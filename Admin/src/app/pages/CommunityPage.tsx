@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { Search, Users, Plus } from "lucide-react";
+import { Search, Users, Plus, Eye, Pencil, Trash2, UploadCloud, Check, X as XIcon } from "lucide-react";
 import Modal, {
   FormField,
   Input,
   Select,
+  Textarea,
   PrimaryBtn,
   DangerBtn,
   GhostBtn,
 } from "../components/Modal";
-import { StatusBadge } from "./DashboardHome";
-import { PageHeader, ActionBtns } from "./EventsPage";
+import { PageHeader } from "./EventsPage";
 
 interface Member {
   id: number;
@@ -20,13 +20,18 @@ interface Member {
   | "Mentor"
   | "Investor"
   | "Service Provider"
-  | "Member";
+  | "Other";
   company?: string;
   expertise?: string;
   city: string;
   joinDate: string;
   status: "Active" | "Inactive";
-  showOnWebsite: boolean;
+  phone?: string;
+  photo?: string;
+  description?: string;
+  socialLinks?: string[];
+  companyWebsite?: string;
+  otherRoleDetails?: string;
 }
 
 const INITIAL: Member[] = [
@@ -42,6 +47,11 @@ const INITIAL: Member[] = [
     joinDate: "2022-01-15",
     status: "Active",
     showOnWebsite: true,
+    phone: "+91 98765 43201",
+    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=250&auto=format&fit=crop",
+    description: "Co-founder of ASG Foundation. Helping build the tech ecosystem in Jalgaon.",
+    socialLinks: ["https://linkedin.com/in/vikramsingh", "https://twitter.com/vikram_asg"],
+    companyWebsite: "https://asgfoundation.org"
   },
   {
     id: 2,
@@ -54,6 +64,11 @@ const INITIAL: Member[] = [
     joinDate: "2022-01-15",
     status: "Active",
     showOnWebsite: true,
+    phone: "+91 98765 43202",
+    photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=250&auto=format&fit=crop",
+    description: "Co-founder at ASG Foundation. Focused on community growth and corporate partnerships.",
+    socialLinks: ["https://linkedin.com/in/priyanair"],
+    companyWebsite: "https://asgfoundation.org"
   },
 
   // Mentors
@@ -68,6 +83,11 @@ const INITIAL: Member[] = [
     joinDate: "2023-03-10",
     status: "Active",
     showOnWebsite: true,
+    phone: "+91 98765 43203",
+    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=250&auto=format&fit=crop",
+    description: "Professor at IIT Bombay. Mentoring students on Deep Learning models and research projects.",
+    socialLinks: ["https://linkedin.com/in/drravikumar"],
+    companyWebsite: "https://iitb.ac.in"
   },
   {
     id: 4,
@@ -80,6 +100,11 @@ const INITIAL: Member[] = [
     joinDate: "2023-05-20",
     status: "Active",
     showOnWebsite: true,
+    phone: "+91 98765 43204",
+    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=250&auto=format&fit=crop",
+    description: "Lead Product Manager. Helping founders design user journeys and GTM strategies.",
+    socialLinks: ["https://linkedin.com/in/snehajoshi"],
+    companyWebsite: "https://google.co.in"
   },
   {
     id: 5,
@@ -92,6 +117,11 @@ const INITIAL: Member[] = [
     joinDate: "2023-08-15",
     status: "Active",
     showOnWebsite: false,
+    phone: "+91 98765 43205",
+    photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=250&auto=format&fit=crop",
+    description: "Developer Relations at Polygon. Tech advisor for smart contract architectures.",
+    socialLinks: ["https://linkedin.com/in/kiranrao"],
+    companyWebsite: "https://polygon.technology"
   },
 
   // Investors
@@ -106,6 +136,11 @@ const INITIAL: Member[] = [
     joinDate: "2023-06-01",
     status: "Active",
     showOnWebsite: true,
+    phone: "+91 98765 43206",
+    photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=250&auto=format&fit=crop",
+    description: "Partner at Sequoia. Investing in SaaS, FinTech, and deep-tech startups in India.",
+    socialLinks: ["https://linkedin.com/in/amitverma"],
+    companyWebsite: "https://sequoiacap.com"
   },
   {
     id: 7,
@@ -118,6 +153,11 @@ const INITIAL: Member[] = [
     joinDate: "2023-09-10",
     status: "Active",
     showOnWebsite: true,
+    phone: "+91 98765 43207",
+    photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop",
+    description: "Angel investor. Focused on supporting student startups and regional tech incubators.",
+    socialLinks: ["https://linkedin.com/in/nehasharma"],
+    companyWebsite: "https://angelnet.in"
   },
 
   // Service Providers
@@ -132,6 +172,11 @@ const INITIAL: Member[] = [
     joinDate: "2024-01-05",
     status: "Active",
     showOnWebsite: true,
+    phone: "+91 98765 43208",
+    photo: "https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=250&auto=format&fit=crop",
+    description: "Corporate lawyer. Helping startups with registrations, term sheets, and IP compliance.",
+    socialLinks: ["https://linkedin.com/in/rajeshpatel"],
+    companyWebsite: "https://legaladvisors.com"
   },
   {
     id: 9,
@@ -144,68 +189,123 @@ const INITIAL: Member[] = [
     joinDate: "2024-02-12",
     status: "Active",
     showOnWebsite: true,
+    phone: "+91 98765 43209",
+    photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=250&auto=format&fit=crop",
+    description: "Co-founder at BrandCraft. Expert in brand positioning and performance marketing.",
+    socialLinks: ["https://linkedin.com/company/brandcraft"],
+    companyWebsite: "https://brandcraft.co"
   },
 
-  // Members
-  {
-    id: 10,
-    name: "Arjun Sharma",
-    email: "arjun@member.com",
-    type: "Member",
-    expertise: "Software Development",
-    city: "Delhi",
-    joinDate: "2024-03-10",
-    status: "Active",
-    showOnWebsite: true,
-  },
-  {
-    id: 11,
-    name: "Kavya Iyer",
-    email: "kavya@member.com",
-    type: "Member",
-    expertise: "Data Science",
-    city: "Kochi",
-    joinDate: "2024-04-15",
-    status: "Active",
-    showOnWebsite: true,
-  },
 ];
 
 const empty: Omit<Member, "id"> = {
   name: "",
   email: "",
-  type: "Member",
+  type: "Founder",
   company: "",
   expertise: "",
   city: "",
-  joinDate: "",
+  joinDate: new Date().toISOString().split("T")[0],
   status: "Active",
   showOnWebsite: true,
+  phone: "",
+  photo: "",
+  description: "",
+  socialLinks: [""],
+  companyWebsite: "",
+  otherRoleDetails: ""
 };
 
 export default function CommunityPage() {
-  const [members, setMembers] = useState<Member[]>(INITIAL);
+  const [members, setMembers] = useState<Member[]>(() => {
+    try {
+      const local = localStorage.getItem("asg_members");
+      if (local) return JSON.parse(local);
+    } catch (e) {}
+    localStorage.setItem("asg_members", JSON.stringify(INITIAL));
+    return INITIAL;
+  });
+
+  const [applications, setApplications] = useState<any[]>(() => {
+    try {
+      const local = localStorage.getItem("asg_listing_applications");
+      if (local) return JSON.parse(local);
+    } catch (e) {}
+    return [];
+  });
+
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] =
-    useState<Member["type"]>("Founder");
-  const [filterStatus, setFilterStatus] = useState<
-    "All" | "Active" | "Inactive"
-  >("All");
+  const [activeTab, setActiveTab] = useState<string>("Founder");
+  const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
   const [modal, setModal] = useState<{
     open: boolean;
-    mode: "add" | "edit" | "delete";
-    item: Member | null;
+    mode: "add" | "edit" | "delete" | "view";
+    item: any | null;
   }>({
     open: false,
     mode: "add",
     item: null,
   });
   const [form, setForm] = useState<Omit<Member, "id">>(empty);
+  const [dragActive, setDragActive] = useState(false);
 
-  const toggleShowOnWebsite = (id: number) => {
-    setMembers((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, showOnWebsite: !m.showOnWebsite } : m))
+  const saveMembers = (newMembers: Member[]) => {
+    setMembers(newMembers);
+    localStorage.setItem("asg_members", JSON.stringify(newMembers));
+  };
+
+  const toggleStatus = (id: number) => {
+    const next = members.map((m) =>
+      m.id === id
+        ? { ...m, status: m.status === "Active" ? "Inactive" : "Active" as const }
+        : m
     );
+    saveMembers(next);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        set("photo", event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSocialLinkChange = (index: number, value: string) => {
+    const newLinks = [...(form.socialLinks || [""])];
+    newLinks[index] = value;
+    set("socialLinks", newLinks);
+  };
+
+  const addSocialLink = () => {
+    set("socialLinks", [...(form.socialLinks || [""]), ""]);
+  };
+
+  const removeSocialLink = (index: number) => {
+    const newLinks = (form.socialLinks || [""]).filter((_, i) => i !== index);
+    set("socialLinks", newLinks.length ? newLinks : [""]);
   };
 
   const filtered = members.filter((m) => {
@@ -213,18 +313,61 @@ export default function CommunityPage() {
     const matchSearch =
       m.name.toLowerCase().includes(search.toLowerCase()) ||
       m.email.toLowerCase().includes(search.toLowerCase()) ||
-      (m.company
-        ?.toLowerCase()
-        .includes(search.toLowerCase()) ??
-        false) ||
-      (m.expertise
-        ?.toLowerCase()
-        .includes(search.toLowerCase()) ??
-        false);
+      (m.company?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+      (m.expertise?.toLowerCase().includes(search.toLowerCase()) ?? false);
     const matchStatus =
       filterStatus === "All" || m.status === filterStatus;
     return matchType && matchSearch && matchStatus;
   });
+
+  const filteredApplications = applications.filter((app) => {
+    const matchSearch =
+      app.name.toLowerCase().includes(search.toLowerCase()) ||
+      app.email.toLowerCase().includes(search.toLowerCase()) ||
+      (app.company?.toLowerCase().includes(search.toLowerCase()) ?? false);
+    const matchStatus =
+      filterStatus === "All" || app.status === filterStatus;
+    return matchStatus && matchSearch;
+  });
+
+  const handleAcceptApplication = (app: any) => {
+    let mappedType: Member["type"] = "Founder";
+    if (app.role === "founders") mappedType = "Founder";
+    else if (app.role === "mentors") mappedType = "Mentor";
+    else if (app.role === "investors") mappedType = "Investor";
+    else if (app.role === "service-providers") mappedType = "Service Provider";
+    else if (app.role === "other") mappedType = "Other";
+
+    const newMember: Member = {
+      id: Date.now(),
+      name: app.name,
+      email: app.email,
+      phone: app.phone,
+      type: mappedType,
+      company: app.company,
+      companyWebsite: app.companyWebsite,
+      description: app.description,
+      socialLinks: app.socialLinks,
+      city: "Jalgaon",
+      joinDate: new Date().toISOString().split("T")[0],
+      status: "Active",
+      photo: app.photo,
+      otherRoleDetails: app.otherRoleDetails
+    };
+
+    const nextMembers = [...members, newMember];
+    saveMembers(nextMembers);
+
+    const nextApps = applications.map((a) => (a.id === app.id ? { ...a, status: "Accepted" } : a));
+    setApplications(nextApps);
+    localStorage.setItem("asg_listing_applications", JSON.stringify(nextApps));
+  };
+
+  const handleRejectApplication = (app: any) => {
+    const nextApps = applications.map((a) => (a.id === app.id ? { ...a, status: "Rejected" } : a));
+    setApplications(nextApps);
+    localStorage.setItem("asg_listing_applications", JSON.stringify(nextApps));
+  };
 
   const openAdd = () => {
     setForm({ ...empty, type: activeTab });
@@ -232,56 +375,75 @@ export default function CommunityPage() {
   };
   const openEdit = (item: Member) => {
     const { id, ...rest } = item;
-    setForm(rest);
+    setForm({
+      ...empty,
+      ...rest,
+      socialLinks: rest.socialLinks && rest.socialLinks.length > 0 ? rest.socialLinks : [""]
+    });
     setModal({ open: true, mode: "edit", item });
   };
   const openDelete = (item: Member) =>
     setModal({ open: true, mode: "delete", item });
+  const openView = (item: Member) =>
+    setModal({ open: true, mode: "view", item });
   const close = () => setModal((m) => ({ ...m, open: false }));
 
   const save = () => {
     if (!form.name || !form.email) return;
+    const cleanedSocialLinks = (form.socialLinks || []).filter(l => l.trim());
+    const finalForm = { ...form, socialLinks: cleanedSocialLinks };
+    
     if (modal.mode === "add") {
-      setMembers((prev) => [
-        ...prev,
-        { ...form, id: Date.now() },
-      ]);
+      const next = [
+        ...members,
+        { ...finalForm, id: Date.now() },
+      ];
+      saveMembers(next);
     } else if (modal.item) {
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.id === modal.item!.id
-            ? { ...modal.item!, ...form }
-            : m,
-        ),
+      const next = members.map((m) =>
+        m.id === modal.item!.id
+          ? { ...modal.item!, ...finalForm }
+          : m
       );
+      saveMembers(next);
     }
     close();
   };
 
   const remove = () => {
-    if (modal.item)
-      setMembers((prev) =>
-        prev.filter((m) => m.id !== modal.item!.id),
-      );
+    if (modal.item) {
+      const next = members.filter((m) => m.id !== modal.item!.id);
+      saveMembers(next);
+    }
     close();
   };
 
   const set = (k: keyof typeof form, v: any) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const tabs: Member["type"][] = [
+  const tabs = [
     "Founder",
     "Mentor",
     "Investor",
     "Service Provider",
-    "Member",
-  ];
-  const tabCounts = tabs.map((t) => ({
-    type: t,
-    count: members.filter(
-      (m) => m.type === t && m.status === "Active",
-    ).length,
-  }));
+    "Other",
+    "Applications"
+  ] as const;
+
+  const tabCounts = tabs.map((t) => {
+    if (t === "Applications") {
+      return {
+        type: t,
+        count: applications.filter((app) => app.status === "Pending").length,
+      };
+    }
+    return {
+      type: t,
+      count: members.filter(
+        (m) => m.type === t && m.status === "Active",
+      ).length,
+    };
+  });
 
   return (
     <div>
@@ -290,19 +452,21 @@ export default function CommunityPage() {
         title="Community Members"
         subtitle={`${members.length} total · ${members.filter((m) => m.status === "Active").length} active`}
         action={
-          <button
-            onClick={openAdd}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-            style={{
-              background: "#FF6B00",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "'Satoshi', sans-serif",
-              boxShadow: "0 2px 10px rgba(255,107,0,0.35)",
-            }}
-          >
-            <Plus size={16} /> Add {activeTab}
-          </button>
+          activeTab !== "Applications" ? (
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+              style={{
+                background: "#FF6B00",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "'Satoshi', sans-serif",
+                boxShadow: "0 2px 10px rgba(255,107,0,0.35)",
+              }}
+            >
+              <Plus size={16} /> Add {activeTab}
+            </button>
+          ) : null
         }
       />
 
@@ -322,6 +486,7 @@ export default function CommunityPage() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 whitespace-nowrap"
               style={{
                 background: isActive ? "#FF6B00" : "#fff",
+                backgroundColor: isActive ? "#FF6B00" : "#fff",
                 color: isActive ? "#fff" : "#555",
                 border: isActive
                   ? "1px solid #FF6B00"
@@ -420,15 +585,24 @@ export default function CommunityPage() {
           >
             <thead>
               <tr style={{ background: "#fafafa" }}>
-                {[
-                  "Name",
-                  "Company/Expertise",
-                  "City",
-                  "Joined",
-                  "Show on Website",
-                  "Status",
-                  "Actions",
-                ].map((h) => (
+                {(activeTab === "Applications"
+                  ? [
+                      "Applicant",
+                      "Selected Role",
+                      "Company / details",
+                      "Submitted",
+                      "Status",
+                      "Actions",
+                    ]
+                  : [
+                      "Name",
+                      "Company/Expertise",
+                      "City",
+                      "Joined",
+                      "Status",
+                      "Actions",
+                    ]
+                ).map((h) => (
                   <th
                     key={h}
                     style={{
@@ -447,137 +621,309 @@ export default function CommunityPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((member) => (
-                <tr
-                  key={member.id}
-                  style={{ borderTop: "1px solid #f5f5f5" }}
-                  onMouseEnter={(e) =>
-                  (e.currentTarget.style.background =
-                    "#fafafa")
-                  }
-                  onMouseLeave={(e) =>
-                  (e.currentTarget.style.background =
-                    "transparent")
-                  }
-                >
-                  <td style={{ padding: "14px 16px" }}>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{
-                          background: `hsl(${(member.name.charCodeAt(0) * 37) % 360}, 60%, 92%)`,
-                          color: `hsl(${(member.name.charCodeAt(0) * 37) % 360}, 60%, 40%)`,
-                          fontWeight: 700,
-                          fontSize: "14px",
-                        }}
-                      >
-                        {member.name[0]}
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: 600,
-                            color: "#0d0d0d",
-                          }}
-                        >
-                          {member.name}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "12px",
-                            color: "#aaa",
-                          }}
-                        >
-                          {member.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    {member.company && (
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: "#0d0d0d",
-                        }}
-                      >
-                        {member.company}
-                      </div>
-                    )}
-                    {member.expertise && (
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#888",
-                          marginTop: member.company
-                            ? "2px"
-                            : "0",
-                        }}
-                      >
-                        {member.expertise}
-                      </div>
-                    )}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 16px",
-                      fontSize: "13px",
-                      color: "#555",
-                    }}
-                  >
-                    {member.city}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 16px",
-                      fontSize: "13px",
-                      color: "#8a8a8a",
-                    }}
-                  >
-                    {new Date(
-                      member.joinDate,
-                    ).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </td>
-                  {/* Inline visibility toggle switch */}
-                  <td style={{ padding: "14px 16px" }}>
-                    <button
-                      onClick={() => toggleShowOnWebsite(member.id)}
-                      className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out align-middle"
-                      style={{
-                        background: member.showOnWebsite ? "#FF6B00" : "#d1d5db",
-                        border: "none",
-                        outline: "none"
-                      }}
+              {activeTab === "Applications"
+                ? filteredApplications.map((app) => (
+                    <tr
+                      key={app.id}
+                      style={{ borderTop: "1px solid #f5f5f5" }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "#fafafa")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
                     >
-                      <span
-                        className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out"
+                      <td style={{ padding: "14px 16px" }}>
+                        <div className="flex items-center gap-3">
+                          {app.photo ? (
+                            <img
+                              src={app.photo}
+                              alt={app.name}
+                              style={{
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "12px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            <div
+                              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                              style={{
+                                background: `hsl(${(app.name.charCodeAt(0) * 37) % 360}, 60%, 92%)`,
+                                color: `hsl(${(app.name.charCodeAt(0) * 37) % 360}, 60%, 40%)`,
+                                fontWeight: 700,
+                                fontSize: "14px",
+                              }}
+                            >
+                              {app.name[0]}
+                            </div>
+                          )}
+                          <div>
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: 600,
+                                color: "#0d0d0d",
+                              }}
+                            >
+                              {app.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#aaa",
+                              }}
+                            >
+                              {app.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>
+                        <span style={{ fontSize: "12px", fontWeight: 500, padding: "3px 10px", borderRadius: "99px", background: "rgba(255,107,0,0.1)", color: "#FF6B00" }}>
+                          {app.role === "founders" ? "Founder" :
+                           app.role === "mentors" ? "Mentor" :
+                           app.role === "investors" ? "Investor" :
+                           app.role === "service-providers" ? "Service Provider" :
+                           app.role === "other" ? "Other" :
+                           app.role}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>
+                        <div style={{ fontWeight: 600, color: "#0d0d0d" }}>{app.company || "—"}</div>
+                        {app.companyWebsite && (
+                          <a href={app.companyWebsite} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#FF6B00", textDecoration: "none" }}>
+                            {app.companyWebsite} ↗
+                          </a>
+                        )}
+                      </td>
+                      <td style={{ padding: "14px 16px", fontSize: "13px", color: "#8a8a8a" }}>
+                        {new Date(app.date).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            padding: "3px 10px",
+                            borderRadius: "99px",
+                            background:
+                              app.status === "Pending"
+                                ? "rgba(245,158,11,0.12)"
+                                : app.status === "Accepted"
+                                ? "rgba(16,185,129,0.12)"
+                                : "rgba(239,68,68,0.12)",
+                            color:
+                              app.status === "Pending"
+                                ? "#d97706"
+                                : app.status === "Accepted"
+                                ? "#059669"
+                                : "#dc2626",
+                          }}
+                        >
+                          {app.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => openView(app)}
+                            className="p-1.5 rounded-lg transition-all bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100"
+                            title="View Details"
+                          >
+                            <Eye size={13} />
+                          </button>
+                          {app.status === "Pending" && (
+                            <>
+                              <button
+                                onClick={() => handleAcceptApplication(app)}
+                                className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg border-none cursor-pointer hover:bg-emerald-100"
+                                title="Accept"
+                              >
+                                <Check size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleRejectApplication(app)}
+                                className="p-1.5 bg-red-50 text-red-500 rounded-lg border-none cursor-pointer hover:bg-red-100"
+                                title="Reject"
+                              >
+                                <XIcon size={13} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                : filtered.map((member) => (
+                    <tr
+                      key={member.id}
+                      style={{ borderTop: "1px solid #f5f5f5" }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "#fafafa")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
+                    >
+                      <td style={{ padding: "14px 16px" }}>
+                        <div className="flex items-center gap-3">
+                          {member.photo ? (
+                            <img
+                              src={member.photo}
+                              alt={member.name}
+                              style={{
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "12px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            <div
+                              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                              style={{
+                                background: `hsl(${(member.name.charCodeAt(0) * 37) % 360}, 60%, 92%)`,
+                                color: `hsl(${(member.name.charCodeAt(0) * 37) % 360}, 60%, 40%)`,
+                                fontWeight: 700,
+                                fontSize: "14px",
+                              }}
+                            >
+                              {member.name[0]}
+                            </div>
+                          )}
+                          <div>
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: 600,
+                                color: "#0d0d0d",
+                              }}
+                            >
+                              {member.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#aaa",
+                              }}
+                            >
+                              {member.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        {member.company && (
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: 500,
+                              color: "#0d0d0d",
+                            }}
+                          >
+                            {member.company}
+                          </div>
+                        )}
+                        {member.expertise && (
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#888",
+                              marginTop: member.company
+                                ? "2px"
+                                : "0",
+                            }}
+                          >
+                            {member.expertise}
+                          </div>
+                        )}
+                      </td>
+                      <td
                         style={{
-                          transform: member.showOnWebsite ? "translateX(16px)" : "translateX(0)"
+                          padding: "14px 16px",
+                          fontSize: "13px",
+                          color: "#555",
                         }}
-                      />
-                    </button>
-                  </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <StatusBadge status={member.status} />
-                  </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <ActionBtns
-                      onEdit={() => openEdit(member)}
-                      onDelete={() => openDelete(member)}
-                    />
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
+                      >
+                        {member.city}
+                      </td>
+                      <td
+                        style={{
+                          padding: "14px 16px",
+                          fontSize: "13px",
+                          color: "#8a8a8a",
+                        }}
+                      >
+                        {new Date(
+                          member.joinDate,
+                        ).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleStatus(member.id)}
+                            className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out align-middle"
+                            style={{
+                              background: member.status === "Active" ? "#10b981" : "#e5e7eb",
+                              border: "none",
+                              outline: "none"
+                            }}
+                            title={member.status === "Active" ? "Disable" : "Enable"}
+                          >
+                            <span
+                              className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out"
+                              style={{
+                                transform: member.status === "Active" ? "translateX(16px)" : "translateX(0)"
+                              }}
+                            />
+                          </button>
+                          <span style={{ fontSize: "12px", fontWeight: 500, color: member.status === "Active" ? "#10b981" : "#888" }}>
+                            {member.status}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => openView(member)}
+                            className="p-1.5 rounded-lg transition-all bg-blue bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100"
+                            title="View Details"
+                          >
+                            <Eye size={13} />
+                          </button>
+                          <button
+                            onClick={() => openEdit(member)}
+                            className="p-1.5 rounded-lg transition-all bg-orange-50 text-[#FF6B00] border-none cursor-pointer hover:bg-orange-100"
+                            title="Edit Details"
+                          >
+                            <Pencil size={13} />
+                          </button>
+                          <button
+                            onClick={() => openDelete(member)}
+                            className="p-1.5 rounded-lg transition-all bg-red-50 text-red-500 border-none cursor-pointer hover:bg-red-100"
+                            title="Remove Member"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              {((activeTab === "Applications" && filteredApplications.length === 0) ||
+                (activeTab !== "Applications" && filtered.length === 0)) && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     style={{
                       padding: "40px 16px",
                       textAlign: "center",
@@ -585,7 +931,7 @@ export default function CommunityPage() {
                       fontSize: "14px",
                     }}
                   >
-                    No {activeTab.toLowerCase()}s found.
+                    No {activeTab.toLowerCase()} found.
                   </td>
                 </tr>
               )}
@@ -594,108 +940,382 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      <Modal
-        isOpen={modal.open && modal.mode !== "delete"}
-        onClose={close}
-        title={
-          modal.mode === "add"
-            ? `Add ${form.type}`
-            : `Edit ${form.type}`
-        }
-        size="md"
-      >
-        <FormField label="Full Name *">
-          <Input
-            value={form.name}
-            onChange={(e) => set("name", e.target.value)}
-            placeholder="Full name"
-          />
-        </FormField>
-        <FormField label="Email *">
-          <Input
-            type="email"
-            value={form.email}
-            onChange={(e) => set("email", e.target.value)}
-            placeholder="email@example.com"
-          />
-        </FormField>
-        <div
-          className="grid gap-4"
-          style={{ gridTemplateColumns: "1fr 1fr" }}
+      {/* VIEW DETAILS MODAL */}
+      {modal.open && modal.mode === "view" && modal.item && (
+        <Modal
+          isOpen={true}
+          onClose={close}
+          title={`View ${modal.item.type} Details`}
+          size="md"
         >
-          <FormField label="Type">
-            <Select
-              value={form.type}
-              onChange={(e) => set("type", e.target.value)}
-            >
-              {tabs.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </Select>
-          </FormField>
-          <FormField label="City">
-            <Input
-              value={form.city}
-              onChange={(e) => set("city", e.target.value)}
-              placeholder="City"
-            />
-          </FormField>
-          <FormField label="Company">
-            <Input
-              value={form.company || ""}
-              onChange={(e) => set("company", e.target.value)}
-              placeholder="Company name"
-            />
-          </FormField>
-          <FormField label="Expertise">
-            <Input
-              value={form.expertise || ""}
-              onChange={(e) => set("expertise", e.target.value)}
-              placeholder="Area of expertise"
-            />
-          </FormField>
-          <FormField label="Join Date">
-            <Input
-              type="date"
-              value={form.joinDate}
-              onChange={(e) => set("joinDate", e.target.value)}
-            />
-          </FormField>
-          <FormField label="Status">
-            <Select
-              value={form.status}
-              onChange={(e) => set("status", e.target.value)}
-            >
-              <option>Active</option>
-              <option>Inactive</option>
-            </Select>
-          </FormField>
-        </div>
-
-        {/* Show on website visibility checkbox */}
-        <div style={{ marginTop: "12px" }}>
-          <FormField label="Show Profile on Website">
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px" }}>
-              <input
-                type="checkbox"
-                checked={form.showOnWebsite}
-                onChange={(e) => set("showOnWebsite", e.target.checked)}
-                style={{ width: "16px", height: "16px", accentColor: "#FF6B00", cursor: "pointer" }}
-              />
-              <span style={{ fontSize: "13px", color: "#555" }}>Choose whether to show this member's info on the public portal</span>
+          <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+              {modal.item.photo ? (
+                <img
+                  src={modal.item.photo}
+                  alt={modal.item.name}
+                  style={{
+                    width: "70px",
+                    height: "70px",
+                    borderRadius: "16px",
+                    objectFit: "cover",
+                    border: "2px solid #FF6B00"
+                  }}
+                />
+              ) : (
+                <div
+                  className="w-[70px] h-[70px] rounded-2xl flex items-center justify-center font-bold text-2xl"
+                  style={{
+                    background: `hsl(${(modal.item.name.charCodeAt(0) * 37) % 360}, 60%, 92%)`,
+                    color: `hsl(${(modal.item.name.charCodeAt(0) * 37) % 360}, 60%, 40%)`
+                  }}
+                >
+                  {modal.item.name[0]}
+                </div>
+              )}
+              <div>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0d0d0d" }}>{modal.item.name}</h3>
+                <p style={{ fontSize: "13px", color: "#888" }}>{modal.item.email}</p>
+                <span
+                  style={{
+                    display: "inline-block",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: "#FF6B00",
+                    background: "rgba(255,107,0,0.1)",
+                    padding: "3px 10px",
+                    borderRadius: "99px",
+                    marginTop: "6px"
+                  }}
+                >
+                  {modal.item.type}
+                </span>
+              </div>
             </div>
-          </FormField>
-        </div>
 
-        <div className="flex justify-end gap-3 mt-4">
-          <GhostBtn onClick={close}>Cancel</GhostBtn>
-          <PrimaryBtn onClick={save}>
-            {modal.mode === "add"
+            <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Phone Number</label>
+                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.phone || "—"}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>City</label>
+                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.city || "—"}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Company / Affiliation</label>
+                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>
+                  {modal.item.companyWebsite ? (
+                    <a href={modal.item.companyWebsite} target="_blank" rel="noopener noreferrer" style={{ color: "#FF6B00", textDecoration: "none" }}>
+                      {modal.item.company} 🔗
+                    </a>
+                  ) : (
+                    modal.item.company || "—"
+                  )}
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Expertise</label>
+                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.expertise || "—"}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Join Date</label>
+                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>
+                  {new Date(modal.item.joinDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Status</label>
+                <div style={{ fontSize: "13.5px", marginTop: "2px", fontWeight: 600, color: modal.item.status === "Active" ? "#10b981" : "#ef4444" }}>
+                  {modal.item.status}
+                </div>
+              </div>
+            </div>
+
+             {modal.item.otherRoleDetails && (
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Tell us about your role</label>
+                <div style={{ fontSize: "13.5px", color: "#555", background: "#f9f9f9", padding: "10px 14px", borderRadius: "10px", border: "1px solid #f0f0f0", marginTop: "4px", lineHeight: "1.4" }}>
+                  {modal.item.otherRoleDetails}
+                </div>
+              </div>
+            )}
+
+            {modal.item.description && (
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Short Description</label>
+                <div style={{ fontSize: "13.5px", color: "#555", background: "#f9f9f9", padding: "10px 14px", borderRadius: "10px", border: "1px solid #f0f0f0", marginTop: "4px", lineHeight: "1.4" }}>
+                  {modal.item.description}
+                </div>
+              </div>
+            )}
+
+            {modal.item.socialLinks && modal.item.socialLinks.filter(Boolean).length > 0 && (
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Social Media Links</label>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "6px" }}>
+                  {modal.item.socialLinks.filter(Boolean).map((link: any, idx: number) => {
+                    let domain = "Link";
+                    if (link.includes("linkedin.com")) domain = "LinkedIn";
+                    else if (link.includes("twitter.com") || link.includes("x.com")) domain = "Twitter";
+                    else if (link.includes("github.com")) domain = "GitHub";
+                    else if (link.includes("instagram.com")) domain = "Instagram";
+                    return (
+                      <a
+                        key={idx}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          color: "#FF6B00",
+                          background: "rgba(255,107,0,0.08)",
+                          padding: "4px 10px",
+                          borderRadius: "8px",
+                          textDecoration: "none"
+                        }}
+                      >
+                        {domain} ↗
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2 border-t border-gray-100">
+              <GhostBtn onClick={close}>Close</GhostBtn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ADD / EDIT MODAL */}
+      {modal.open && (modal.mode === "add" || modal.mode === "edit") && (
+        <Modal
+          isOpen={true}
+          onClose={close}
+          title={
+            modal.mode === "add"
               ? `Add ${form.type}`
-              : "Save Changes"}
-          </PrimaryBtn>
-        </div>
-      </Modal>
+              : `Edit ${form.type}`
+          }
+          size="md"
+        >
+          <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-2 no-scrollbar">
+            <FormField label="Full Name *">
+              <Input
+                value={form.name}
+                onChange={(e) => set("name", e.target.value)}
+                placeholder="Full name"
+              />
+            </FormField>
+            <FormField label="Email *">
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => set("email", e.target.value)}
+                placeholder="email@example.com"
+              />
+            </FormField>
+            <div
+              className="grid gap-4"
+              style={{ gridTemplateColumns: "1fr 1fr" }}
+            >
+              <FormField label="Type">
+                <Select
+                  value={form.type}
+                  onChange={(e) => set("type", e.target.value)}
+                >
+                  {tabs.filter(t => t !== "Applications").map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </Select>
+              </FormField>
+              <FormField label="Phone Number">
+                <Input
+                  type="tel"
+                  value={form.phone || ""}
+                  onChange={(e) => set("phone", e.target.value)}
+                  placeholder="+91 98765 43210"
+                />
+              </FormField>
+              <FormField label="City">
+                <Input
+                  value={form.city}
+                  onChange={(e) => set("city", e.target.value)}
+                  placeholder="City"
+                />
+              </FormField>
+              <FormField label="Company">
+                <Input
+                  value={form.company || ""}
+                  onChange={(e) => set("company", e.target.value)}
+                  placeholder="Company name"
+                />
+              </FormField>
+              <FormField label="Expertise">
+                <Input
+                  value={form.expertise || ""}
+                  onChange={(e) => set("expertise", e.target.value)}
+                  placeholder="Area of expertise"
+                />
+              </FormField>
+              <FormField label="Company Website Link">
+                <Input
+                  type="url"
+                  value={form.companyWebsite || ""}
+                  onChange={(e) => set("companyWebsite", e.target.value)}
+                  placeholder="https://company.com"
+                />
+              </FormField>
+              <FormField label="Join Date">
+                <Input
+                  type="date"
+                  value={form.joinDate}
+                  onChange={(e) => set("joinDate", e.target.value)}
+                />
+              </FormField>
+              <FormField label="Status">
+                <Select
+                  value={form.status}
+                  onChange={(e) => set("status", e.target.value)}
+                >
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </Select>
+              </FormField>
+            </div>
+
+            {form.type === "Other" && (
+              <FormField label="Tell us about your role *">
+                <Textarea
+                  value={form.otherRoleDetails || ""}
+                  onChange={(e) => set("otherRoleDetails", e.target.value)}
+                  placeholder="Specify custom role details..."
+                  rows={2}
+                />
+              </FormField>
+            )}
+
+            {/* Profile Photo Drag & Drop Upload Zone */}
+            <div>
+              <FormField label="Profile Photo (Drag & Drop or Click to Upload)">
+                <div
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleDrop}
+                  onClick={() => document.getElementById("member-photo-upload")?.click()}
+                  style={{
+                    borderColor: dragActive ? "#FF6B00" : "#ebebeb",
+                    background: dragActive ? "rgba(255,107,0,0.04)" : "#fcfcfc",
+                    borderStyle: "dashed",
+                    borderWidth: "2px",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <input id="member-photo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFile(e.target.files[0]);
+                    }
+                  }} />
+                  {form.photo ? (
+                    <div className="flex flex-col items-center">
+                      <img src={form.photo} alt="Preview" className="w-16 h-16 rounded-xl object-cover mb-2" />
+                      <span className="text-[11px] text-gray-400">Click to select a different photo</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <UploadCloud size={24} className="text-[#FF6B00] mb-1" />
+                      <span className="text-xs font-semibold text-gray-650">Drag & drop profile picture here</span>
+                    </div>
+                  )}
+                </div>
+              </FormField>
+            </div>
+
+            {/* Short Description */}
+            <FormField label="Short Description">
+              <Textarea
+                value={form.description || ""}
+                onChange={(e) => set("description", e.target.value)}
+                placeholder="Write a brief bio or description of the member..."
+                rows={3}
+              />
+            </FormField>
+
+            {/* Dynamic Social Media Links */}
+            <div>
+              <FormField label="Social Media Links">
+                <div className="space-y-2">
+                  {(form.socialLinks || [""]).map((link, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <Input
+                        type="url"
+                        value={link}
+                        onChange={(e) => handleSocialLinkChange(idx, e.target.value)}
+                        placeholder="https://linkedin.com/in/username"
+                      />
+                      {(form.socialLinks || []).length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSocialLink(idx)}
+                          style={{
+                            background: "rgba(239, 68, 68, 0.1)",
+                            color: "#ef4444",
+                            border: "none",
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            fontWeight: 600
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addSocialLink}
+                    style={{
+                      background: "rgba(255, 107, 0, 0.1)",
+                      color: "#FF6B00",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      marginTop: "4px"
+                    }}
+                  >
+                    + Add Another Link
+                  </button>
+                </div>
+              </FormField>
+            </div>
+
+
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+              <GhostBtn onClick={close}>Cancel</GhostBtn>
+              <PrimaryBtn onClick={save}>
+                {modal.mode === "add"
+                  ? `Add ${form.type}`
+                  : "Save Changes"}
+              </PrimaryBtn>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <Modal
         isOpen={modal.open && modal.mode === "delete"}

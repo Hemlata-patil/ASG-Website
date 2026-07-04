@@ -6,6 +6,7 @@ import { domains } from '../data/domains';
 import { mentors } from '../data/mentors';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import ApexDropdown from '../components/common/ApexDropdown/ApexDropdown';
+import { expertsData } from '../data/experts';
 
 export default function AAL() {
   const navigate = useNavigate();
@@ -15,6 +16,39 @@ export default function AAL() {
   const formAnim = useScrollAnimation();
 
   const formRef = useRef(null);
+
+  const [experts, setExperts] = useState(() => {
+    const local = localStorage.getItem('asg_experts');
+    if (local) {
+      try {
+        return JSON.parse(local);
+      } catch (e) {
+        return expertsData;
+      }
+    }
+    localStorage.setItem('asg_experts', JSON.stringify(expertsData));
+    return expertsData;
+  });
+
+  const [initiatives, setInitiatives] = useState(() => {
+    const local = localStorage.getItem('asg_initiatives');
+    const INITIAL_INITIATIVES = [
+      { id: 1, icon: "💡", title: "Mentorship Circles", shortDescription: "Weekly group mentorship sessions matching cohorts with domain leaders from top tech firms." },
+      { id: 2, icon: "🚀", title: "AI Sandbox", shortDescription: "Hands-on cloud resource sandbox and API credits to prototype AI integrations swiftly." },
+      { id: 3, icon: "💼", title: "Pitch Launchpad", shortDescription: "Preparation sprints culminating in Pitch Days to secure regional investor feedback and backing." }
+    ];
+    if (local) {
+      try {
+        return JSON.parse(local);
+      } catch (e) {
+        return INITIAL_INITIATIVES;
+      }
+    }
+    localStorage.setItem('asg_initiatives', JSON.stringify(INITIAL_INITIATIVES));
+    return INITIAL_INITIATIVES;
+  });
+
+  const activeExperts = experts.filter(e => e.status === 'Active' && e.showOnWebsite);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -29,7 +63,9 @@ export default function AAL() {
     notes: '',
     internStatus: 'new', // new | existing
     linkedin: '',
-    photo: null
+    photo: null,
+    shortDescription: '',
+    aiToolsUsed: ''
   });
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,10 +162,10 @@ export default function AAL() {
     if (!formData.degree.trim()) errors.degree = 'Degree/Course of study is required';
     if (!formData.year) errors.year = 'Year of study is required';
     if (!formData.linkedin.trim()) errors.linkedin = 'LinkedIn Profile Link is required';
-
+    if (!formData.photo) errors.photo = 'Profile Photo is required';
+    if (formData.internStatus === 'new' && !formData.aiToolsUsed.trim()) errors.aiToolsUsed = 'Please tell us what AI tools you use';
     if (formData.internStatus === 'existing') {
       if (!formData.project) errors.project = 'Please choose your project';
-      if (!formData.photo) errors.photo = 'Please upload a photo for the listing';
     }
     return errors;
   };
@@ -157,9 +193,10 @@ export default function AAL() {
         notes: '',
         internStatus: 'new',
         linkedin: '',
-        photo: null
+        photo: null,
+        aiToolsUsed: ''
       });
-    }, 1500);
+    }, 1550);
   };
 
   return (
@@ -256,16 +293,16 @@ export default function AAL() {
           <SectionHeading
             overline="Mentorship"
             title="Learn From Industry Experts"
-            subtitle="Our AAL mentors come from active startups and tech organizations to review builds weekly."
+            subtitle="Our AAL initiatives are designed to accelerate building, learning, and prototype scaling."
           />
-          {/* Grid list of mentors */}
+          {/* Grid list of initiatives */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
             gap: 'var(--space-4)'
           }}>
-            {mentors.filter(m => m.program.includes("AAL")).map((mentor) => (
-              <div key={mentor.id} style={{
+            {initiatives.map((init) => (
+              <div key={init.id} style={{
                 backgroundColor: 'var(--apex-bg-surface)',
                 border: '1px solid var(--apex-border-dark)',
                 borderRadius: 'var(--radius-md)',
@@ -274,34 +311,30 @@ export default function AAL() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                boxShadow: 'var(--shadow-sm)'
-              }}>
-                <img
-                  src={mentor.avatar}
-                  alt={mentor.name}
-                  style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    marginBottom: 'var(--space-3)',
-                    border: '2.5px solid var(--apex-primary)',
-                    boxShadow: 'var(--shadow-sm)'
-                  }}
-                />
-                <h4 className="heading-sm" style={{ fontSize: '1.1rem', marginBottom: '4px', color: 'var(--apex-text-white)' }}>{mentor.name}</h4>
-                <p className="body-sm" style={{ color: 'var(--apex-text-white)', fontWeight: '600', marginBottom: '2px' }}>{mentor.role}</p>
-                <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginBottom: 'var(--space-3)' }}>{mentor.company}</p>
-                <span className="label" style={{
-                  backgroundColor: 'var(--apex-bg-surface-elevated)',
-                  color: 'var(--apex-primary)',
-                  padding: '4px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.75rem',
-                  fontWeight: '700'
+                boxShadow: 'var(--shadow-sm)',
+                transition: 'all var(--transition-base)'
+              }}
+              className="expert-card"
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--apex-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--apex-border-dark)'}
+              >
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255, 107, 0, 0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  marginBottom: 'var(--space-3)',
+                  border: '1.5px solid var(--apex-primary)',
+                  boxShadow: 'var(--shadow-sm)'
                 }}>
-                  {mentor.program}
-                </span>
+                  {init.icon}
+                </div>
+                <h4 className="heading-sm" style={{ fontSize: '1.2rem', marginBottom: '8px', color: 'var(--apex-text-white)' }}>{init.title}</h4>
+                <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0, lineHeight: '1.5' }}>{init.shortDescription}</p>
               </div>
             ))}
           </div>
@@ -648,102 +681,112 @@ export default function AAL() {
                   </div>
                 </div>
 
-                {/* Conditional Fields based on Intern Type */}
-                {formData.internStatus === 'existing' ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', borderTop: '1px solid var(--apex-border-dark)', paddingTop: 'var(--space-4)', marginTop: 'var(--space-2)' }} className="grid-2">
-                    {/* Preferred Project Selection */}
-                    <div>
-                      <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Your Project *</label>
-                      <ApexDropdown
-                        label={domains.find(d => d.id === formData.project)?.name || 'Select your project'}
-                        options={domains.map((d) => ({ value: d.id, label: d.name }))}
-                        onSelect={(value) => {
-                          setFormData((prev) => ({ ...prev, project: value }));
-                          if (formErrors.project) {
-                            setFormErrors((prev) => ({ ...prev, project: '' }));
-                          }
-                        }}
-                        minWidth="100%"
-                      />
-                      {formErrors.project && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.project}</span>}
-                    </div>
-
-                    {/* Drag and Drop photo zone */}
-                    <div>
-                      <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Profile Photo *</label>
-                      <div
-                        onDragEnter={handleDrag}
-                        onDragOver={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDrop={handleDrop}
-                        style={{
-                          border: formErrors.photo ? '2px dashed var(--apex-primary)' : (isDragActive ? '2px dashed var(--apex-primary)' : '2px dashed var(--apex-border-dark)'),
-                          borderRadius: 'var(--radius-sm)',
-                          backgroundColor: isDragActive ? 'rgba(255, 90, 20, 0.05)' : 'var(--apex-bg-surface-elevated)',
-                          padding: '14px',
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}
-                        onClick={() => document.getElementById('photo-upload-input').click()}
-                      >
-                        <input
-                          id="photo-upload-input"
-                          type="file"
-                          accept="image/*"
-                          style={{ display: 'none' }}
-                          onChange={handleFileChange}
-                        />
-                        {formData.photo ? (
-                          <div style={{ color: 'var(--apex-text-white)', fontSize: '0.85rem' }}>
-                            Selected: <strong>{formData.photo.name}</strong>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--apex-primary)', marginTop: '4px' }}>Click/drag to change</div>
-                          </div>
-                        ) : (
-                          <div style={{ color: 'var(--apex-text-muted)', fontSize: '0.8rem' }}>
-                            Drag & drop photo here or <span style={{ color: 'var(--apex-primary)', fontWeight: '600' }}>browse</span>
-                          </div>
-                        )}
-                      </div>
-                      {formErrors.photo && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.photo}</span>}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{
-                    backgroundColor: 'var(--apex-bg-surface-elevated)',
-                    border: '1px solid var(--apex-border-dark)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '12px 16px',
-                    color: 'var(--apex-text-muted)',
-                    fontSize: '0.85rem',
-                    textAlign: 'center',
-                    marginTop: 'var(--space-2)'
-                  }}>
-                    💡 Projects and Listings will be assigned and managed by the administrator.
+                {/* Project Selection (Existing Only) */}
+                {formData.internStatus === 'existing' && (
+                  <div style={{ marginBottom: 'var(--space-2)' }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Your Project *</label>
+                    <ApexDropdown
+                      label={domains.find(d => d.id === formData.project)?.name || 'Select your project'}
+                      options={domains.map((d) => ({ value: d.id, label: d.name }))}
+                      onSelect={(value) => {
+                        setFormData((prev) => ({ ...prev, project: value }));
+                        if (formErrors.project) {
+                          setFormErrors((prev) => ({ ...prev, project: '' }));
+                        }
+                      }}
+                      minWidth="100%"
+                    />
+                    {formErrors.project && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.project}</span>}
                   </div>
                 )}
 
-                {/* Statement / Notes */}
+                {/* AI Tools (New Interns Only) */}
+                {formData.internStatus === 'new' && (
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>What AI tools have you used? *</label>
+                    <input
+                      type="text"
+                      name="aiToolsUsed"
+                      value={formData.aiToolsUsed || ''}
+                      onChange={handleFormChange}
+                      placeholder="e.g. ChatGPT, GitHub Copilot, Claude"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--apex-bg-surface-elevated)',
+                        border: formErrors.aiToolsUsed ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
+                        color: 'var(--apex-text-white)',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                    {formErrors.aiToolsUsed && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.aiToolsUsed}</span>}
+                  </div>
+                )}
+
+                {/* Profile Photo Upload */}
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Why do you want to join this project? (Optional)</label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleFormChange}
-                    rows="3"
-                    placeholder="Briefly tell us about your experience or motivation..."
+                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Profile Photo *</label>
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
                     style={{
-                      width: '100%',
-                      padding: '10px 14px',
+                      border: formErrors.photo ? '2px dashed var(--apex-primary)' : (isDragActive ? '2px dashed var(--apex-primary)' : '2px dashed var(--apex-border-dark)'),
                       borderRadius: 'var(--radius-sm)',
-                      backgroundColor: 'var(--apex-bg-surface-elevated)',
-                      border: '1px solid var(--apex-border-dark)',
-                      color: 'var(--apex-text-white)',
-                      fontSize: '0.9rem',
-                      resize: 'vertical'
+                      backgroundColor: isDragActive ? 'rgba(255, 90, 20, 0.05)' : 'var(--apex-bg-surface-elevated)',
+                      padding: '16px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
                     }}
-                  />
+                    onClick={() => document.getElementById('photo-upload-input').click()}
+                  >
+                    <input
+                      id="photo-upload-input"
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleFileChange}
+                    />
+                    {formData.photo ? (
+                      <div style={{ color: 'var(--apex-text-white)', fontSize: '0.85rem' }}>
+                        Selected: <strong>{formData.photo.name}</strong>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--apex-primary)', marginTop: '4px' }}>Click/drag to change</div>
+                      </div>
+                    ) : (
+                      <div style={{ color: 'var(--apex-text-muted)', fontSize: '0.8rem' }}>
+                        Drag & drop photo here or <span style={{ color: 'var(--apex-primary)', fontWeight: '600' }}>browse</span>
+                      </div>
+                    )}
+                  </div>
+                  {formErrors.photo && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.photo}</span>}
                 </div>
+
+                {/* Statement / Notes (New Only) */}
+                {formData.internStatus === 'new' && (
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Why do you want to join this project? (Optional)</label>
+                    <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleFormChange}
+                      rows="3"
+                      placeholder="Briefly tell us about your experience or motivation..."
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--apex-bg-surface-elevated)',
+                        border: '1px solid var(--apex-border-dark)',
+                        color: 'var(--apex-text-white)',
+                        fontSize: '0.9rem',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+                )}
 
                 <button
                   type="submit"

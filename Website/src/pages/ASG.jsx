@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Rocket, Compass, Briefcase, Wrench, CheckCircle } from 'lucide-react';
@@ -17,19 +18,74 @@ export default function ASG() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     role: '', // founders | mentors | investors | service-providers
-    linkedin: '',
-    company: ''
+    socialLinks: [''],
+    company: '',
+    companyWebsite: '',
+    description: '',
+    photo: null,
+    otherRoleDetails: ''
   });
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleSocialLinkChange = (index, value) => {
+    const newLinks = [...formData.socialLinks];
+    newLinks[index] = value;
+    setFormData(prev => ({ ...prev, socialLinks: newLinks }));
+    if (formErrors.socialLinks) {
+      setFormErrors(prev => ({ ...prev, socialLinks: '' }));
+    }
+  };
+
+  const addSocialLink = () => {
+    setFormData(prev => ({ ...prev, socialLinks: [...prev.socialLinks, ''] }));
+  };
+
+  const removeSocialLink = (index) => {
+    const newLinks = formData.socialLinks.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, socialLinks: newLinks.length ? newLinks : [''] }));
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFormData(prev => ({ ...prev, photo: e.dataTransfer.files[0] }));
+      if (formErrors.photo) {
+        setFormErrors(prev => ({ ...prev, photo: '' }));
+      }
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData(prev => ({ ...prev, photo: e.target.files[0] }));
+      if (formErrors.photo) {
+        setFormErrors(prev => ({ ...prev, photo: '' }));
+      }
     }
   };
 
@@ -41,9 +97,15 @@ export default function ASG() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = 'Valid email is required';
     }
+    if (!formData.phone.trim()) errors.phone = 'Phone Number is required';
     if (!formData.role) errors.role = 'Ecosystem role is required';
-    if (!formData.linkedin.trim()) errors.linkedin = 'LinkedIn Profile link is required';
     if (!formData.company.trim()) errors.company = 'Company / Affiliation is required';
+    if (!formData.description.trim()) errors.description = 'Short Description is required';
+    if (!formData.photo) errors.photo = 'Profile Photo / Company Logo is required';
+    if (formData.role === 'other' && !formData.otherRoleDetails?.trim()) {
+      errors.otherRoleDetails = 'Tell us about your role is required';
+    }
+    // Social Media Links are optional – no validation required
     return errors;
   };
 
@@ -55,17 +117,53 @@ export default function ASG() {
       return;
     }
     setIsSubmitting(true);
-    setTimeout(() => {
+
+    const saveApplication = (photoBase64) => {
+      const newApp = {
+        id: Date.now(),
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        otherRoleDetails: formData.otherRoleDetails || '',
+        company: formData.company,
+        companyWebsite: formData.companyWebsite,
+        socialLinks: formData.socialLinks.filter(l => l.trim()),
+        description: formData.description,
+        photo: photoBase64 || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
+        status: "Pending",
+        date: new Date().toISOString().split("T")[0]
+      };
+
+      const existingApps = JSON.parse(localStorage.getItem("asg_listing_applications") || "[]");
+      existingApps.push(newApp);
+      localStorage.setItem("asg_listing_applications", JSON.stringify(existingApps));
+
       setIsSubmitting(false);
       setSubmitSuccess(true);
       setFormData({
         name: '',
         email: '',
+        phone: '',
         role: '',
-        linkedin: '',
-        company: ''
+        socialLinks: [''],
+        company: '',
+        companyWebsite: '',
+        description: '',
+        photo: null,
+        otherRoleDetails: ''
       });
-    }, 1500);
+    };
+
+    if (formData.photo instanceof File) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        saveApplication(event.target?.result);
+      };
+      reader.readAsDataURL(formData.photo);
+    } else {
+      saveApplication(null);
+    }
   };
 
   const pillars = [
@@ -120,7 +218,7 @@ export default function ASG() {
       </section>
 
       {/* Pillars Section */}
-      <section className="section" id="pillars" ref={pillarsAnim.ref} className={`section ${pillarsAnim.className}`}>
+      <section id="pillars" ref={pillarsAnim.ref} className={`section ${pillarsAnim.className}`}>
         <div className="container">
           <SectionHeading
             overline="Community Pillars"
@@ -159,7 +257,7 @@ export default function ASG() {
                   <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
                     <div style={{ marginTop: '4px' }}>{p.icon}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
                         <h4 className="heading-sm" style={{ marginBottom: '4px', color: 'var(--apex-text-white)' }}>{p.title}</h4>
                         <span style={{ fontSize: '0.75rem', color: 'var(--apex-primary)', fontWeight: '700' }}>
                           View Listings →
@@ -205,7 +303,7 @@ export default function ASG() {
                 <CheckCircle size={48} color="var(--apex-primary)" />
                 <h4 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--apex-text-white)' }}>Listing Application Received!</h4>
                 <p className="body-sm" style={{ color: 'var(--apex-text-muted)', maxWidth: '400px' }}>
-                  Thank you! Our community admins will review your LinkedIn profile and list your profile details on the directory.
+                  Thank you! Our community admins will review your profile details and list your profile details on the directory.
                 </p>
                 <button
                   onClick={() => setSubmitSuccess(false)}
@@ -225,6 +323,8 @@ export default function ASG() {
               </div>
             ) : (
               <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                
+                {/* Name & Email Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }} className="grid-2">
                   {/* Name */}
                   <div>
@@ -271,7 +371,30 @@ export default function ASG() {
                   </div>
                 </div>
 
+                {/* Phone & Role Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }} className="grid-2">
+                  {/* Phone */}
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Phone Number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleFormChange}
+                      placeholder="e.g. 9876543210"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--apex-bg-surface-elevated)',
+                        border: formErrors.phone ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
+                        color: 'var(--apex-text-white)',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                    {formErrors.phone && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.phone}</span>}
+                  </div>
+
                   {/* Role Dropdown */}
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Community Node Role *</label>
@@ -281,13 +404,15 @@ export default function ASG() {
                         formData.role === 'mentors' ? 'Mentor' :
                         formData.role === 'investors' ? 'Investor' :
                         formData.role === 'service-providers' ? 'Service Provider' :
+                        formData.role === 'other' ? 'Other' :
                         'Select role'
                       }
                       options={[
                         { value: 'founders', label: 'Founder' },
                         { value: 'mentors', label: 'Mentor' },
                         { value: 'investors', label: 'Investor' },
-                        { value: 'service-providers', label: 'Service Provider' }
+                        { value: 'service-providers', label: 'Service Provider' },
+                        { value: 'other', label: 'Other' }
                       ]}
                       onSelect={(value) => {
                         setFormData((prev) => ({ ...prev, role: value }));
@@ -299,7 +424,35 @@ export default function ASG() {
                     />
                     {formErrors.role && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.role}</span>}
                   </div>
+                </div>
 
+                {/* Custom Role Details - Visible only when "Other" is selected */}
+                {formData.role === 'other' && (
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Tell us about your role *</label>
+                    <textarea
+                      name="otherRoleDetails"
+                      value={formData.otherRoleDetails}
+                      onChange={handleFormChange}
+                      rows="3"
+                      placeholder="Please specify your startup role or affiliation..."
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--apex-bg-surface-elevated)',
+                        border: formErrors.otherRoleDetails ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
+                        color: 'var(--apex-text-white)',
+                        fontSize: '0.9rem',
+                        resize: 'vertical'
+                      }}
+                    />
+                    {formErrors.otherRoleDetails && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.otherRoleDetails}</span>}
+                  </div>
+                )}
+
+                {/* Company & Website Row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }} className="grid-2">
                   {/* Company / Affiliation */}
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Company / Affiliation *</label>
@@ -321,28 +474,153 @@ export default function ASG() {
                     />
                     {formErrors.company && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.company}</span>}
                   </div>
+
+                  {/* Company Website Link */}
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Company Website Link</label>
+                    <input
+                      type="url"
+                      name="companyWebsite"
+                      value={formData.companyWebsite}
+                      onChange={handleFormChange}
+                      placeholder="https://company.com"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--apex-bg-surface-elevated)',
+                        border: '1px solid var(--apex-border-dark)',
+                        color: 'var(--apex-text-white)',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
                 </div>
 
-                {/* LinkedIn link */}
+                {/* Dynamic Social Media Links */}
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>LinkedIn Profile Link *</label>
-                  <input
-                    type="url"
-                    name="linkedin"
-                    value={formData.linkedin}
+                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Social Media Links <span style={{ color: 'var(--apex-text-muted)', fontWeight: 400 }}>(Optional)</span></label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {formData.socialLinks.map((link, index) => (
+                      <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="url"
+                          value={link}
+                          onChange={(e) => handleSocialLinkChange(index, e.target.value)}
+                          placeholder="e.g. https://linkedin.com/in/username"
+                          style={{
+                            flex: 1,
+                            padding: '10px 14px',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: 'var(--apex-bg-surface-elevated)',
+                            border: formErrors.socialLinks ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
+                            color: 'var(--apex-text-white)',
+                            fontSize: '0.9rem'
+                          }}
+                        />
+                        {formData.socialLinks.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeSocialLink(index)}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              color: '#ef4444',
+                              border: 'none',
+                              padding: '10px 14px',
+                              borderRadius: 'var(--radius-sm)',
+                              cursor: 'pointer',
+                              fontWeight: '650',
+                              fontSize: '0.85rem'
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addSocialLink}
+                    style={{
+                      background: 'rgba(255, 107, 0, 0.1)',
+                      color: 'var(--apex-primary)',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: 'var(--radius-full)',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '0.8rem',
+                      marginTop: '8px',
+                      display: 'inline-block'
+                    }}
+                  >
+                    + Add Another Social Link
+                  </button>
+                  {formErrors.socialLinks && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.socialLinks}</span>}
+                </div>
+
+                {/* Short Description */}
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Short Description *</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
                     onChange={handleFormChange}
-                    placeholder="https://linkedin.com/in/username"
+                    rows="3"
+                    placeholder="Briefly describe your business, role, or area of focus..."
                     style={{
                       width: '100%',
                       padding: '10px 14px',
                       borderRadius: 'var(--radius-sm)',
                       backgroundColor: 'var(--apex-bg-surface-elevated)',
-                      border: formErrors.linkedin ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
+                      border: formErrors.description ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
                       color: 'var(--apex-text-white)',
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      resize: 'vertical'
                     }}
                   />
-                  {formErrors.linkedin && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.linkedin}</span>}
+                  {formErrors.description && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.description}</span>}
+                </div>
+
+                {/* Photo Upload Drag & Drop Zone */}
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Profile Photo / Company Logo *</label>
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                    style={{
+                      border: formErrors.photo ? '2px dashed var(--apex-primary)' : (isDragActive ? '2px dashed var(--apex-primary)' : '2px dashed var(--apex-border-dark)'),
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: isDragActive ? 'rgba(255, 90, 20, 0.05)' : 'var(--apex-bg-surface-elevated)',
+                      padding: '20px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onClick={() => document.getElementById('photo-upload-input').click()}
+                  >
+                    <input
+                      id="photo-upload-input"
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleFileChange}
+                    />
+                    {formData.photo ? (
+                      <div style={{ color: 'var(--apex-text-white)', fontSize: '0.85rem' }}>
+                        Selected: <strong>{formData.photo.name}</strong>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--apex-primary)', marginTop: '4px' }}>Click or drag to change</div>
+                      </div>
+                    ) : (
+                      <div style={{ color: 'var(--apex-text-muted)', fontSize: '0.85rem' }}>
+                        Drag & drop photo here or <span style={{ color: 'var(--apex-primary)', fontWeight: '600' }}>browse</span>
+                      </div>
+                    )}
+                  </div>
+                  {formErrors.photo && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.photo}</span>}
                 </div>
 
                 <button
@@ -356,7 +634,7 @@ export default function ASG() {
                     padding: '12px 28px',
                     fontWeight: '700',
                     cursor: 'pointer',
-                    marginTop: '6px',
+                    marginTop: '10px',
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
@@ -374,8 +652,9 @@ export default function ASG() {
 
 
       {/* Recurrent Programs List (Styling fix for light mode) */}
-      <section className="section" ref={programsAnim.ref} className={`section ${programsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
+      <section ref={programsAnim.ref} className={`section ${programsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
         <div className="container">
+          
           <SectionHeading
             overline="Ecosystem Operations"
             title="Ecosystem Programs & Rituals"

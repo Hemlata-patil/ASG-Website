@@ -4,7 +4,6 @@ import logoImg from "../../assets/logo.png";
 import {
   LayoutDashboard,
   CalendarDays,
-  CalendarCheck,
   GraduationCap,
   Images,
   FileText,
@@ -14,16 +13,21 @@ import {
   UserCircle,
   LogOut,
   X,
+  Handshake,
+  Award,
+  Milestone,
 } from "lucide-react";
 
 const NAV = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Events", icon: CalendarDays, path: "/dashboard/events" },
-  { label: "Attendance", icon: CalendarCheck, path: "/dashboard/attendance" },
   { label: "AAL", icon: GraduationCap, path: "/dashboard/aal" },
   { label: "Gallery", icon: Images, path: "/dashboard/gallery" },
   { label: "Blogs", icon: FileText, path: "/dashboard/blogs" },
   { label: "Community Members", icon: Users, path: "/dashboard/community" },
+  { label: "Industry Partners", icon: Handshake, path: "/dashboard/partners" },
+  { label: "Industry Experts", icon: Award, path: "/dashboard/experts" },
+  { label: "ASG Initiatives", icon: Milestone, path: "/dashboard/initiatives" },
   { label: "Contact Queries", icon: Mail, path: "/dashboard/queries" },
 ];
 

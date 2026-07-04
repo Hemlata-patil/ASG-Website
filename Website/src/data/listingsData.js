@@ -5,28 +5,44 @@ export const asgMembers = {
       name: "Rajesh Patil",
       company: "AgriScale AI",
       role: "Founder & CEO",
-      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43210",
+      companyWebsite: "https://agriscale.ai",
+      socialLinks: ["https://linkedin.com/in/rajeshpatil", "https://twitter.com/rajesh_agri"],
+      description: "Building AI-powered sorting and grading solutions for regional banana and cotton farmers."
     },
     {
       id: "f2",
       name: "Snehal Choudhary",
       company: "JalShop",
       role: "Co-founder",
-      photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43211",
+      companyWebsite: "https://jalshop.in",
+      socialLinks: ["https://linkedin.com/in/snehalchoudhary"],
+      description: "Hyperlocal e-commerce platform connecting Jalgaon retail merchants to local households."
     },
     {
       id: "f3",
       name: "Amit Mahajan",
       company: "FinUp Local",
       role: "Founder",
-      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43212",
+      companyWebsite: "https://finuplocal.com",
+      socialLinks: ["https://linkedin.com/in/amitmahajan", "https://github.com/amitfintech"],
+      description: "Simplifying micro-credit accessibility and digital ledger bookkeeping for rural shop owners."
     },
     {
       id: "f4",
       name: "Priya Sonawane",
       company: "EduSphere",
       role: "Founder & CEO",
-      photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43213",
+      companyWebsite: "https://edusphere.co.in",
+      socialLinks: ["https://linkedin.com/in/priyasonawane"],
+      description: "Providing interactive STEM curriculum and robotics kits to rural schools across North Maharashtra."
     }
   ],
   mentors: [
@@ -35,28 +51,44 @@ export const asgMembers = {
       name: "Dr. Sandeep Joshi",
       company: "IMR Institute",
       role: "IP & Academic Advisor",
-      photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43220",
+      companyWebsite: "https://imr.edu",
+      socialLinks: ["https://linkedin.com/in/sandeepjoshi"],
+      description: "20+ years in academic research. Assisting student squads in patent filing and research publication."
     },
     {
       id: "m2",
       name: "Milind Kulkarni",
       company: "Tech solutions",
       role: "Senior Software Architect",
-      photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43221",
+      companyWebsite: "https://techsolutions.com",
+      socialLinks: ["https://linkedin.com/in/milindkulkarni", "https://github.com/milindk"],
+      description: "Guiding squads on cloud scalability, microservices architecture, and robust database design."
     },
     {
       id: "m3",
       name: "Anjali Sharma",
       company: "GTM Growth",
       role: "Marketing Strategist",
-      photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43222",
+      companyWebsite: "https://gtmgrowth.com",
+      socialLinks: ["https://linkedin.com/in/anjalisharma"],
+      description: "Helping early stage startups define their customer personas, SEO strategy, and GTM pipelines."
     },
     {
       id: "m4",
       name: "Rohan Deshmukh",
       company: "ScaleUp Advisors",
       role: "GTM & Sales Expert",
-      photo: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43223",
+      companyWebsite: "https://scaleupadvisors.com",
+      socialLinks: ["https://linkedin.com/in/rohandeshmukh"],
+      description: "Specializes in B2B enterprise sales, corporate partnerships, and pricing model optimization."
     }
   ],
   investors: [
@@ -65,28 +97,44 @@ export const asgMembers = {
       name: "Jalgaon Angel Syndicate",
       company: "Ecosystem Fund",
       role: "Micro-VC Syndicate",
-      photo: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43230",
+      companyWebsite: "https://jalgaonangels.com",
+      socialLinks: ["https://linkedin.com/company/jalgaon-angels"],
+      description: "Local business leaders pooling capital to back promising tech startups in North Maharashtra."
     },
     {
       id: "i2",
       name: "North Maharashtra Micro-VC",
       company: "Seed Fund",
       role: "Pre-seed Angel Network",
-      photo: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43231",
+      companyWebsite: "https://nmmlabs.com",
+      socialLinks: ["https://linkedin.com/company/nmmvc"],
+      description: "Early-stage fund looking for tech-enabled businesses solving regional infrastructure problems."
     },
     {
       id: "i3",
       name: "Karan Oswal",
       company: "Oswal Ventures",
       role: "Private Investor",
-      photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43232",
+      companyWebsite: "https://oswalventures.com",
+      socialLinks: ["https://linkedin.com/in/karanoswal"],
+      description: "Angel investor focusing on retail tech, logistics, and consumer internet businesses."
     },
     {
       id: "i4",
       name: "Mehta Venture Partners",
       company: "Seed Investors",
       role: "Angel Group",
-      photo: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43233",
+      companyWebsite: "https://mehtaventures.com",
+      socialLinks: ["https://linkedin.com/company/mehta-ventures"],
+      description: "Family office looking to support scalable software prototypes and tech services startups."
     }
   ],
   "service-providers": [
@@ -95,28 +143,44 @@ export const asgMembers = {
       name: "Patil & Associates",
       company: "Fin/CA",
       role: "Corporate & CA Services",
-      photo: "https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43240",
+      companyWebsite: "https://patilca.com",
+      socialLinks: ["https://linkedin.com/company/patil-ca"],
+      description: "Assisting startups with company incorporation, tax compliance, and financial auditing."
     },
     {
       id: "s2",
       name: "Vikas Legal Firm",
       company: "Legal",
       role: "IP & Startup Registration",
-      photo: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43241",
+      companyWebsite: "https://vikaslegal.com",
+      socialLinks: ["https://linkedin.com/company/vikas-legal"],
+      description: "Specialized in trademark registration, founder agreements, and intellectual property protection."
     },
     {
       id: "s3",
       name: "Apex Cloud Consultants",
       company: "Tech Services",
       role: "AWS & Devops Partner",
-      photo: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43242",
+      companyWebsite: "https://apexcloud.co",
+      socialLinks: ["https://linkedin.com/company/apex-cloud"],
+      description: "Providing AWS credits, cloud architecture setup, and automated CI/CD deployment pipelines."
     },
     {
       id: "s4",
       name: "PixelPerfect Agency",
       company: "Design",
       role: "UI/UX & Branding Agency",
-      photo: "https://images.unsplash.com/photo-1542744094-3a31f103e35f?q=80&w=250&auto=format&fit=crop"
+      photo: "https://images.unsplash.com/photo-1542744094-3a31f103e35f?q=80&w=250&auto=format&fit=crop",
+      phone: "+91 98765 43243",
+      companyWebsite: "https://pixelperfect.design",
+      socialLinks: ["https://linkedin.com/company/pixelperfect"],
+      description: "Creating premium digital experiences, brand guidelines, and high-converting landing pages."
     }
   ]
 };

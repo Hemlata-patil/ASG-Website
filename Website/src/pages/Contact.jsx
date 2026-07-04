@@ -12,11 +12,13 @@ export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     message: '',
     role: initialRole
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     if (initialRole) {
@@ -27,11 +29,26 @@ export default function Contact() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simulate API Formspree call
+    const errors = {};
+    if (!formData.name.trim()) errors.name = 'Full Name is required';
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email';
+    }
+    if (!formData.phone.trim()) errors.phone = 'Mobile Number is required';
+    if (!formData.message.trim()) errors.message = 'Message is required';
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
     console.log("Form Submitted:", formData);
     setIsSubmitted(true);
   };
@@ -147,7 +164,7 @@ export default function Contact() {
               {!isSubmitted ? (
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <div>
-                    <label style={{ fontSize: '0.85rem', color: 'var(--apex-text-muted)', display: 'block', marginBottom: '6px' }}>Name</label>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--apex-text-muted)', display: 'block', marginBottom: '6px' }}>Name *</label>
                     <input
                       type="text"
                       name="name"
@@ -158,17 +175,18 @@ export default function Contact() {
                       style={{
                         width: '100%',
                         backgroundColor: 'var(--apex-bg-base)',
-                        border: '1px solid var(--apex-border-dark)',
+                        border: formErrors.name ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
                         borderRadius: 'var(--radius-sm)',
                         padding: '10px 14px',
                         color: '#fff',
                         outline: 'none'
                       }}
                     />
+                    {formErrors.name && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.name}</span>}
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.85rem', color: 'var(--apex-text-muted)', display: 'block', marginBottom: '6px' }}>Email</label>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--apex-text-muted)', display: 'block', marginBottom: '6px' }}>Email *</label>
                     <input
                       type="email"
                       name="email"
@@ -179,19 +197,40 @@ export default function Contact() {
                       style={{
                         width: '100%',
                         backgroundColor: 'var(--apex-bg-base)',
-                        border: '1px solid var(--apex-border-dark)',
+                        border: formErrors.email ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
                         borderRadius: 'var(--radius-sm)',
                         padding: '10px 14px',
                         color: '#fff',
                         outline: 'none'
                       }}
                     />
+                    {formErrors.email && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.email}</span>}
                   </div>
 
-
+                  <div>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--apex-text-muted)', display: 'block', marginBottom: '6px' }}>Mobile Number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="Your Mobile Number"
+                      style={{
+                        width: '100%',
+                        backgroundColor: 'var(--apex-bg-base)',
+                        border: formErrors.phone ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '10px 14px',
+                        color: '#fff',
+                        outline: 'none'
+                      }}
+                    />
+                    {formErrors.phone && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.phone}</span>}
+                  </div>
 
                   <div>
-                    <label style={{ fontSize: '0.85rem', color: 'var(--apex-text-muted)', display: 'block', marginBottom: '6px' }}>Message</label>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--apex-text-muted)', display: 'block', marginBottom: '6px' }}>Message *</label>
                     <textarea
                       name="message"
                       rows="4"
@@ -202,7 +241,7 @@ export default function Contact() {
                       style={{
                         width: '100%',
                         backgroundColor: 'var(--apex-bg-base)',
-                        border: '1px solid var(--apex-border-dark)',
+                        border: formErrors.message ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
                         borderRadius: 'var(--radius-sm)',
                         padding: '10px 14px',
                         color: '#fff',
@@ -210,6 +249,7 @@ export default function Contact() {
                         resize: 'vertical'
                       }}
                     />
+                    {formErrors.message && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.message}</span>}
                   </div>
 
                   <button
@@ -239,7 +279,7 @@ export default function Contact() {
                     Your inquiry has been logged successfully. Our organizing committee will get back to you within 2 business days.
                   </p>
                   <button
-                    onClick={() => { setIsSubmitted(false); setFormData({ name: '', email: '', message: '', role: 'Student' }); }}
+                    onClick={() => { setIsSubmitted(false); setFormData({ name: '', email: '', phone: '', message: '', role: 'Student' }); setFormErrors({}); }}
                     style={{
                       backgroundColor: 'transparent',
                       border: '1.5px solid var(--apex-primary)',

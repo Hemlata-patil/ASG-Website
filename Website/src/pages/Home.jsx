@@ -306,7 +306,7 @@ export default function Home() {
       </section>
 
       {/* 3. DUAL SPLIT SECTION */}
-      <section className="section" ref={splitAnim.ref} className={`section ${splitAnim.className}`}>
+      <section ref={splitAnim.ref} className={`section ${splitAnim.className}`}>
         <div className="container">
           <SectionHeading
             overline="Dual Programs"
@@ -390,7 +390,7 @@ export default function Home() {
       </section>
 
       {/* 4. UPCOMING EVENTS PREVIEW (Light mode styling fix) */}
-      <section className="section" ref={eventsAnim.ref} className={`section ${eventsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
+      <section ref={eventsAnim.ref} className={`section ${eventsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'var(--space-5)' }}>
             <SectionHeading
@@ -450,15 +450,9 @@ export default function Home() {
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', color: 'var(--apex-text-muted)' }}>
                       <MapPin size={14} /> {item.venue}
                     </span>
-                    {item.status === 'upcoming' && item.registrationUrl ? (
-                      <a href={item.registrationUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--apex-primary)', fontWeight: '600', fontSize: '0.9rem' }}>
-                        RSVP / Register →
-                      </a>
-                    ) : (
-                      <Link to="/events" style={{ color: 'var(--apex-primary)', fontWeight: '600', fontSize: '0.9rem' }}>
-                        View Details →
-                      </Link>
-                    )}
+                    <Link to="/events" style={{ color: 'var(--apex-primary)', fontWeight: '600', fontSize: '0.9rem' }}>
+                      View Details →
+                    </Link>
                   </div>
                 </div>
               ));
@@ -468,7 +462,7 @@ export default function Home() {
       </section>
 
       {/* 5. GALLERY TIMELINE PREVIEW */}
-      <section className="section" ref={galleryAnim.ref} className={`section ${galleryAnim.className}`}>
+      <section ref={galleryAnim.ref} className={`section ${galleryAnim.className}`}>
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'var(--space-5)' }}>
             <SectionHeading
@@ -638,7 +632,7 @@ export default function Home() {
       </section>
 
       {/* 6. TESTIMONIALS SECTION (Light mode styling fix) */}
-      <section className="section" ref={testimonialsAnim.ref} className={`section ${testimonialsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
+      <section ref={testimonialsAnim.ref} className={`section ${testimonialsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
         <div className="container">
           <SectionHeading
             overline="What ASG Members Say"

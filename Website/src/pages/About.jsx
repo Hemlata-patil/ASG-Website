@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PageWrapper from '../components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '../components/common/SectionHeading/SectionHeading';
 import { team } from '../data/team';
@@ -7,8 +7,7 @@ import simplesphereLogo from '../assets/simplesphere.png';
 import aspireyaLogo from '../assets/aspireya.png';
 import logicPointLogo from '../assets/logic_point.png';
 import utLogo from '../assets/ut_logo.png';
-
-
+import { partnersData } from '../data/partners';
 
 export default function About() {
   const originAnim = useScrollAnimation();
@@ -16,12 +15,20 @@ export default function About() {
   const teamAnim = useScrollAnimation();
   const partnersAnim = useScrollAnimation();
 
-  const partnerLogos = [
-    { name: "Jalgaon Tech Corp", letters: "JTC" },
-    { name: "Kulkarni Investments", letters: "KI" },
-    { name: "IMR Institute", letters: "IMR" },
-    { name: "North Maharashtra Labs", letters: "NML" }
-  ];
+  const [partners, setPartners] = useState(() => {
+    const local = localStorage.getItem('asg_partners');
+    if (local) {
+      try {
+        return JSON.parse(local);
+      } catch (e) {
+        return partnersData;
+      }
+    }
+    localStorage.setItem('asg_partners', JSON.stringify(partnersData));
+    return partnersData;
+  });
+
+  const activePartners = partners.filter(p => p.status === 'Active' && p.showOnWebsite);
 
   return (
     <PageWrapper>
@@ -105,7 +112,6 @@ export default function About() {
         </div>
       </section>
 
-
       {/* Redesigned Industry Partners Section with Infinite Scroll Marquee */}
       <section ref={partnersAnim.ref} className={`section ${partnersAnim.className}`} style={{ backgroundColor: 'transparent' }}>
         <div className="container">
@@ -172,6 +178,68 @@ export default function About() {
                 <img src={aspireyaLogo} alt="Aspireya" />
               </div>
             </div>
+          </div>
+
+          {/* Active Partners Cards Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: 'var(--space-4)',
+            marginTop: 'var(--space-5)'
+          }}>
+            {activePartners.map((partner) => (
+              <div
+                key={partner.id}
+                style={{
+                  backgroundColor: 'var(--apex-bg-surface)',
+                  border: '1px solid var(--apex-border-dark)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: 'var(--space-4)',
+                  boxShadow: 'var(--shadow-sm)',
+                  transition: 'all var(--transition-base)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--apex-primary)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--apex-border-dark)';
+                  e.currentTarget.style.transform = 'none';
+                }}
+              >
+                <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '2rem' }}>{partner.logo}</div>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    fontWeight: '700',
+                    color: 'var(--apex-primary)',
+                    backgroundColor: 'rgba(255,107,0,0.1)',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-sm)'
+                  }}>
+                    {partner.category}
+                  </span>
+                </div>
+                <h4 className="heading-sm" style={{ fontSize: '1.1rem', marginBottom: '8px', color: '#fff' }}>{partner.name}</h4>
+                <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginBottom: '12px', lineHeight: '1.4' }}>{partner.description}</p>
+                <a
+                  href={partner.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    color: 'var(--apex-primary)',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  Visit Website ↗
+                </a>
+              </div>
+            ))}
           </div>
         </div>
       </section>

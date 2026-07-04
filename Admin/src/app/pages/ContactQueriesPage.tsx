@@ -8,6 +8,7 @@ interface QueryItem {
   id: number;
   name: string;
   email: string;
+  phone?: string;
   subject: string;
   message: string;
   date: string;
@@ -15,9 +16,9 @@ interface QueryItem {
 }
 
 const INITIAL: QueryItem[] = [
-  { id: 1, name: "Rajesh Patil", email: "rajesh.patil@outlook.com", subject: "Sponsorship for college fest", message: "Hello team, we are organizing a national level hackathon at our campus next month and would love to partner with ASG as our ecosystem sponsor. Please share the relevant contact point.", date: "2026-06-23", status: "Pending" },
-  { id: 2, name: "Sneha Chaudhari", email: "sneha.c@gmail.com", subject: "Incubation application query", message: "Hi, I have a prototype ready for an agri-tech IoT device. What is the process to apply for incubation under the upcoming APEX cohort? Is there an online submission link?", date: "2026-06-22", status: "Pending" },
-  { id: 3, name: "Vikram Deshmukh", email: "vikram@deshmukhventures.in", subject: "Investor partnership", message: "Enjoyed reading the Jalgaon Ecosystem Blueprint. I represent a seed fund interested in matching regional student startups with micro-VCs. Let us schedule a call.", date: "2026-06-20", status: "Resolved" }
+  { id: 1, name: "Rajesh Patil", email: "rajesh.patil@outlook.com", phone: "+91 98765 43230", subject: "Sponsorship for college fest", message: "Hello team, we are organizing a national level hackathon at our campus next month and would love to partner with ASG as our ecosystem sponsor. Please share the relevant contact point.", date: "2026-06-23", status: "Pending" },
+  { id: 2, name: "Sneha Chaudhari", email: "sneha.c@gmail.com", phone: "+91 98765 43231", subject: "Incubation application query", message: "Hi, I have a prototype ready for an agri-tech IoT device. What is the process to apply for incubation under the upcoming APEX cohort? Is there an online submission link?", date: "2026-06-22", status: "Pending" },
+  { id: 3, name: "Vikram Deshmukh", email: "vikram@deshmukhventures.in", phone: "+91 98765 43232", subject: "Investor partnership", message: "Enjoyed reading the Jalgaon Ecosystem Blueprint. I represent a seed fund interested in matching regional student startups with micro-VCs. Let us schedule a call.", date: "2026-06-20", status: "Resolved" }
 ];
 
 export default function ContactQueriesPage() {
@@ -193,6 +194,11 @@ export default function ContactQueriesPage() {
                   <div style={{ fontSize: "14px", fontWeight: 600, color: "#0d0d0d" }}>
                     {selectedQuery.name} (<a href={`mailto:${selectedQuery.email}`} style={{ color: "#FF6B00", textDecoration: "none" }}>{selectedQuery.email}</a>)
                   </div>
+                  {selectedQuery.phone && (
+                    <div style={{ fontSize: "13px", color: "#555", marginTop: "2.5px", fontWeight: 500 }}>
+                      📞 Mobile: {selectedQuery.phone}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ fontSize: "11px", textTransform: "uppercase", fontWeight: 600, color: "#aaa" }}>Subject</label>

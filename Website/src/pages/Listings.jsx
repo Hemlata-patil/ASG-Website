@@ -72,21 +72,77 @@ export default function Listings() {
   // Get data to display
   let displayData = [];
   if (currentType === 'interns') {
-    if (selectedProject === 'all') {
-      // Flatten all interns
-      Object.keys(aalInterns).forEach(projId => {
-        const projName = domains.find(d => d.id === projId)?.name || projId;
-        aalInterns[projId].forEach(intern => {
-          displayData.push({ ...intern, project: projName, projectId: projId });
-        });
-      });
+    // Try to load approved interns from admin localStorage first
+    let approvedInterns = [];
+    try {
+      const raw = localStorage.getItem("asg_aal_items");
+      if (raw) {
+        const allItems = JSON.parse(raw);
+        approvedInterns = allItems.filter(i => i.type === "Intern" && i.status === "Active");
+      }
+    } catch { /* ignore */ }
+
+    const sourceInterns = approvedInterns.length > 0 ? approvedInterns : null;
+
+    if (sourceInterns) {
+      // Group dynamic interns by domain as the project dimension
+      if (selectedProject === 'all') {
+        displayData = sourceInterns.map(intern => ({
+          ...intern,
+          project: intern.domain || 'General',
+          projectId: (intern.domain || 'general').toLowerCase().replace(/\s+/g, '-')
+        }));
+      } else {
+        displayData = sourceInterns
+          .filter(intern => {
+            const projId = (intern.domain || 'general').toLowerCase().replace(/\s+/g, '-');
+            return projId === selectedProject;
+          })
+          .map(intern => ({
+            ...intern,
+            project: intern.domain || 'General',
+            projectId: selectedProject
+          }));
+      }
     } else {
-      const projName = domains.find(d => d.id === selectedProject)?.name || selectedProject;
-      const internsForProj = aalInterns[selectedProject] || [];
-      displayData = internsForProj.map(intern => ({ ...intern, project: projName, projectId: selectedProject }));
+      // Fallback to static data
+      if (selectedProject === 'all') {
+        Object.keys(aalInterns).forEach(projId => {
+          const projName = domains.find(d => d.id === projId)?.name || projId;
+          aalInterns[projId].forEach(intern => {
+            displayData.push({ ...intern, project: projName, projectId: projId });
+          });
+        });
+      } else {
+        const projName = domains.find(d => d.id === selectedProject)?.name || selectedProject;
+        const internsForProj = aalInterns[selectedProject] || [];
+        displayData = internsForProj.map(intern => ({ ...intern, project: projName, projectId: selectedProject }));
+      }
     }
   } else {
-    displayData = asgMembers[currentType] || [];
+    const local = localStorage.getItem("asg_members");
+    let membersList = [];
+    if (local) {
+      try {
+        membersList = JSON.parse(local);
+      } catch (e) {
+        membersList = [];
+      }
+    }
+    
+    if (membersList && membersList.length > 0) {
+      const typeMapping = {
+        'founders': 'Founder',
+        'mentors': 'Mentor',
+        'investors': 'Investor',
+        'service-providers': 'Service Provider',
+        'other': 'Other'
+      };
+      const adminType = typeMapping[currentType];
+      displayData = membersList.filter(m => m.type === adminType && m.status === 'Active');
+    } else {
+      displayData = asgMembers[currentType] || [];
+    }
   }
 
   // Resolve currently selected project name
@@ -232,8 +288,65 @@ export default function Listings() {
                         {member.role}
                       </p>
                       <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0 }}>
-                        {member.company}
+                        {member.companyWebsite ? (
+                          <a href={member.companyWebsite} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--apex-text-white)', textDecoration: 'underline', transition: 'color var(--transition-fast)' }} onMouseEnter={(e) => e.target.style.color = 'var(--apex-primary)'} onMouseLeave={(e) => e.target.style.color = 'var(--apex-text-white)'}>
+                            {member.company} 🔗
+                          </a>
+                        ) : member.company}
                       </p>
+                      {member.phone && (
+                        <p className="body-sm" style={{ color: 'var(--apex-text-muted)', fontSize: '0.8rem', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                          <span>📞</span> {member.phone}
+                        </p>
+                      )}
+                      {member.description && (
+                        <p className="body-sm" style={{ color: 'var(--apex-text-muted)', fontSize: '0.8rem', marginTop: '8px', fontStyle: 'italic', maxWidth: '240px', lineHeight: '1.4' }}>
+                          "{member.description}"
+                        </p>
+                      )}
+                      {member.socialLinks && member.socialLinks.filter(Boolean).length > 0 && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
+                          {member.socialLinks.filter(Boolean).map((link, lIdx) => {
+                            let label = "Link";
+                            if (link.includes("linkedin.com")) label = "LinkedIn";
+                            else if (link.includes("twitter.com") || link.includes("x.com")) label = "Twitter";
+                            else if (link.includes("github.com")) label = "GitHub";
+                            else if (link.includes("facebook.com")) label = "Facebook";
+                            else if (link.includes("instagram.com")) label = "Instagram";
+                            else label = `Social ${lIdx + 1}`;
+                            
+                            return (
+                              <a
+                                key={lIdx}
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontSize: '0.7rem',
+                                  fontWeight: '700',
+                                  color: 'var(--apex-primary)',
+                                  backgroundColor: 'rgba(255, 107, 0, 0.1)',
+                                  border: '1px solid rgba(255, 107, 0, 0.2)',
+                                  padding: '3px 8px',
+                                  borderRadius: 'var(--radius-full)',
+                                  textDecoration: 'none',
+                                  transition: 'all var(--transition-fast)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'var(--apex-primary)';
+                                  e.currentTarget.style.color = '#fff';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'rgba(255, 107, 0, 0.1)';
+                                  e.currentTarget.style.color = 'var(--apex-primary)';
+                                }}
+                              >
+                                {label}
+                              </a>
+                            );
+                          })}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>

@@ -10,7 +10,9 @@ import CommunityPage from "./pages/CommunityPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ContactQueriesPage from "./pages/ContactQueriesPage";
-import AttendancePage from "./pages/AttendancePage";
+import IndustryPartnersPage from "./pages/IndustryPartnersPage";
+import IndustryExpertsPage from "./pages/IndustryExpertsPage";
+import ASGInitiativesPage from "./pages/ASGInitiativesPage";
 
 export const router = createBrowserRouter([
   {
@@ -28,7 +30,9 @@ export const router = createBrowserRouter([
       { path: "blogs", element: <BlogsPage /> },
       { path: "community", element: <CommunityPage /> },
       { path: "queries", element: <ContactQueriesPage /> },
-      { path: "attendance", element: <AttendancePage /> },
+      { path: "partners", element: <IndustryPartnersPage /> },
+      { path: "experts", element: <IndustryExpertsPage /> },
+      { path: "initiatives", element: <ASGInitiativesPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "profile", element: <ProfilePage /> },
     ],

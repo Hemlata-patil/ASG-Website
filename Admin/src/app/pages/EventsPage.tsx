@@ -584,9 +584,6 @@ export default function EventsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Registration URL (Upcoming)">
-              <Input value={form.registrationUrl} onChange={(e) => setField("registrationUrl", e.target.value)} placeholder="https://forms.gle/..." />
-            </FormField>
             <FormField label="Recap URL (Past)">
               <Input value={form.recapUrl} onChange={(e) => setField("recapUrl", e.target.value)} placeholder="e.g. #" />
             </FormField>

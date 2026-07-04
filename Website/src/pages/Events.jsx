@@ -159,19 +159,7 @@ export default function Events() {
                         <MapPin size={14} /> {item.venue}
                       </span>
 
-                      {/* CTA link depending on status */}
-                      {activeTab === 'upcoming' && item.registrationUrl && (
-                        <a href={item.registrationUrl} target="_blank" rel="noopener noreferrer" style={{
-                          color: 'var(--apex-primary)',
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          Register Now <ExternalLink size={14} />
-                        </a>
-                      )}
+
                       {activeTab === 'past' && item.recapUrl && (
                         <a href={item.recapUrl} style={{ color: 'var(--apex-text-muted)', fontWeight: '600', fontSize: '0.9rem' }}>
                           View Recap →
