@@ -118,6 +118,15 @@ const INITIAL: AALItem[] = [
   { id: 4, type: "Problem Statement", title: "Career Intelligence Platform", description: "An AI-powered skill mapping and resume scanner giving real-time feedback matching candidates to startups.", domain: "Career Intelligence", status: "Active", icon: "🧠" },
   { id: 5, type: "Problem Statement", title: "Social Work & Sustainability", description: "Platform tracking corporate social responsibility actions, volunteer hours, and local green initiatives.", domain: "Social Work", status: "Active", icon: "🌱" },
   { id: 6, type: "Problem Statement", title: "Digital Economy Trackers", description: "Visualizing local commerce trends, digital transaction frequencies, and retail statistics in Jalgaon.", domain: "Digital Economy", status: "Active", icon: "📊" },
+  { id: 7, type: "Problem Statement", title: "ASG Ecosystem Portal", description: "Unified hub listing founders, service providers, active mentors, and investor portfolios in Jalgaon.", domain: "ASG Ecosystem", status: "Active", icon: "🚀" },
+  { id: 8, type: "Problem Statement", title: "Event Industry Planner", description: "A centralized booking and schedule pipeline tracking venues, AV providers, and speaker slots for events.", domain: "Event Industry", status: "Active", icon: "🎉" },
+  { id: 9, type: "Problem Statement", title: "Sports & Fitness Tracker", description: "Matching local sports clubs, training centers, and fitness trainers to sports enthusiasts and students.", domain: "Sports & Fitness", status: "Active", icon: "👟" },
+  { id: 10, type: "Problem Statement", title: "Kids Sector & E-Learning", description: "Interactive educational game portals and cognitive skill-builders for primary school students.", domain: "Kids Sector", status: "Active", icon: "👶" },
+  { id: 11, type: "Problem Statement", title: "HoReCa Management Systems", description: "Smart table reservation, order management, and feedback metrics custom-designed for Jalgaon restaurants.", domain: "HoReCa", status: "Active", icon: "🍔" },
+  { id: 12, type: "Problem Statement", title: "Energy & Utilities Hub", description: "Consumption analysis metrics tracking electricity loads, solar outputs, and distribution efficiencies.", domain: "Energy", status: "Active", icon: "⚡" },
+  { id: 13, type: "Problem Statement", title: "E-Sports & Gaming Guilds", description: "An interactive tournament planner, community chat forums, and team matching for regional e-sports.", domain: "E-Sports & Gaming", status: "Active", icon: "🎮" },
+  { id: 14, type: "Problem Statement", title: "Mobility & Transit Helpers", description: "Live shuttle route tracing, rickshaw fare estimates, and local carpooling matching for students.", domain: "Mobility", status: "Active", icon: "🚗" },
+  { id: 15, type: "Problem Statement", title: "Temple Ecosystem Portal", description: "A digital queue scheduler, trust donations manager, and tourism calendar for local cultural sites.", domain: "Temple Ecosystem", status: "Active", icon: "🛕" },
 
   // Applications
   {
@@ -342,6 +351,14 @@ export default function AALPage() {
   const [dragActive, setDragActive] = useState(false);
   const [selectedProblemStatement, setSelectedProblemStatement] = useState<string>("");
   const [selectedMentor, setSelectedMentor] = useState<string>("");
+  const [filterDomain, setFilterDomain] = useState<string>("All");
+
+  const allDomains = Array.from(new Set(
+    items
+      .filter((i) => i.type === "Problem Statement")
+      .map((i) => i.title)
+      .filter((d) => d && d.trim())
+  )) as string[];
 
   const saveItems = (newItems: AALItem[]) => {
     setItems(newItems);
@@ -400,7 +417,8 @@ export default function AALPage() {
       i.description.toLowerCase().includes(search.toLowerCase()) ||
       (i.domain?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
       (i.internName?.toLowerCase().includes(search.toLowerCase()) ?? false);
-    return matchType && matchSearch;
+    const matchDomain = filterDomain === "All" || i.domain === filterDomain || (i.type === "Problem Statement" && i.title === filterDomain);
+    return matchType && matchSearch && matchDomain;
   });
 
   const openAdd = () => {
@@ -489,10 +507,15 @@ export default function AALPage() {
   };
 
   const tabs: AALType[] = ["Intern", "Problem Statement", "Application"];
-  const tabCounts = tabs.map(t => ({ type: t, count: items.filter(i => i.type === t).length }));
+  const tabCounts = tabs.map(t => ({
+    type: t,
+    count: t === "Application"
+      ? items.filter(i => i.type === "Application" && i.status !== "Accepted").length
+      : items.filter(i => i.type === t).length
+  }));
 
-  const newApplications = filtered.filter(i => !i.isExistingIntern);
-  const existingApplications = filtered.filter(i => i.isExistingIntern);
+  const newApplications = filtered.filter(i => !i.isExistingIntern && i.status !== "Accepted");
+  const existingApplications = filtered.filter(i => i.isExistingIntern && i.status !== "Accepted");
 
   return (
     <div>
@@ -548,14 +571,39 @@ export default function AALPage() {
       </div>
 
       <div className="bg-white rounded-2xl overflow-hidden mb-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)", border: "1px solid #f0f0f0" }}>
-        <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: "1px solid #f5f5f5" }}>
-          <Search size={16} style={{ color: "#bbb" }} />
-          <input
-            placeholder={`Search AAL ${activeTab.toLowerCase()}s…`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ border: "none", outline: "none", fontSize: "14px", color: "#555", background: "none", flex: 1, fontFamily: "'Inter', sans-serif" }}
-          />
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4" style={{ borderBottom: "1px solid #f5f5f5" }}>
+          <div className="flex items-center gap-3 flex-1 min-w-[240px]">
+            <Search size={16} style={{ color: "#bbb" }} />
+            <input
+              placeholder={`Search AAL ${activeTab.toLowerCase()}s…`}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ border: "none", outline: "none", fontSize: "14px", color: "#555", background: "none", flex: 1, fontFamily: "'Inter', sans-serif" }}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "#666", fontFamily: "'Inter', sans-serif" }}>Domain/PS:</span>
+            <select
+              value={filterDomain}
+              onChange={(e) => setFilterDomain(e.target.value)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "8px",
+                border: "1px solid #e5e7eb",
+                backgroundColor: "#fff",
+                fontSize: "13px",
+                color: "#555",
+                outline: "none",
+                cursor: "pointer",
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              <option value="All">All Domains</option>
+              {allDomains.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {activeTab !== "Application" ? (

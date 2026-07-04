@@ -4,24 +4,14 @@ import { Calendar, MapPin, ExternalLink } from 'lucide-react';
 import PageWrapper from '../components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '../components/common/SectionHeading/SectionHeading';
 import { events } from '../data/events';
-import ApexDropdown from '../components/common/ApexDropdown/ApexDropdown';
 
 export default function Events() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialType = searchParams.get('type') || 'All';
-
-  const [activeTab, setActiveTab] = useState('upcoming'); // upcoming | past | recurrent
-  const [categoryFilter, setCategoryFilter] = useState(initialType); // All | Workshop | Meetup | Expert Session | Demo Day
-
-  const categories = ['All', 'Workshop', 'Meetup', 'Expert Session', 'Demo Day', 'Founder Circle', 'Community'];
+  const [activeTab, setActiveTab] = useState('all'); // all | upcoming | past
 
   const filteredEvents = events.filter(event => {
     // Filter by tab status
-    const matchesTab = event.status === activeTab;
-    // Filter by category
-    const matchesCategory = categoryFilter === 'All' || event.type === categoryFilter;
-
-    return matchesTab && matchesCategory;
+    const matchesTab = activeTab === 'all' || event.status === activeTab;
+    return matchesTab;
   });
 
   return (
@@ -49,7 +39,7 @@ export default function Events() {
           }}>
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-              {['upcoming', 'past'].map((tab) => (
+              {['all', 'upcoming', 'past'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -66,23 +56,9 @@ export default function Events() {
                     transition: 'background var(--transition-fast)'
                   }}
                 >
-                  {`${tab} events`}
+                  {tab === 'all' ? 'All Events' : `${tab} events`}
                 </button>
               ))}
-            </div>
-
-            {/* Category Dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--apex-text-muted)' }}>Category:</span>
-              <ApexDropdown
-                label={categoryFilter}
-                options={categories.map((cat) => ({ value: cat, label: cat }))}
-                onSelect={(val) => {
-                  setCategoryFilter(val);
-                  setSearchParams({ type: val });
-                }}
-                minWidth="160px"
-              />
             </div>
           </div>
 
@@ -101,7 +77,7 @@ export default function Events() {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    opacity: activeTab === 'past' ? 0.75 : 1
+                    opacity: item.status === 'past' ? 0.75 : 1
                   }}
                 >
                   {item.thumbnail && (
@@ -160,7 +136,7 @@ export default function Events() {
                       </span>
 
 
-                      {activeTab === 'past' && item.recapUrl && (
+                      {item.status === 'past' && item.recapUrl && (
                         <a href={item.recapUrl} style={{ color: 'var(--apex-text-muted)', fontWeight: '600', fontSize: '0.9rem' }}>
                           View Recap →
                         </a>
@@ -178,7 +154,7 @@ export default function Events() {
               border: '1px dashed var(--apex-border-dark)',
               borderRadius: 'var(--radius-md)'
             }}>
-              No events found for the selected category.
+              No events found.
             </div>
           )}
         </div>

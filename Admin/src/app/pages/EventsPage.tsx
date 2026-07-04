@@ -103,8 +103,7 @@ const emptyForm: Omit<Event, "id"> = {
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
   const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string>("All");
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
+  const [activeTab, setActiveTab] = useState<"all" | "upcoming" | "past">("all");
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -167,15 +166,14 @@ export default function EventsPage() {
   // Filtering events
   const filteredEvents = useMemo(() => {
     return events.filter((e) => {
-      const matchesTab = e.status === activeTab;
+      const matchesTab = activeTab === "all" || e.status === activeTab;
       const matchesSearch =
         e.title.toLowerCase().includes(search.toLowerCase()) ||
         e.venue.toLowerCase().includes(search.toLowerCase()) ||
         e.description.toLowerCase().includes(search.toLowerCase());
-      const matchesCat = filterCategory === "All" || e.type === filterCategory;
-      return matchesTab && matchesSearch && matchesCat;
+      return matchesTab && matchesSearch;
     });
-  }, [events, search, filterCategory, activeTab]);
+  }, [events, search, activeTab]);
 
   // Pagination processing
   const totalItems = filteredEvents.length;
@@ -364,7 +362,7 @@ export default function EventsPage() {
             
             {/* Tab selector based on Status */}
             <div className="flex items-center gap-1.5 bg-gray-100/70 p-1 rounded-xl w-fit">
-              {["upcoming", "past"].map((tab) => {
+              {["all", "upcoming", "past"].map((tab) => {
                 const isActive = activeTab === tab;
                 return (
                   <button
@@ -386,7 +384,7 @@ export default function EventsPage() {
               })}
             </div>
 
-            {/* Search and Category Filters */}
+            {/* Search Filter */}
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
               <div className="relative w-full sm:w-[260px] flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-2xs">
                 <Search size={15} className="text-gray-400 mr-2 flex-shrink-0" />
@@ -401,26 +399,6 @@ export default function EventsPage() {
                   style={{ fontFamily: "'Inter', sans-serif" }}
                 />
               </div>
-
-              <div className="relative w-full sm:w-[200px] flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-2xs">
-                <Filter size={14} className="text-gray-400 mr-2 flex-shrink-0" />
-                <select
-                  value={filterCategory}
-                  onChange={(e) => {
-                    setFilterCategory(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full border-none outline-none text-xs text-gray-700 bg-transparent cursor-pointer"
-                  style={{ fontFamily: "'Satoshi', sans-serif" }}
-                >
-                  <option value="All">All Categories</option>
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
           </div>
@@ -433,7 +411,6 @@ export default function EventsPage() {
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider w-[100px]">Thumbnail</th>
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Event Info</th>
-                <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Category</th>
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Scheduled Date</th>
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Venue</th>
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
@@ -453,11 +430,6 @@ export default function EventsPage() {
                       {ev.title}
                     </div>
                     <div className="text-[11px] text-gray-400 mt-1 line-clamp-1">{ev.description}</div>
-                  </td>
-                  <td className="p-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold border bg-orange-50 text-orange-850 border-orange-200">
-                      {ev.type}
-                    </span>
                   </td>
                   <td className="p-4 text-xs font-semibold text-gray-700">
                     {new Date(ev.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
@@ -508,9 +480,6 @@ export default function EventsPage() {
           <div>
             <div className="relative h-44 w-full rounded-xl overflow-hidden mb-5 bg-gray-100 border border-gray-200/50 shadow-2xs">
               <img src={modal.item.thumbnail} alt={modal.item.title} className="w-full h-full object-cover" />
-              <div className="absolute top-3 left-3 flex gap-2">
-                <span className="px-3 py-1 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold rounded-full">{modal.item.type}</span>
-              </div>
             </div>
             <div className="mb-5">
               <h2 className="text-xl font-extrabold text-gray-900" style={{ fontFamily: "'Satoshi', sans-serif" }}>{modal.item.title}</h2>
@@ -559,16 +528,9 @@ export default function EventsPage() {
       {/* ADD / EDIT FORM MODAL */}
       <Modal isOpen={modal.open && (modal.mode === "add" || modal.mode === "edit")} onClose={close} title={modal.mode === "add" ? "Create Ecosystem Event" : "Modify Event Settings"} size="lg">
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Event Title *">
-              <Input value={form.title} onChange={(e) => setField("title", e.target.value)} placeholder="e.g. AI Agents Buildathon" />
-            </FormField>
-            <FormField label="Category Type *">
-              <Select value={form.type} onChange={(e) => setField("type", e.target.value)}>
-                {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
-              </Select>
-            </FormField>
-          </div>
+          <FormField label="Event Title *">
+            <Input value={form.title} onChange={(e) => setField("title", e.target.value)} placeholder="e.g. AI Agents Buildathon" />
+          </FormField>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField label="Scheduled Date *">
               <Input type="date" value={form.date} onChange={(e) => setField("date", e.target.value)} />

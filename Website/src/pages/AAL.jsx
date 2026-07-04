@@ -8,6 +8,8 @@ import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import ApexDropdown from '../components/common/ApexDropdown/ApexDropdown';
 import { expertsData } from '../data/experts';
 
+import { Globe } from 'lucide-react';
+
 export default function AAL() {
   const navigate = useNavigate();
   const domainsAnim = useScrollAnimation();
@@ -30,25 +32,14 @@ export default function AAL() {
     return expertsData;
   });
 
-  const [initiatives, setInitiatives] = useState(() => {
-    const local = localStorage.getItem('asg_initiatives');
-    const INITIAL_INITIATIVES = [
-      { id: 1, icon: "💡", title: "Mentorship Circles", shortDescription: "Weekly group mentorship sessions matching cohorts with domain leaders from top tech firms." },
-      { id: 2, icon: "🚀", title: "AI Sandbox", shortDescription: "Hands-on cloud resource sandbox and API credits to prototype AI integrations swiftly." },
-      { id: 3, icon: "💼", title: "Pitch Launchpad", shortDescription: "Preparation sprints culminating in Pitch Days to secure regional investor feedback and backing." }
-    ];
-    if (local) {
-      try {
-        return JSON.parse(local);
-      } catch (e) {
-        return INITIAL_INITIATIVES;
-      }
-    }
-    localStorage.setItem('asg_initiatives', JSON.stringify(INITIAL_INITIATIVES));
-    return INITIAL_INITIATIVES;
-  });
-
-  const activeExperts = experts.filter(e => e.status === 'Active' && e.showOnWebsite);
+  const activeExperts = experts.map(e => {
+    const socialLinks = e.socialLinks && e.socialLinks.length > 0
+      ? e.socialLinks
+      : (e.linkedin ? [e.linkedin] : []);
+    const currentProblemStatement = e.currentProblemStatement || e.expertise || "";
+    const description = e.description || e.bio || "";
+    return { ...e, socialLinks, currentProblemStatement, description };
+  }).filter(e => e.status === 'Active');
 
   // Form states
   const [formData, setFormData] = useState({
@@ -293,48 +284,165 @@ export default function AAL() {
           <SectionHeading
             overline="Mentorship"
             title="Learn From Industry Experts"
-            subtitle="Our AAL initiatives are designed to accelerate building, learning, and prototype scaling."
+            subtitle="Engage with leading experts who mentor our teams on architecture, product design, and growth."
           />
-          {/* Grid list of initiatives */}
+          {/* Grid list of experts */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 'var(--space-4)'
-          }}>
-            {initiatives.map((init) => (
-              <div key={init.id} style={{
-                backgroundColor: 'var(--apex-bg-surface)',
-                border: '1px solid var(--apex-border-dark)',
-                borderRadius: 'var(--radius-md)',
-                padding: 'var(--space-4)',
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                boxShadow: 'var(--shadow-sm)',
-                transition: 'all var(--transition-base)'
-              }}
-              className="expert-card"
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--apex-primary)'}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--apex-border-dark)'}
-              >
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(255, 107, 0, 0.08)',
+            gap: 'var(--space-4)',
+            marginTop: 'var(--space-4)'
+          }} className="grid-3">
+            {activeExperts.map((expert, idx) => (
+              <div 
+                key={expert.id || expert.name + idx}
+                style={{
+                  backgroundColor: 'var(--apex-bg-surface)',
+                  border: '1px solid var(--apex-border-dark)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: 'var(--space-4)',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2rem',
-                  marginBottom: 'var(--space-3)',
-                  border: '1.5px solid var(--apex-primary)',
-                  boxShadow: 'var(--shadow-sm)'
-                }}>
-                  {init.icon}
+                  textAlign: 'center',
+                  boxShadow: 'var(--shadow-sm)',
+                  transition: 'border-color var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base)'
+                }}
+                className="expert-card"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--apex-primary)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-glow-orange-sm)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--apex-border-dark)';
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                }}
+              >
+                {/* Photo with beautiful avatar border styling */}
+                <div style={{ position: 'relative', marginBottom: 'var(--space-3)' }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    left: '-4px',
+                    right: '-4px',
+                    bottom: '-4px',
+                    background: 'linear-gradient(135deg, var(--apex-primary), var(--apex-primary-warm))',
+                    borderRadius: '50%',
+                    zIndex: 1
+                  }} />
+                  {expert.photo ? (
+                    <img 
+                      src={expert.photo} 
+                      alt={expert.name}
+                      style={{
+                        width: '100px',
+                        height: '100px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        position: 'relative',
+                        zIndex: 2,
+                        border: '3px solid var(--apex-bg-surface)'
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100px',
+                      height: '100px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255, 107, 0, 0.08)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '2rem',
+                      fontWeight: 'bold',
+                      color: 'var(--apex-primary)',
+                      border: '3px solid var(--apex-bg-surface)',
+                      position: 'relative',
+                      zIndex: 2
+                    }}>
+                      {expert.name ? expert.name[0] : '?'}
+                    </div>
+                  )}
                 </div>
-                <h4 className="heading-sm" style={{ fontSize: '1.2rem', marginBottom: '8px', color: 'var(--apex-text-white)' }}>{init.title}</h4>
-                <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0, lineHeight: '1.5' }}>{init.shortDescription}</p>
+
+                <h3 className="heading-sm" style={{ color: 'var(--apex-text-white)', marginBottom: '6px', fontSize: '1.2rem' }}>
+                  {expert.name}
+                </h3>
+
+                <p className="body-sm" style={{ color: 'var(--apex-primary-warm)', fontWeight: '600', marginBottom: '4px' }}>
+                  {expert.role}
+                </p>
+                <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0 }}>
+                  {expert.company}
+                </p>
+
+                {expert.currentProblemStatement && (
+                  <div style={{ marginTop: '8px', marginBottom: '4px' }}>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      backgroundColor: 'rgba(255, 90, 20, 0.1)',
+                      color: 'var(--apex-primary)',
+                      padding: '4px 12px',
+                      borderRadius: 'var(--radius-full)',
+                      fontWeight: '700',
+                      display: 'inline-block'
+                    }}>
+                      PS: {expert.currentProblemStatement}
+                    </span>
+                  </div>
+                )}
+
+                {(expert.description || expert.bio) && (
+                  <p className="body-sm" style={{ color: 'var(--apex-text-muted)', fontSize: '0.8rem', marginTop: '8px', fontStyle: 'italic', maxWidth: '240px', lineHeight: '1.4', flex: 1 }}>
+                    "{expert.description || expert.bio}"
+                  </p>
+                )}
+
+                {expert.socialLinks && expert.socialLinks.filter(Boolean).length > 0 && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
+                    {expert.socialLinks.filter(Boolean).map((link, lIdx) => {
+                      let label = "Link";
+                      if (link.includes("linkedin.com")) label = "LinkedIn";
+                      else if (link.includes("twitter.com") || link.includes("x.com")) label = "Twitter";
+                      else if (link.includes("github.com")) label = "GitHub";
+                      else if (link.includes("facebook.com")) label = "Facebook";
+                      else if (link.includes("instagram.com")) label = "Instagram";
+                      else label = `Social ${lIdx + 1}`;
+                      
+                      return (
+                        <a
+                          key={lIdx}
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: '0.7rem',
+                            fontWeight: '700',
+                            color: 'var(--apex-primary)',
+                            backgroundColor: 'rgba(255, 107, 0, 0.1)',
+                            border: '1px solid rgba(255, 107, 0, 0.2)',
+                            padding: '3px 8px',
+                            borderRadius: 'var(--radius-full)',
+                            textDecoration: 'none',
+                            transition: 'all var(--transition-fast)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--apex-primary)';
+                            e.currentTarget.style.color = '#fff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 107, 0, 0.1)';
+                            e.currentTarget.style.color = 'var(--apex-primary)';
+                          }}
+                        >
+                          {label}
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ))}
           </div>

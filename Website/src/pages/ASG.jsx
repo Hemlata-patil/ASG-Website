@@ -323,7 +323,7 @@ export default function ASG() {
               </div>
             ) : (
               <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                
+
                 {/* Name & Email Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }} className="grid-2">
                   {/* Name */}
@@ -401,11 +401,11 @@ export default function ASG() {
                     <ApexDropdown
                       label={
                         formData.role === 'founders' ? 'Founder' :
-                        formData.role === 'mentors' ? 'Mentor' :
-                        formData.role === 'investors' ? 'Investor' :
-                        formData.role === 'service-providers' ? 'Service Provider' :
-                        formData.role === 'other' ? 'Other' :
-                        'Select role'
+                          formData.role === 'mentors' ? 'Mentor' :
+                            formData.role === 'investors' ? 'Investor' :
+                              formData.role === 'service-providers' ? 'Service Provider' :
+                                formData.role === 'other' ? 'Other' :
+                                  'Select role'
                       }
                       options={[
                         { value: 'founders', label: 'Founder' },
@@ -654,10 +654,10 @@ export default function ASG() {
       {/* Recurrent Programs List (Styling fix for light mode) */}
       <section ref={programsAnim.ref} className={`section ${programsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
         <div className="container">
-          
+
           <SectionHeading
             overline="Ecosystem Operations"
-            title="Ecosystem Programs & Rituals"
+            title="ASG Programs & Initiatives"
             subtitle="We run recurring monthly, bi-weekly, and annual formats to keep stakeholders engaged."
           />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-3)' }} className="grid-4">
