@@ -24,6 +24,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const handleLogoClick = () => {
+    const origin = window.location.origin;
+    if (origin.includes("5174")) {
+      window.location.href = origin.replace("5174", "5173");
+    } else {
+      window.location.href = "http://localhost:5173";
+    }
+  };
+
   useEffect(() => {
     if (isLoggedIn) navigate("/dashboard");
   }, [isLoggedIn, navigate]);
@@ -81,10 +90,12 @@ export default function LoginPage() {
           <img
             src={logoImg}
             alt="APEX Startup Group"
+            onClick={handleLogoClick}
             style={{
               height: "60px",
               width: "auto",
               marginBottom: "32px",
+              cursor: "pointer",
             }}
           />
 
@@ -140,6 +151,7 @@ export default function LoginPage() {
                 {label}
               </div>
             ))}
+
           </div>
         </div>
 
@@ -157,9 +169,11 @@ export default function LoginPage() {
           <img
             src={logoImg}
             alt="APEX Startup Group"
+            onClick={handleLogoClick}
             style={{
               height: "32px",
               width: "auto",
+              cursor: "pointer",
             }}
           />
         </div>

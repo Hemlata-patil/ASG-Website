@@ -44,23 +44,9 @@ export const events = [
     photos: [],
     thumbnail: "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=400&auto=format&fit=crop"
   },
+
   {
     id: 4,
-    title: "AI for Startups: Practical Integrations & LLMs (2 Cohorts)",
-    type: "Expert Session",
-    status: "past",
-    date: "2025 - 2026",
-    venue: "Online / Zoom",
-    description: "Specialized webinars and technical workshops demonstrating how to integrate LLMs, build RAG pipelines, and optimize business processes.",
-    tags: ["#AI", "#Startups", "#TechStack", "#2Cohorts"],
-    recurrence: null,
-    registrationUrl: null,
-    recapUrl: "#",
-    photos: [],
-    thumbnail: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=400&auto=format&fit=crop"
-  },
-  {
-    id: 5,
     title: "Startup pe Charcha: Casual Founder Roundtable (2 Cohorts)",
     type: "Founder Circle",
     status: "past",
@@ -75,7 +61,7 @@ export const events = [
     thumbnail: "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=400&auto=format&fit=crop"
   },
   {
-    id: 6,
+    id: 5,
     title: "Apex AI Launchpad: Technical Sprints (2 Cohorts)",
     type: "Workshop",
     status: "past",
@@ -90,7 +76,7 @@ export const events = [
     thumbnail: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=400&auto=format&fit=crop"
   },
   {
-    id: 7,
+    id: 6,
     title: "Pickel Ball Meetup (1 Cohort)",
     type: "Community",
     status: "upcoming",
@@ -105,7 +91,7 @@ export const events = [
     thumbnail: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=400&auto=format&fit=crop"
   },
   {
-    id: 8,
+    id: 7,
     title: "AI ki Choupal: Community Hackathons (2 Cohorts)",
     type: "Meetup",
     status: "past",
@@ -120,7 +106,7 @@ export const events = [
     thumbnail: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=400&auto=format&fit=crop"
   },
   {
-    id: 9,
+    id: 8,
     title: "APEX Manthan Strategy Roundtable (1 Cohort)",
     type: "Expert Session",
     status: "upcoming",

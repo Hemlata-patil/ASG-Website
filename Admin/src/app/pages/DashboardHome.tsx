@@ -1,4 +1,5 @@
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router";
 import {
   CalendarDays,
   Clock,
@@ -49,6 +50,7 @@ const COLLEGE_DATA = [
 export default function DashboardHome() {
   const { adminEmail } = useAuth();
   const firstName = adminEmail?.split("@")[0] || "Admin";
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -136,7 +138,11 @@ export default function DashboardHome() {
             >
               Recent Events
             </h2>
-            <div className="flex items-center gap-1" style={{ color: "#FF6B00", fontSize: "13px", fontWeight: 500, cursor: "pointer" }}>
+            <div 
+              onClick={() => navigate("/dashboard/events")}
+              className="flex items-center gap-1" 
+              style={{ color: "#FF6B00", fontSize: "13px", fontWeight: 500, cursor: "pointer" }}
+            >
               View all <ArrowUpRight size={14} />
             </div>
           </div>
@@ -146,19 +152,19 @@ export default function DashboardHome() {
                 <tr style={{ borderBottom: "1px solid #f0f0f0" }}>
                   {["Event", "Date", "Location", "Attendees", "Status"].map((h) => (
                     <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        color: "#aaa",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                        paddingBottom: "10px",
-                        paddingRight: "16px",
-                      }}
-                    >
-                      {h}
+                       key={h}
+                       style={{
+                         textAlign: "left",
+                         fontSize: "11px",
+                         fontWeight: 600,
+                         color: "#aaa",
+                         textTransform: "uppercase",
+                         letterSpacing: "0.05em",
+                         paddingBottom: "10px",
+                         paddingRight: "16px",
+                       }}
+                     >
+                       {h}
                     </th>
                   ))}
                 </tr>
@@ -201,7 +207,11 @@ export default function DashboardHome() {
             >
               Recent Blogs
             </h2>
-            <div className="flex items-center gap-1" style={{ color: "#FF6B00", fontSize: "13px", fontWeight: 500, cursor: "pointer" }}>
+            <div 
+              onClick={() => navigate("/dashboard/blogs")}
+              className="flex items-center gap-1" 
+              style={{ color: "#FF6B00", fontSize: "13px", fontWeight: 500, cursor: "pointer" }}
+            >
               View all <ArrowUpRight size={14} />
             </div>
           </div>

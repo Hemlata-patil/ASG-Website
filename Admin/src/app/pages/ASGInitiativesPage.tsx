@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Search, Plus, Pencil, Trash2, Milestone, UploadCloud } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Plus, Pencil, Trash2, Milestone, UploadCloud, Undo, Redo } from "lucide-react";
 import Modal, { FormField, Input, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "../components/Modal";
 import { PageHeader } from "./EventsPage";
+import { useUndoRedoState } from "../hooks/useUndoRedoState";
 
 interface Initiative {
   id: number;
@@ -23,7 +24,7 @@ const empty: Omit<Initiative, "id"> = {
 };
 
 export default function ASGInitiativesPage() {
-  const [initiatives, setInitiatives] = useState<Initiative[]>(() => {
+  const [initiatives, setInitiatives, undo, redo, canUndo, canRedo] = useUndoRedoState<Initiative[]>(() => {
     const local = localStorage.getItem("asg_initiatives");
     if (local) {
       try {
@@ -36,15 +37,15 @@ export default function ASGInitiativesPage() {
     return INITIAL;
   });
 
+  useEffect(() => {
+    localStorage.setItem("asg_initiatives", JSON.stringify(initiatives));
+  }, [initiatives]);
+
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<{ open: boolean; mode: "add" | "edit" | "delete"; item: Initiative | null }>({
     open: false, mode: "add", item: null
   });
   const [form, setForm] = useState<Omit<Initiative, "id">>(empty);
-
-  const saveToStorage = (updated: Initiative[]) => {
-    localStorage.setItem("asg_initiatives", JSON.stringify(updated));
-  };
 
   const filtered = initiatives.filter((i) => {
     return (
@@ -69,26 +70,17 @@ export default function ASGInitiativesPage() {
 
   const save = () => {
     if (!form.title || !form.shortDescription) return;
-    setInitiatives((prev) => {
-      let next;
-      if (modal.mode === "add") {
-        next = [...prev, { ...form, id: Date.now() }];
-      } else {
-        next = prev.map((i) => (i.id === modal.item!.id ? { ...modal.item!, ...form } : i));
-      }
-      saveToStorage(next);
-      return next;
-    });
+    if (modal.mode === "add") {
+      setInitiatives((prev) => [...prev, { ...form, id: Date.now() }]);
+    } else {
+      setInitiatives((prev) => prev.map((i) => (i.id === modal.item!.id ? { ...modal.item!, ...form } : i)));
+    }
     close();
   };
 
   const remove = () => {
     if (modal.item) {
-      setInitiatives((prev) => {
-        const next = prev.filter((i) => i.id !== modal.item!.id);
-        saveToStorage(next);
-        return next;
-      });
+      setInitiatives((prev) => prev.filter((i) => i.id !== modal.item!.id));
     }
     close();
   };
@@ -102,10 +94,31 @@ export default function ASGInitiativesPage() {
         title="ASG Initiatives"
         subtitle={`${initiatives.length} total initiatives managed`}
         action={
-          <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-            style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
-            <Plus size={16} /> Add Initiative
-          </button>
+          <div className="flex items-center gap-2.5">
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Undo List Action"
+              >
+                <Undo size={14} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Redo List Action"
+              >
+                <Redo size={14} />
+              </button>
+            </div>
+            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+              style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
+              <Plus size={16} /> Add Initiative
+            </button>
+          </div>
         }
       />
 

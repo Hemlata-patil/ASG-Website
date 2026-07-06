@@ -15,8 +15,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  BookOpen
+  BookOpen,
+  Undo,
+  Redo
 } from "lucide-react";
+import { useUndoRedoState } from "../hooks/useUndoRedoState";
 import Modal, {
   FormField,
   Input,
@@ -101,7 +104,7 @@ const emptyForm: Omit<Event, "id"> = {
 };
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
+  const [events, setEvents, undo, redo, canUndo, canRedo] = useUndoRedoState<Event[]>(INITIAL_EVENTS);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "upcoming" | "past">("all");
   
@@ -299,6 +302,26 @@ export default function EventsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2.5">
+          {/* Undo/Redo Buttons */}
+          <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs mr-1">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+              title="Undo List Action"
+            >
+              <Undo size={14} />
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+              title="Redo List Action"
+            >
+              <Redo size={14} />
+            </button>
+          </div>
+
           <button
             onClick={exportToCSV}
             className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-sm transition-all"

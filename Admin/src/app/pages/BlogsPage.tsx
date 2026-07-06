@@ -8,6 +8,7 @@ import {
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "../components/Modal";
 import { StatusBadge } from "./DashboardHome";
 import { PageHeader, ActionBtns } from "./EventsPage";
+import { useUndoRedoState } from "../hooks/useUndoRedoState";
 
 interface Blog {
   id: number;
@@ -152,7 +153,7 @@ const FONT_SIZES = [
 const EMOJIS = ["😀", "😂", "😍", "👍", "👎", "🎉", "🔥", "🚀", "💡", "💻", "🎨", "📝", "🤔", "👏", "✔️", "🌟", "📅", "💡"];
 
 export default function BlogsPage() {
-  const [blogs, setBlogs] = useState<Blog[]>(() => {
+  const [blogs, setBlogs, undo, redo, canUndo, canRedo] = useUndoRedoState<Blog[]>(() => {
     try {
       const raw = localStorage.getItem("asg_blogs");
       if (raw) {
@@ -535,13 +536,34 @@ export default function BlogsPage() {
             title="Blog Posts CMS"
             subtitle={`${blogs.length} posts · ${blogs.filter((b) => b.status === "Published").length} published`}
             action={
-              <button 
-                onClick={handleAddNewClick} 
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-                style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}
-              >
-                <Plus size={16} /> New CMS Post
-              </button>
+              <div className="flex items-center gap-2.5">
+                {/* Undo/Redo Buttons */}
+                <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
+                  <button
+                    onClick={undo}
+                    disabled={!canUndo}
+                    className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                    title="Undo List Action"
+                  >
+                    <Undo size={14} />
+                  </button>
+                  <button
+                    onClick={redo}
+                    disabled={!canRedo}
+                    className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                    title="Redo List Action"
+                  >
+                    <Redo size={14} />
+                  </button>
+                </div>
+                <button 
+                  onClick={handleAddNewClick} 
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                  style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}
+                >
+                  <Plus size={16} /> New CMS Post
+                </button>
+              </div>
             }
           />
 

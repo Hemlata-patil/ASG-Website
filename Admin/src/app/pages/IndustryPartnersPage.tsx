@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Search, Handshake, Plus, Pencil, Trash2, Eye, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Handshake, Plus, Pencil, Trash2, Eye, ExternalLink, Undo, Redo } from "lucide-react";
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "../components/Modal";
 import { PageHeader } from "./EventsPage";
+import { useUndoRedoState } from "../hooks/useUndoRedoState";
 
 interface Partner {
   id: number;
@@ -32,7 +33,7 @@ const empty: Omit<Partner, "id"> = {
 };
 
 export default function IndustryPartnersPage() {
-  const [partners, setPartners] = useState<Partner[]>(() => {
+  const [partners, setPartners, undo, redo, canUndo, canRedo] = useUndoRedoState<Partner[]>(() => {
     const local = localStorage.getItem("asg_partners");
     if (local) {
       try {
@@ -45,16 +46,16 @@ export default function IndustryPartnersPage() {
     return INITIAL;
   });
 
+  useEffect(() => {
+    localStorage.setItem("asg_partners", JSON.stringify(partners));
+  }, [partners]);
+
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
   const [modal, setModal] = useState<{ open: boolean; mode: "add" | "edit" | "delete"; item: Partner | null }>({
     open: false, mode: "add", item: null
   });
   const [form, setForm] = useState<Omit<Partner, "id">>(empty);
-
-  const saveToStorage = (updated: Partner[]) => {
-    localStorage.setItem("asg_partners", JSON.stringify(updated));
-  };
 
   const filtered = partners.filter((p) => {
     const matchSearch =
@@ -66,11 +67,7 @@ export default function IndustryPartnersPage() {
   });
 
   const toggleStatus = (id: number) => {
-    setPartners((prev) => {
-      const next = prev.map((p) => (p.id === id ? { ...p, status: p.status === "Active" ? "Inactive" : "Active" } : p));
-      saveToStorage(next);
-      return next;
-    });
+    setPartners((prev) => prev.map((p) => (p.id === id ? { ...p, status: p.status === "Active" ? "Inactive" : "Active" } : p)));
   };
 
   const openAdd = () => {
@@ -87,26 +84,17 @@ export default function IndustryPartnersPage() {
 
   const save = () => {
     if (!form.name || !form.website) return;
-    setPartners((prev) => {
-      let next;
-      if (modal.mode === "add") {
-        next = [...prev, { ...form, id: Date.now() }];
-      } else {
-        next = prev.map((p) => (p.id === modal.item!.id ? { ...modal.item!, ...form } : p));
-      }
-      saveToStorage(next);
-      return next;
-    });
+    if (modal.mode === "add") {
+      setPartners((prev) => [...prev, { ...form, id: Date.now() }]);
+    } else {
+      setPartners((prev) => prev.map((p) => (p.id === modal.item!.id ? { ...modal.item!, ...form } : p)));
+    }
     close();
   };
 
   const remove = () => {
     if (modal.item) {
-      setPartners((prev) => {
-        const next = prev.filter((p) => p.id !== modal.item!.id);
-        saveToStorage(next);
-        return next;
-      });
+      setPartners((prev) => prev.filter((p) => p.id !== modal.item!.id));
     }
     close();
   };
@@ -120,10 +108,31 @@ export default function IndustryPartnersPage() {
         title="Industry Partners"
         subtitle={`${partners.length} total partners · ${partners.filter((p) => p.status === "Active").length} active`}
         action={
-          <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-            style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
-            <Plus size={16} /> Add Partner
-          </button>
+          <div className="flex items-center gap-2.5">
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Undo List Action"
+              >
+                <Undo size={14} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Redo List Action"
+              >
+                <Redo size={14} />
+              </button>
+            </div>
+            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+              style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
+              <Plus size={16} /> Add Partner
+            </button>
+          </div>
         }
       />
 

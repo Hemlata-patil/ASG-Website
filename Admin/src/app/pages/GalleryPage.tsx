@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus, Trash2, Pencil, Images, Search, Filter, UploadCloud, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Images, Search, Filter, UploadCloud, X, Undo, Redo } from "lucide-react";
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "../components/Modal";
 import { PageHeader } from "./EventsPage";
+import { useUndoRedoState } from "../hooks/useUndoRedoState";
 
 interface GalleryItem {
   id: number;
@@ -32,7 +33,7 @@ const empty: Omit<GalleryItem, "id"> = {
 };
 
 export default function GalleryPage() {
-  const [items, setItems] = useState<GalleryItem[]>(INITIAL);
+  const [items, setItems, undo, redo, canUndo, canRedo] = useUndoRedoState<GalleryItem[]>(INITIAL);
   const [search, setSearch] = useState("");
   const [filterYear, setFilterYear] = useState("All");
   const [modal, setModal] = useState<{ open: boolean; mode: "add" | "edit" | "delete"; item: GalleryItem | null }>({
@@ -128,10 +129,31 @@ export default function GalleryPage() {
         title="Gallery Timeline"
         subtitle={`${items.length} chronological log entries`}
         action={
-          <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-            style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
-            <Plus size={16} /> Add Entry
-          </button>
+          <div className="flex items-center gap-2.5">
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Undo List Action"
+              >
+                <Undo size={14} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Redo List Action"
+              >
+                <Redo size={14} />
+              </button>
+            </div>
+            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+              style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
+              <Plus size={16} /> Add Entry
+            </button>
+          </div>
         }
       />
 

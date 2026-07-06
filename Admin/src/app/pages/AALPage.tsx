@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Plus, Search, GraduationCap, Check, X as XIcon, UploadCloud, Eye, Pencil, Trash2, HelpCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Search, GraduationCap, Check, X as XIcon, UploadCloud, Eye, Pencil, Trash2, HelpCircle, Undo, Redo } from "lucide-react";
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "../components/Modal";
 import { PageHeader } from "./EventsPage";
+import { useUndoRedoState } from "../hooks/useUndoRedoState";
 
 const DUMMY_MENTORS = [
   { id: 1, name: "Dr. Sandeep Joshi", expertise: "IP & Academic Research" },
@@ -326,7 +327,7 @@ function StatusBadge({ status }: { status: AALItem["status"] }) {
 }
 
 export default function AALPage() {
-  const [items, setItems] = useState<AALItem[]>(() => {
+  const [items, setItems, undo, redo, canUndo, canRedo] = useUndoRedoState<AALItem[]>(() => {
     try {
       const raw = localStorage.getItem("asg_aal_items");
       if (raw) {
@@ -342,6 +343,11 @@ export default function AALPage() {
     } catch { /* ignore */ }
     return INITIAL;
   });
+
+  useEffect(() => {
+    localStorage.setItem("asg_aal_items", JSON.stringify(items));
+  }, [items]);
+
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<AALType>("Intern");
   const [modal, setModal] = useState<{ open: boolean; mode: "add" | "edit" | "delete" | "view"; item: AALItem | null }>({
@@ -362,7 +368,6 @@ export default function AALPage() {
 
   const saveItems = (newItems: AALItem[]) => {
     setItems(newItems);
-    localStorage.setItem("asg_aal_items", JSON.stringify(newItems));
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -524,12 +529,33 @@ export default function AALPage() {
         title="AAL — Apex AI Launchpad"
         subtitle={`${items.filter(i => i.type === "Intern" && i.status === "Active").length} active interns · ${items.filter(i => i.type === "Problem Statement").length} problem statements`}
         action={
-          activeTab !== "Application" ? (
-            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-              style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
-              <Plus size={16} /> Add {activeTab}
-            </button>
-          ) : null
+          <div className="flex items-center gap-2.5">
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Undo List Action"
+              >
+                <Undo size={14} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Redo List Action"
+              >
+                <Redo size={14} />
+              </button>
+            </div>
+            {activeTab !== "Application" && (
+              <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+                style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
+                <Plus size={16} /> Add {activeTab}
+              </button>
+            )}
+          </div>
         }
       />
 

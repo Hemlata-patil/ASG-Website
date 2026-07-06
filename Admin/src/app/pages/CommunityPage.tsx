@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, Users, Plus, Eye, Pencil, Trash2, UploadCloud, Check, X as XIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Users, Plus, Eye, Pencil, Trash2, UploadCloud, Check, X as XIcon, Undo, Redo } from "lucide-react";
 import Modal, {
   FormField,
   Input,
@@ -10,6 +10,7 @@ import Modal, {
   GhostBtn,
 } from "../components/Modal";
 import { PageHeader } from "./EventsPage";
+import { useUndoRedoState } from "../hooks/useUndoRedoState";
 
 interface Member {
   id: number;
@@ -217,14 +218,18 @@ const empty: Omit<Member, "id"> = {
 };
 
 export default function CommunityPage() {
-  const [members, setMembers] = useState<Member[]>(() => {
+  const [members, setMembers, undo, redo, canUndo, canRedo] = useUndoRedoState<Member[]>(() => {
     try {
-      const local = localStorage.getItem("asg_members");
-      if (local) return JSON.parse(local);
+      const raw = localStorage.getItem("asg_members");
+      if (raw) return JSON.parse(raw);
     } catch (e) {}
     localStorage.setItem("asg_members", JSON.stringify(INITIAL));
     return INITIAL;
   });
+
+  useEffect(() => {
+    localStorage.setItem("asg_members", JSON.stringify(members));
+  }, [members]);
 
   const [applications, setApplications] = useState<any[]>(() => {
     try {
@@ -251,7 +256,6 @@ export default function CommunityPage() {
 
   const saveMembers = (newMembers: Member[]) => {
     setMembers(newMembers);
-    localStorage.setItem("asg_members", JSON.stringify(newMembers));
   };
 
   const toggleStatus = (id: number) => {
@@ -452,21 +456,42 @@ export default function CommunityPage() {
         title="Community Members"
         subtitle={`${members.length} total · ${members.filter((m) => m.status === "Active").length} active`}
         action={
-          activeTab !== "Applications" ? (
-            <button
-              onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-              style={{
-                background: "#FF6B00",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "'Satoshi', sans-serif",
-                boxShadow: "0 2px 10px rgba(255,107,0,0.35)",
-              }}
-            >
-              <Plus size={16} /> Add {activeTab}
-            </button>
-          ) : null
+          <div className="flex items-center gap-2.5">
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Undo List Action"
+              >
+                <Undo size={14} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Redo List Action"
+              >
+                <Redo size={14} />
+              </button>
+            </div>
+            {activeTab !== "Applications" && (
+              <button
+                onClick={openAdd}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+                style={{
+                  background: "#FF6B00",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "'Satoshi', sans-serif",
+                  boxShadow: "0 2px 10px rgba(255,107,0,0.35)",
+                }}
+              >
+                <Plus size={16} /> Add {activeTab}
+              </button>
+            )}
+          </div>
         }
       />
 

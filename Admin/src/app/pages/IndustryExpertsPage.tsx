@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Search, Award, Plus, Pencil, Trash2, UploadCloud, Eye, Link2, X as XIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Award, Plus, Pencil, Trash2, UploadCloud, Eye, Link2, X as XIcon, Undo, Redo } from "lucide-react";
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "../components/Modal";
 import { PageHeader } from "./EventsPage";
+import { useUndoRedoState } from "../hooks/useUndoRedoState";
 
 interface Expert {
   id: number;
@@ -90,7 +91,7 @@ const empty: Omit<Expert, "id"> = {
 };
 
 export default function IndustryExpertsPage() {
-  const [experts, setExperts] = useState<Expert[]>(() => {
+  const [experts, setExperts, undo, redo, canUndo, canRedo] = useUndoRedoState<Expert[]>(() => {
     const local = localStorage.getItem("asg_experts");
     if (local) {
       try {
@@ -103,6 +104,10 @@ export default function IndustryExpertsPage() {
     return INITIAL;
   });
 
+  useEffect(() => {
+    localStorage.setItem("asg_experts", JSON.stringify(experts));
+  }, [experts]);
+
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
   const [modal, setModal] = useState<{ open: boolean; mode: "add" | "edit" | "delete" | "view"; item: Expert | null }>({
@@ -112,10 +117,6 @@ export default function IndustryExpertsPage() {
   const [dragActive, setDragActive] = useState(false);
 
   const problemStatements = getProblemStatements();
-
-  const saveToStorage = (updated: Expert[]) => {
-    localStorage.setItem("asg_experts", JSON.stringify(updated));
-  };
 
   const filtered = experts.filter((e) => {
     const matchSearch =
@@ -128,11 +129,7 @@ export default function IndustryExpertsPage() {
   });
 
   const toggleStatus = (id: number) => {
-    setExperts((prev) => {
-      const next = prev.map((e) => (e.id === id ? { ...e, status: e.status === "Active" ? "Inactive" : "Active" } : e));
-      saveToStorage(next);
-      return next;
-    });
+    setExperts((prev) => prev.map((e) => (e.id === id ? { ...e, status: e.status === "Active" ? "Inactive" : "Active" } : e)));
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -195,26 +192,17 @@ export default function IndustryExpertsPage() {
 
   const save = () => {
     if (!form.name || !form.role || !form.company) return;
-    setExperts((prev) => {
-      let next;
-      if (modal.mode === "add") {
-        next = [...prev, { ...form, id: Date.now() }];
-      } else {
-        next = prev.map((e) => (e.id === modal.item!.id ? { ...modal.item!, ...form } : e));
-      }
-      saveToStorage(next);
-      return next;
-    });
+    if (modal.mode === "add") {
+      setExperts((prev) => [...prev, { ...form, id: Date.now() }]);
+    } else {
+      setExperts((prev) => prev.map((e) => (e.id === modal.item!.id ? { ...modal.item!, ...form } : e)));
+    }
     close();
   };
 
   const remove = () => {
     if (modal.item) {
-      setExperts((prev) => {
-        const next = prev.filter((e) => e.id !== modal.item!.id);
-        saveToStorage(next);
-        return next;
-      });
+      setExperts((prev) => prev.filter((e) => e.id !== modal.item!.id));
     }
     close();
   };
@@ -228,10 +216,31 @@ export default function IndustryExpertsPage() {
         title="Industry Experts & Mentors"
         subtitle={`${experts.length} total experts · ${experts.filter((e) => e.status === "Active").length} active`}
         action={
-          <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-            style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
-            <Plus size={16} /> Add Expert
-          </button>
+          <div className="flex items-center gap-2.5">
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Undo List Action"
+              >
+                <Undo size={14} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
+                title="Redo List Action"
+              >
+                <Redo size={14} />
+              </button>
+            </div>
+            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+              style={{ background: "#FF6B00", border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
+              <Plus size={16} /> Add Expert
+            </button>
+          </div>
         }
       />
 

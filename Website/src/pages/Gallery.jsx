@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageWrapper from '../components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '../components/common/SectionHeading/SectionHeading';
 import Lightbox from '../components/common/Lightbox/Lightbox';
@@ -6,21 +7,44 @@ import { galleryEntries } from '../data/gallery';
 
 export default function Gallery() {
   const [yearFilter, setYearFilter] = useState('All'); // All | 2024 | 2025 | 2026
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
 
   // Lightbox State
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeImages, setActiveImages] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  const filteredEntries = galleryEntries.filter(entry => {
-    return yearFilter === 'All' || entry.year === yearFilter;
-  });
-
   const triggerLightbox = (photos, index) => {
     setActiveImages(photos);
     setLightboxIndex(index);
     setLightboxOpen(true);
   };
+
+  useEffect(() => {
+    if (highlightId) {
+      const entry = galleryEntries.find(e => e.id === parseInt(highlightId));
+      if (entry) {
+        // Open lightbox with this entry's photos
+        triggerLightbox(entry.photos, 0);
+
+        // Also scroll to this element if it exists
+        setTimeout(() => {
+          const el = document.getElementById(`gallery-entry-${highlightId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Add a temporary highlight glow/border
+            el.style.borderColor = 'var(--apex-primary)';
+            el.style.boxShadow = '0 0 15px rgba(255, 90, 20, 0.4)';
+          }
+        }, 150);
+      }
+    }
+  }, [highlightId]);
+
+  const filteredEntries = galleryEntries.filter(entry => {
+    return yearFilter === 'All' || entry.year === yearFilter;
+  });
 
   return (
     <PageWrapper>
@@ -96,6 +120,7 @@ export default function Gallery() {
               {filteredEntries.map((entry) => (
                 <div 
                   key={entry.id} 
+                  id={`gallery-entry-${entry.id}`}
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',

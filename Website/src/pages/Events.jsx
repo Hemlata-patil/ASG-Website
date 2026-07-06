@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Calendar, MapPin, ExternalLink } from 'lucide-react';
 import PageWrapper from '../components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '../components/common/SectionHeading/SectionHeading';
 import { events } from '../data/events';
+import { galleryEntries } from '../data/gallery';
 
 export default function Events() {
   const [activeTab, setActiveTab] = useState('all'); // all | upcoming | past
@@ -136,11 +137,33 @@ export default function Events() {
                       </span>
 
 
-                      {item.status === 'past' && item.recapUrl && (
-                        <a href={item.recapUrl} style={{ color: 'var(--apex-text-muted)', fontWeight: '600', fontSize: '0.9rem' }}>
-                          View Recap →
-                        </a>
-                      )}
+                      {(() => {
+                        if (item.status !== 'past') return null;
+                        
+                        const cleanEventTags = (item.tags || []).map(t => t.replace('#', '').toLowerCase());
+                        const match = galleryEntries.find(entry => {
+                          const entryTags = (entry.tags || []).map(t => t.toLowerCase());
+                          const hasTagMatch = entryTags.some(t => cleanEventTags.includes(t));
+                          const titleMatch = entry.title.toLowerCase().includes(item.title.split(':')[0].split('(')[0].trim().toLowerCase()) ||
+                                             item.title.toLowerCase().includes(entry.title.split('-')[0].trim().toLowerCase());
+                          return hasTagMatch || titleMatch;
+                        });
+
+                        if (match) {
+                          return (
+                            <Link to={`/gallery?highlight=${match.id}`} style={{ color: 'var(--apex-primary)', fontWeight: '600', fontSize: '0.9rem' }}>
+                              View Recap →
+                            </Link>
+                          );
+                        } else if (item.recapUrl && item.recapUrl !== '#') {
+                          return (
+                            <a href={item.recapUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--apex-text-muted)', fontWeight: '600', fontSize: '0.9rem' }}>
+                              View Recap →
+                            </a>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 </div>
