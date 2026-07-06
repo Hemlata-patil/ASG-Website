@@ -257,7 +257,7 @@ export default function ASG() {
                   <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
                     <div style={{ marginTop: '4px' }}>{p.icon}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justify: 'left', alignItems: 'left' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h4 className="heading-sm" style={{ marginBottom: '4px', color: 'var(--apex-text-white)' }}>{p.title}</h4>
                         <span style={{ fontSize: '0.75rem', color: 'var(--apex-primary)', fontWeight: '700' }}>
                           View Listings →
