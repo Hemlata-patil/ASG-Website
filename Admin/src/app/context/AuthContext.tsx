@@ -1,4 +1,7 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+"use client";
+
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -10,12 +13,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => localStorage.getItem("asg_auth") === "true"
-  );
-  const [adminEmail, setAdminEmail] = useState(
-    () => localStorage.getItem("asg_email") || ""
-  );
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
+
+  useEffect(() => {
+    setIsLoggedIn(localStorage.getItem("asg_auth") === "true");
+    setAdminEmail(localStorage.getItem("asg_email") || "");
+  }, []);
 
   const login = (email: string) => {
     setIsLoggedIn(true);
@@ -43,3 +47,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 }
+

@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import logoImg from "../../assets/logo.png";
 import {
@@ -43,17 +43,17 @@ export default function Sidebar({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { logout } = useAuth();
 
   const isActive = (path: string) =>
     path === "/dashboard"
-      ? location.pathname === "/dashboard"
-      : location.pathname.startsWith(path);
+      ? pathname === "/dashboard"
+      : pathname?.startsWith(path) || false;
 
   const go = (path: string) => {
-    navigate(path);
+    router.push(path);
     onClose();
   };
 
@@ -84,7 +84,7 @@ export default function Sidebar({
         >
           <div className="flex flex-col gap-1.5">
             <img
-              src={logoImg}
+              src={logoImg.src}
               alt="APEX Startup Group"
               style={{
                 height: "60px",
@@ -157,7 +157,7 @@ export default function Sidebar({
           <button
             onClick={() => {
               logout();
-              navigate("/");
+              router.push("/");
             }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150"
             style={{
@@ -168,12 +168,14 @@ export default function Sidebar({
               fontFamily: "'Inter', sans-serif",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(239,68,68,0.12)";
-              e.currentTarget.style.color = "#ef4444";
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "rgba(239,68,68,0.12)";
+              el.style.color = "#ef4444";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "rgba(255,255,255,0.4)";
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "transparent";
+              el.style.color = "rgba(255,255,255,0.4)";
             }}
           >
             <LogOut size={16} />
