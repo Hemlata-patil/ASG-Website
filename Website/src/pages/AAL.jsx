@@ -263,7 +263,7 @@ export default function AAL() {
                   e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                 }}
               >
-                <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
                   <div style={{ fontSize: '2rem' }}>{d.icon}</div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--apex-primary)', fontWeight: '700' }}>
                     View Interns →
@@ -294,7 +294,7 @@ export default function AAL() {
             marginTop: 'var(--space-4)'
           }} className="grid-3">
             {activeExperts.map((expert, idx) => (
-              <div 
+              <div
                 key={expert.id || expert.name + idx}
                 style={{
                   backgroundColor: 'var(--apex-bg-surface)',
@@ -333,8 +333,8 @@ export default function AAL() {
                     zIndex: 1
                   }} />
                   {expert.photo ? (
-                    <img 
-                      src={expert.photo} 
+                    <img
+                      src={expert.photo}
                       alt={expert.name}
                       style={{
                         width: '100px',
@@ -410,7 +410,7 @@ export default function AAL() {
                       else if (link.includes("facebook.com")) label = "Facebook";
                       else if (link.includes("instagram.com")) label = "Instagram";
                       else label = `Social ${lIdx + 1}`;
-                      
+
                       return (
                         <a
                           key={lIdx}

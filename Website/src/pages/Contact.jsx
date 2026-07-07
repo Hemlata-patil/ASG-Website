@@ -91,7 +91,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <span style={{ fontSize: '0.75rem', color: 'var(--apex-text-muted)', display: 'block' }}>Email</span>
-                    <a href="mailto:info@apexstartupgroup.com" style={{ fontSize: '0.9rem', fontWeight: '600' }}>info@apexstartupgroup.com</a>
+                    <a href="mailto:reachus.asg@gmail.com" style={{ fontSize: '0.9rem', fontWeight: '600' }}>reachus.asg@gmail.com</a>
                   </div>
                 </div>
 
@@ -121,7 +121,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <span style={{ fontSize: '0.75rem', color: 'var(--apex-text-muted)', display: 'block' }}>WhatsApp Group</span>
-                    <a href="https://chat.whatsapp.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--apex-primary)' }}>Join WhatsApp Community →</a>
+                    <a href="https://chat.whatsapp.com/CoG7rugANv166E6p51uLcI" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--apex-primary)' }}>Join WhatsApp Community →</a>
                   </div>
                 </div>
               </div>
@@ -130,25 +130,25 @@ export default function Contact() {
               <div style={{ borderTop: '1px solid var(--apex-border-dark)', paddingTop: 'var(--space-4)' }}>
                 <h4 className="label" style={{ color: 'var(--apex-text-muted)', marginBottom: 'var(--space-3)' }}>Follow our updates</h4>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{
+                  <a href="https://www.instagram.com/apexstartupgroup" target="_blank" rel="noopener noreferrer" style={{
                     display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)'
                   }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg> Instagram
                   </a>
-                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" style={{
+                  <a href="https://www.linkedin.com/company/apex-startup-group" target="_blank" rel="noopener noreferrer" style={{
                     display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)'
                   }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect width="4" height="12" x="2" y="9" /><circle cx="4" cy="4" r="2" /></svg> LinkedIn
                   </a>
-                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={{
+                  <a href="https://x.com/apexstartupgrp" target="_blank" rel="noopener noreferrer" style={{
                     display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)'
                   }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M4 4l11.733 16h4.267l-11.733 -16z"/><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"/></svg> Twitter/X
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M4 4l11.733 16h4.267l-11.733 -16z" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg> Twitter/X
                   </a>
-                  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={{
+                  <a href="https://youtube.com/@apexstartupgroup" target="_blank" rel="noopener noreferrer" style={{
                     display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)'
                   }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25a29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg> YouTube
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25a29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" /></svg> YouTube
                   </a>
                 </div>
               </div>

@@ -38,11 +38,11 @@ body {
 
 .container {
   width: 100%;
-  max-width: var(--bp-xl);
+  max-width: 1360px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: var(--space-4);
-  padding-right: var(--space-4);
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 /* Text Highlight */
@@ -102,6 +102,10 @@ body {
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
   .grid-2, .grid-3 {
     grid-template-columns: 1fr;
   }
