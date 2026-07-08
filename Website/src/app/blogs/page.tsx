@@ -52,9 +52,9 @@ export default function Blogs() {
   // Filtering blogs based on category selection and search query
   const filteredBlogs = blogsList.filter(blog => {
     const matchCategory = selectedCategory === 'All' || blog.category === selectedCategory;
-    const matchSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        blog.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        blog.author.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.author.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCategory && matchSearch;
   });
 
@@ -62,7 +62,7 @@ export default function Blogs() {
     <PageWrapper>
       <section className="section">
         <div className="container">
-          <SectionHeading 
+          <SectionHeading
             overline="Insights & Ideas"
             title="Ecosystem Logs & Articles"
             subtitle="Thoughts, tutorials, and success stories from the APEX Startup Group and AI Launchpad cohorts."
@@ -82,8 +82,8 @@ export default function Blogs() {
               width: '100%',
               maxWidth: '450px',
             }}>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search blogs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -137,8 +137,8 @@ export default function Blogs() {
             gap: 'var(--space-4)'
           }} className="grid-3">
             {filteredBlogs.map((blog) => (
-              <article 
-                key={blog.id} 
+              <article
+                key={blog.id}
                 style={{
                   backgroundColor: 'var(--apex-bg-surface)',
                   border: '1px solid var(--apex-border-dark)',
@@ -160,9 +160,9 @@ export default function Blogs() {
               >
                 {/* Image Cover */}
                 <div style={{ height: '200px', overflow: 'hidden', cursor: 'pointer' }} onClick={() => router.push(`/blogs/${blog.slug}`)}>
-                  <img 
-                    src={blog.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=200&fit=crop"} 
-                    alt={blog.title} 
+                  <img
+                    src={blog.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=200&fit=crop"}
+                    alt={blog.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
@@ -182,8 +182,8 @@ export default function Blogs() {
                       <span style={{ fontSize: '0.8rem', color: 'var(--apex-text-muted)' }}>{blog.readTime}</span>
                     </div>
 
-                    <h4 
-                      className="heading-sm" 
+                    <h4
+                      className="heading-sm"
                       style={{ fontSize: '1.2rem', marginBottom: '8px', color: 'var(--apex-text-white)', cursor: 'pointer' }}
                       onClick={() => router.push(`/blogs/${blog.slug}`)}
                     >
@@ -198,7 +198,7 @@ export default function Blogs() {
                     <span style={{ fontSize: '0.8rem', color: 'var(--apex-text-muted)' }}>
                       {new Date(blog.date).toLocaleDateString("en-US", { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
-                    <span 
+                    <span
                       style={{ color: 'var(--apex-primary)', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}
                       onClick={() => router.push(`/blogs/${blog.slug}`)}
                     >

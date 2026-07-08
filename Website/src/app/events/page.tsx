@@ -140,13 +140,13 @@ export default function Events() {
 
                       {(() => {
                         if (item.status !== 'past') return null;
-                        
+
                         const cleanEventTags = (item.tags || []).map(t => t.replace('#', '').toLowerCase());
                         const match = galleryEntries.find(entry => {
                           const entryTags = (entry.tags || []).map(t => t.toLowerCase());
                           const hasTagMatch = entryTags.some(t => cleanEventTags.includes(t));
                           const titleMatch = entry.title.toLowerCase().includes(item.title.split(':')[0].split('(')[0].trim().toLowerCase()) ||
-                                             item.title.toLowerCase().includes(entry.title.split('-')[0].trim().toLowerCase());
+                            item.title.toLowerCase().includes(entry.title.split('-')[0].trim().toLowerCase());
                           return hasTagMatch || titleMatch;
                         });
 

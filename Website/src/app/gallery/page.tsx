@@ -47,7 +47,7 @@ function GalleryContent() {
 
   return (
     <div className="container">
-      <SectionHeading 
+      <SectionHeading
         overline="Ecosystem Logs"
         title="Chronological Timeline"
         subtitle="Explore our journey, achievements, and community milestones from 2024 to present."
@@ -115,8 +115,8 @@ function GalleryContent() {
           }} />
 
           {filteredEntries.map((entry) => (
-            <div 
-              key={entry.id} 
+            <div
+              key={entry.id}
               id={`gallery-entry-${entry.id}`}
               style={{
                 display: 'flex',
@@ -171,14 +171,14 @@ function GalleryContent() {
                 gap: 0,
                 transition: 'border-color var(--transition-base), box-shadow var(--transition-base)'
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--apex-primary)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--apex-border-dark)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-              }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--apex-primary)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--apex-border-dark)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                }}
               >
                 {/* Log Details */}
                 <div style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', justifySelf: 'stretch', justifyContent: 'space-between' }}>
@@ -190,8 +190,8 @@ function GalleryContent() {
 
                 {/* Image Preview */}
                 <div style={{ position: 'relative', overflow: 'hidden', height: '100%', minHeight: '220px', backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
-                  <img 
-                    src={entry.photos[0]} 
+                  <img
+                    src={entry.photos[0]}
                     alt={entry.title}
                     onClick={() => triggerLightbox(entry.photos, 0)}
                     style={{
@@ -211,7 +211,7 @@ function GalleryContent() {
                     }}
                   />
                   {entry.photos.length > 1 && (
-                    <div 
+                    <div
                       onClick={() => triggerLightbox(entry.photos, 1)}
                       style={{
                         position: 'absolute',
@@ -250,7 +250,7 @@ function GalleryContent() {
 
       {/* Lightbox Overlay */}
       {lightboxOpen && (
-        <Lightbox 
+        <Lightbox
           images={activeImages}
           currentIndex={lightboxIndex}
           onClose={() => setLightboxOpen(false)}

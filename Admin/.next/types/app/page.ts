@@ -1,4 +1,4 @@
-// File: D:\ASG-Website - Copy\Admin\src\app\page.tsx
+// File: D:\ASG Website\Admin\src\app\page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -51,13 +51,13 @@ export default function BlogDetail() {
         const related = allBlogs
           .filter(b => b.id !== current.id && b.category === current.category && (b.status === "Published" || !b.status))
           .slice(0, 3);
-        
+
         // If not enough related, fill with any other published blogs
         if (related.length < 3) {
           const others = allBlogs.filter(b => b.id !== current.id && !related.find(r => r.id === b.id) && (b.status === "Published" || !b.status));
           related.push(...others.slice(0, 3 - related.length));
         }
-        
+
         setRelatedBlogs(related);
       } else {
         // Redirect to list if not found
@@ -189,7 +189,7 @@ export default function BlogDetail() {
 
       <section className="section" style={{ paddingTop: 'var(--space-6)' }}>
         <div className="container" style={{ maxWidth: '850px' }}>
-          
+
           {/* Back Navigation */}
           <Link href="/blogs" style={{
             display: 'inline-flex',
@@ -228,9 +228,9 @@ export default function BlogDetail() {
           </div>
 
           {/* Blog Title */}
-          <h1 className="heading-lg" style={{ 
-            fontSize: '2.8rem', 
-            color: 'var(--apex-text-white)', 
+          <h1 className="heading-lg" style={{
+            fontSize: '2.8rem',
+            color: 'var(--apex-text-white)',
             lineHeight: '1.2',
             marginBottom: 'var(--space-4)'
           }}>
@@ -272,15 +272,15 @@ export default function BlogDetail() {
             border: '1px solid var(--apex-border-dark)',
             boxShadow: 'var(--shadow-lg)'
           }}>
-            <img 
-              src={blog.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=420&fit=crop"} 
-              alt={blog.title} 
+            <img
+              src={blog.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=420&fit=crop"}
+              alt={blog.title}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
 
           {/* Dynamic Article Content */}
-          <div 
+          <div
             className="rich-blog-content"
             style={{ marginBottom: 'var(--space-8)' }}
             dangerouslySetInnerHTML={{ __html: blog.content }}
@@ -325,7 +325,7 @@ export default function BlogDetail() {
                 gap: 'var(--space-4)'
               }} className="grid-3">
                 {relatedBlogs.map(item => (
-                  <div 
+                  <div
                     key={item.id}
                     style={{
                       backgroundColor: 'var(--apex-bg-surface)',
@@ -344,9 +344,9 @@ export default function BlogDetail() {
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
                   >
                     <div style={{ height: '130px', overflow: 'hidden' }}>
-                      <img 
-                        src={item.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300&h=150&fit=crop"} 
-                        alt={item.title} 
+                      <img
+                        src={item.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300&h=150&fit=crop"}
+                        alt={item.title}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     </div>

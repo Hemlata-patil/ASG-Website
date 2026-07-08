@@ -15,7 +15,7 @@ function ListingsContent() {
   const type = params.type as string;
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Resolve standard types
   const validTypes = ['founders', 'mentors', 'investors', 'service-providers', 'interns'];
   const currentType = validTypes.includes(type) ? type : 'founders';
@@ -137,7 +137,7 @@ function ListingsContent() {
         }
       }
     }
-    
+
     if (membersList && membersList.length > 0) {
       const typeMapping: Record<string, string> = {
         'founders': 'Founder',
@@ -160,8 +160,8 @@ function ListingsContent() {
     <div className="container">
       {/* Back button */}
       <div style={{ marginBottom: 'var(--space-4)' }}>
-        <Link 
-          href={currentType === 'interns' ? '/aal' : '/asg'} 
+        <Link
+          href={currentType === 'interns' ? '/aal' : '/asg'}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -186,7 +186,7 @@ function ListingsContent() {
       </div>
 
       {/* Section heading */}
-      <SectionHeading 
+      <SectionHeading
         overline={currentMeta.overline}
         title={currentMeta.title}
         subtitle={currentMeta.subtitle}
@@ -237,7 +237,7 @@ function ListingsContent() {
           marginTop: 'var(--space-4)'
         }} className="grid-3">
           {displayData.map((member, idx) => (
-            <div 
+            <div
               key={member.id || member.name + idx}
               style={{
                 backgroundColor: 'var(--apex-bg-surface)',
@@ -274,8 +274,8 @@ function ListingsContent() {
                   borderRadius: '50%',
                   zIndex: 1
                 }} />
-                <img 
-                  src={member.photo} 
+                <img
+                  src={member.photo}
                   alt={member.name}
                   style={{
                     width: '100px',
@@ -330,7 +330,7 @@ function ListingsContent() {
                         else if (link.includes("github.com")) label = "GitHub";
                         else if (link.includes("facebook.com")) label = "Facebook";
                         else if (link.includes("instagram.com")) label = "Instagram";
-                        
+
                         return (
                           <a
                             key={lIdx}

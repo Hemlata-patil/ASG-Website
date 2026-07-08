@@ -373,13 +373,16 @@ ul, ol {
 ::-webkit-scrollbar {
   width: 10px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--apex-bg-base);
 }
+
 ::-webkit-scrollbar-thumb {
   background: #333;
   border-radius: var(--radius-full);
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--apex-primary);
 }
@@ -472,12 +475,16 @@ body {
     padding-left: 16px;
     padding-right: 16px;
   }
-  .grid-2, .grid-3 {
+
+  .grid-2,
+  .grid-3 {
     grid-template-columns: 1fr;
   }
+
   .grid-4 {
     grid-template-columns: 1fr;
   }
+
   .section {
     padding-top: var(--space-6);
     padding-bottom: var(--space-6);
@@ -490,6 +497,7 @@ body {
     opacity: 0;
     transform: translateY(-6px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -523,7 +531,8 @@ select {
   padding-right: 36px;
 }
 
-select:hover, select:focus-visible {
+select:hover,
+select:focus-visible {
   border-color: var(--apex-primary);
   box-shadow: 0 0 0 3px rgba(255, 90, 20, 0.1);
 }
@@ -534,3 +543,96 @@ select option {
   padding: 9px 12px;
 }
 
+/* Timeline responsiveness */
+.timeline-container {
+  position: relative;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.timeline-track {
+  position: absolute;
+  left: 120px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--apex-border-dark);
+  z-index: 1;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--space-7);
+  position: relative;
+}
+
+.timeline-date {
+  width: 100px;
+  text-align: right;
+  padding-right: 24px;
+  padding-top: 6px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--apex-primary);
+  font-family: 'Fira Code', monospace;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+.timeline-node {
+  position: absolute;
+  left: 121px;
+  top: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--apex-primary);
+  transform: translateX(-50%);
+  z-index: 2;
+  box-shadow: 0 0 0 4px var(--apex-bg-base);
+}
+
+.timeline-card {
+  flex: 1;
+  margin-left: 40px;
+  background-color: var(--apex-bg-surface);
+  border: 1px solid var(--apex-border-dark);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 0;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+@media (max-width: 768px) {
+  .timeline-track {
+    left: 20px;
+  }
+
+  .timeline-item {
+    flex-direction: column;
+    padding-left: 40px;
+  }
+
+  .timeline-date {
+    width: auto;
+    text-align: left;
+    padding-right: 0;
+    padding-bottom: 8px;
+  }
+
+  .timeline-node {
+    left: 21px;
+    top: 12px;
+  }
+
+  .timeline-card {
+    margin-left: 0;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+}
