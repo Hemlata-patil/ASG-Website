@@ -876,17 +876,7 @@ export default function BlogsPage() {
                           onChange={handleMediaUpload}
                         />
                       </button>
-                      <button 
-                        onMouseDown={(e) => { 
-                          e.preventDefault(); 
-                          const url = prompt("Enter online image URL:");
-                          if (url) handleImageInsert(url);
-                        }} 
-                        className="p-1.5 hover:bg-gray-200 rounded-lg text-gray-650 text-xs font-semibold border-none bg-transparent cursor-pointer"
-                        title="Image by URL"
-                      >
-                        URL Img
-                      </button>
+
                       <button onMouseDown={(e) => { e.preventDefault(); handleVideoInsert(); }} className="p-1.5 hover:bg-gray-200 rounded-lg text-gray-600 border-none bg-transparent cursor-pointer" title="Embed Video / YouTube"><Video size={15} /></button>
 
                       <div className="w-px h-5 bg-gray-200 mx-1"></div>
@@ -1079,14 +1069,6 @@ export default function BlogsPage() {
                     </>
                   )}
                 </div>
-                <FormField label="Or Featured Image URL">
-                  <input 
-                    value={form.thumbnailUrl} 
-                    onChange={(e) => setForm(f => ({ ...f, thumbnailUrl: e.target.value }))} 
-                    placeholder="https://..." 
-                    className="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl outline-none"
-                  />
-                </FormField>
               </div>
 
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">

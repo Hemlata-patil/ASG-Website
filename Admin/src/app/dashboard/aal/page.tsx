@@ -547,7 +547,7 @@ export default function AALPage() {
                 <Redo size={14} />
               </button>
             </div>
-            {activeTab !== "Application" && (
+            {activeTab === "Problem Statement" && (
               <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90"
                 style={{ background: "#FF6B00", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
                 <Plus size={16} /> Add {activeTab}

@@ -603,9 +603,7 @@ export default function EventsPage() {
             </div>
           </FormField>
 
-          <FormField label="Or Thumbnail Image URL link">
-            <Input value={form.thumbnail} onChange={(e) => setField("thumbnail", e.target.value)} placeholder="https://images.unsplash.com/..." />
-          </FormField>
+
 
           <FormField label="Ecosystem Description">
             <Textarea value={form.description} onChange={(e) => setField("description", e.target.value)} placeholder="Detailed summary of this ecosystem event..." />
