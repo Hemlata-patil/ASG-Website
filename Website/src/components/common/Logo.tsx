@@ -18,16 +18,7 @@ export default function Logo({ size = 'medium', variant = 'full', light = false 
       const next = prev + 1;
       if (next >= 5) {
         const origin = typeof window !== 'undefined' ? window.location.origin : '';
-        if (origin.includes("5173") || origin.includes("3000")) {
-          // If in local dev (normally 3000 in Next.js), redirect to Next Admin (typically 3001)
-          if (origin.includes("3000")) {
-            window.location.href = origin.replace("3000", "3001");
-          } else {
-            window.location.href = origin.replace("5173", "5174");
-          }
-        } else {
-          window.location.href = "http://localhost:3001";
-        }
+        window.location.href = `${origin}/login`;
         return 0;
       }
       return next;
