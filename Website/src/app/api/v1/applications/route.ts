@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { internApplications } from '@/lib/db/schema/intern_applications';
-<<<<<<< HEAD
-=======
 import { interns } from '@/lib/db/schema/interns';
 
->>>>>>> origin/main
 import { eq, or } from 'drizzle-orm';
 
 export async function POST(req: Request) {
@@ -35,37 +32,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-<<<<<<< HEAD
-    // Check for duplicate application credentials
-    const duplicateChecks = [];
-    if (email) duplicateChecks.push(eq(internApplications.email, email));
-    if (phone) duplicateChecks.push(eq(internApplications.phone, phone));
-    if (linkedin) duplicateChecks.push(eq(internApplications.linkedinUrl, linkedin));
-    if (github) duplicateChecks.push(eq(internApplications.githubUrl, github));
-    if (photoUrl) duplicateChecks.push(eq(internApplications.photoUrl, photoUrl));
-
-    if (duplicateChecks.length > 0) {
-      const existing = await db
-        .select()
-        .from(internApplications)
-        .where(or(...duplicateChecks));
-
-      if (existing.length > 0) {
-        const record = existing[0];
-        let message = 'An application with similar credentials has already been submitted.';
-        
-        if (record.email === email) {
-          message = 'An application with this email address has already been submitted.';
-        } else if (record.phone === phone) {
-          message = 'An application with this phone number has already been submitted.';
-        } else if (record.linkedinUrl === linkedin) {
-          message = 'An application with this LinkedIn profile has already been submitted.';
-        } else if (github && record.githubUrl === github) {
-          message = 'An application with this GitHub profile has already been submitted.';
-        } else if (photoUrl && record.photoUrl === photoUrl) {
-          message = 'An application with this photo has already been submitted.';
-        }
 
     // 1. Check for existing duplicates in intern_applications
     const conditions = [
