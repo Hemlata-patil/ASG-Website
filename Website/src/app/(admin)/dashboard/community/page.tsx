@@ -216,10 +216,50 @@ export default function CommunityPage() {
       }
     } catch { /* ignore */ }
 
-    try {
-      const local = localStorage.getItem("asg_listing_applications");
-      if (local) setApplications(JSON.parse(local));
-    } catch { /* ignore */ }
+    async function loadLiveCommunityApplications() {
+      try {
+        const res = await fetch('/api/v1/admin/community-applications');
+        if (res.ok) {
+          const { data } = await res.json();
+          const dbApps = data.map((app: any) => ({
+            id: app.id,
+            name: app.fullName,
+            email: app.email,
+            phone: app.phone,
+            role: app.applicantType === 'founder' ? 'founders' :
+                  app.applicantType === 'mentor' ? 'mentors' :
+                  app.applicantType === 'investor' ? 'investors' :
+                  app.applicantType === 'service_provider' ? 'service-providers' : 'other',
+            company: app.company,
+            companyWebsite: app.websiteUrl || '',
+            description: app.motivation || '',
+            photo: app.photoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+            status: app.status === 'pending' ? 'Pending' :
+                    app.status === 'accepted' ? 'Accepted' : 'Rejected',
+            socialLinks: app.linkedinUrl ? [app.linkedinUrl] : [],
+            otherRoleDetails: app.designation || ''
+          }));
+          
+          const local = localStorage.getItem("asg_listing_applications");
+          let baseApps = [];
+          if (local) {
+            try { baseApps = JSON.parse(local); } catch {}
+          }
+          
+          const dbIds = new Set(dbApps.map((a: any) => a.id));
+          const nonDbApps = baseApps.filter((a: any) => !dbIds.has(a.id));
+          setApplications([...nonDbApps, ...dbApps]);
+        } else {
+          const local = localStorage.getItem("asg_listing_applications");
+          if (local) setApplications(JSON.parse(local));
+        }
+      } catch (err) {
+        console.error("Failed to load live community applications:", err);
+        const local = localStorage.getItem("asg_listing_applications");
+        if (local) setApplications(JSON.parse(local));
+      }
+    }
+    loadLiveCommunityApplications();
   }, [setMembers]);
 
   useEffect(() => {
@@ -323,43 +363,63 @@ export default function CommunityPage() {
     return matchStatus && matchSearch;
   });
 
-  const handleAcceptApplication = (app: any) => {
-    let mappedType: Member["type"] = "Founder";
-    if (app.role === "founders") mappedType = "Founder";
-    else if (app.role === "mentors") mappedType = "Mentor";
-    else if (app.role === "investors") mappedType = "Investor";
-    else if (app.role === "service-providers") mappedType = "Service Provider";
-    else if (app.role === "other") mappedType = "Other";
+  const handleAcceptApplication = async (app: any) => {
+    try {
+      const res = await fetch(`/api/v1/admin/community-applications?id=${app.id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        let mappedType: Member["type"] = "Founder";
+        if (app.role === "founders") mappedType = "Founder";
+        else if (app.role === "mentors") mappedType = "Mentor";
+        else if (app.role === "investors") mappedType = "Investor";
+        else if (app.role === "service-providers") mappedType = "Service Provider";
+        else if (app.role === "other") mappedType = "Other";
 
-    const newMember: Member = {
-      id: Date.now(),
-      name: app.name,
-      email: app.email,
-      phone: app.phone,
-      type: mappedType,
-      company: app.company,
-      companyWebsite: app.companyWebsite,
-      description: app.description,
-      socialLinks: app.socialLinks,
-      city: "Jalgaon",
-      joinDate: new Date().toISOString().split("T")[0],
-      status: "Active",
-      photo: app.photo,
-      otherRoleDetails: app.otherRoleDetails
-    };
+        const newMember: Member = {
+          id: Date.now(),
+          name: app.name,
+          email: app.email,
+          phone: app.phone,
+          type: mappedType,
+          company: app.company,
+          companyWebsite: app.companyWebsite,
+          description: app.description,
+          socialLinks: app.socialLinks,
+          city: "Jalgaon",
+          joinDate: new Date().toISOString().split("T")[0],
+          status: "Active",
+          photo: app.photo,
+          otherRoleDetails: app.otherRoleDetails
+        };
 
-    const nextMembers = [...members, newMember];
-    saveMembers(nextMembers);
+        const nextMembers = [...members, newMember];
+        saveMembers(nextMembers);
 
-    const nextApps = applications.map((a) => (a.id === app.id ? { ...a, status: "Accepted" } : a));
-    setApplications(nextApps);
-    localStorage.setItem("asg_listing_applications", JSON.stringify(nextApps));
+        const nextApps = applications.map((a) => (a.id === app.id ? { ...a, status: "Accepted" } : a));
+        setApplications(nextApps);
+      } else {
+        alert("Failed to approve application on server.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleRejectApplication = (app: any) => {
-    const nextApps = applications.map((a) => (a.id === app.id ? { ...a, status: "Rejected" } : a));
-    setApplications(nextApps);
-    localStorage.setItem("asg_listing_applications", JSON.stringify(nextApps));
+  const handleRejectApplication = async (app: any) => {
+    try {
+      const res = await fetch(`/api/v1/admin/community-applications?id=${app.id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        const nextApps = applications.map((a) => (a.id === app.id ? { ...a, status: "Rejected" } : a));
+        setApplications(nextApps);
+      } else {
+        alert("Failed to reject application on server.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const openAdd = () => {

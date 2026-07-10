@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { internApplications } from '@/lib/db/schema/intern_applications';
+<<<<<<< HEAD
+=======
+import { interns } from '@/lib/db/schema/interns';
+
+>>>>>>> origin/main
 import { eq, or } from 'drizzle-orm';
 
 export async function POST(req: Request) {
@@ -31,6 +36,7 @@ export async function POST(req: Request) {
       );
     }
 
+<<<<<<< HEAD
     // Check for duplicate application credentials
     const duplicateChecks = [];
     if (email) duplicateChecks.push(eq(internApplications.email, email));
@@ -61,11 +67,66 @@ export async function POST(req: Request) {
           message = 'An application with this photo has already been submitted.';
         }
 
-        return NextResponse.json(
-          { error: { code: 'DUPLICATE_ERROR', message } },
-          { status: 400 }
-        );
-      }
+    // 1. Check for existing duplicates in intern_applications
+    const conditions = [
+      eq(internApplications.email, email),
+      eq(internApplications.phone, phone),
+      eq(internApplications.linkedinUrl, linkedin),
+    ];
+
+    if (github && github.trim() !== '') {
+      conditions.push(eq(internApplications.githubUrl, github));
+    }
+
+    const existingApp = await db
+      .select()
+      .from(internApplications)
+      .where(or(...conditions))
+      .limit(1);
+
+    if (existingApp.length > 0) {
+      const record = existingApp[0];
+      let duplicateField = 'application details';
+      if (record.email.toLowerCase() === email.toLowerCase()) duplicateField = 'Email Address';
+      else if (record.phone === phone) duplicateField = 'Phone Number';
+      else if (record.linkedinUrl?.toLowerCase() === linkedin.toLowerCase()) duplicateField = 'LinkedIn Profile';
+      else if (record.githubUrl && github && record.githubUrl.toLowerCase() === github.toLowerCase()) duplicateField = 'GitHub Link';
+
+      return NextResponse.json(
+        { error: { code: 'DUPLICATE_ERROR', message: `An internship application with this ${duplicateField} already exists.` } },
+        { status: 400 }
+      );
+    }
+
+    // 2. Check for duplicates in active/completed interns
+    const internConditions = [
+      eq(interns.email, email),
+      eq(interns.phone, phone),
+      eq(interns.linkedinUrl, linkedin),
+    ];
+
+    if (github && github.trim() !== '') {
+      internConditions.push(eq(interns.githubUrl, github));
+    }
+
+    const existingIntern = await db
+      .select()
+      .from(interns)
+      .where(or(...internConditions))
+      .limit(1);
+
+    if (existingIntern.length > 0) {
+      const record = existingIntern[0];
+      let duplicateField = 'intern details';
+      if (record.email && record.email.toLowerCase() === email.toLowerCase()) duplicateField = 'Email Address';
+      else if (record.phone && record.phone === phone) duplicateField = 'Phone Number';
+      else if (record.linkedinUrl && record.linkedinUrl.toLowerCase() === linkedin.toLowerCase()) duplicateField = 'LinkedIn Profile';
+      else if (record.githubUrl && github && record.githubUrl.toLowerCase() === github.toLowerCase()) duplicateField = 'GitHub Link';
+
+      return NextResponse.json(
+        { error: { code: 'DUPLICATE_ERROR', message: `An active or completed intern with this ${duplicateField} is already registered.` } },
+        { status: 400 }
+      );
     }
 
     // Insert into Supabase database via Drizzle ORM

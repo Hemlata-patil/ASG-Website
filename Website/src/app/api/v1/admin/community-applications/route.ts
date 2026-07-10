@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { internApplications } from '@/lib/db/schema/intern_applications';
+import { communityMemberApplications } from '@/lib/db/schema/community_member_applications';
 import { desc, eq } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
 
@@ -11,24 +11,23 @@ export async function GET(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: 'You must be logged in to view candidates' } },
+        { error: { code: 'UNAUTHORIZED', message: 'You must be logged in to view community candidates' } },
         { status: 401 }
       );
     }
 
-    // Fetch all intern applications, newest first
     const applications = await db
       .select()
-      .from(internApplications)
-      .orderBy(desc(internApplications.createdAt));
+      .from(communityMemberApplications)
+      .orderBy(desc(communityMemberApplications.createdAt));
 
     return NextResponse.json({
       data: applications,
     });
   } catch (err: any) {
-    console.error('Failed to fetch applications for admin:', err);
+    console.error('Failed to fetch community applications for admin:', err);
     return NextResponse.json(
-      { error: { code: 'INTERNAL_ERROR', message: err.message || 'Failed to fetch applications' } },
+      { error: { code: 'INTERNAL_ERROR', message: err.message || 'Failed to fetch community applications' } },
       { status: 500 }
     );
   }
@@ -41,7 +40,7 @@ export async function DELETE(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: 'You must be logged in to manage candidates' } },
+        { error: { code: 'UNAUTHORIZED', message: 'You must be logged in to manage community candidates' } },
         { status: 401 }
       );
     }
@@ -56,16 +55,16 @@ export async function DELETE(req: Request) {
       );
     }
 
-    await db.delete(internApplications).where(eq(internApplications.id, id));
+    await db.delete(communityMemberApplications).where(eq(communityMemberApplications.id, id));
 
     return NextResponse.json({
       success: true,
-      message: 'Application deleted successfully'
+      message: 'Community application deleted successfully'
     });
   } catch (err: any) {
-    console.error('Failed to delete application:', err);
+    console.error('Failed to delete community application:', err);
     return NextResponse.json(
-      { error: { code: 'INTERNAL_ERROR', message: err.message || 'Failed to delete application' } },
+      { error: { code: 'INTERNAL_ERROR', message: err.message || 'Failed to delete community application' } },
       { status: 500 }
     );
   }

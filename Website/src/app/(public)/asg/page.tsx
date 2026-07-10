@@ -26,7 +26,6 @@ export default function ASG() {
   const router = useRouter();
   const pillarsAnim = useScrollAnimation();
   const programsAnim = useScrollAnimation();
-  const membersAnim = useScrollAnimation();
 
   // ASG Member Listing Application Form State
   const [formData, setFormData] = useState<FormDataState>({
@@ -83,9 +82,7 @@ export default function ASG() {
     if (!formData.role) errors.role = 'Ecosystem role is required';
     if (!formData.company.trim()) errors.company = 'Company / Affiliation is required';
     if (!formData.description.trim()) errors.description = 'Short Description is required';
-    if (!formData.photoUrl) {
-      errors.photo = 'Profile Photo / Company Logo is required';
-    }
+    if (!formData.photoUrl) errors.photoUrl = 'Profile Photo / Company Logo is required';
     if (formData.role === 'other' && !formData.otherRoleDetails?.trim()) {
       errors.otherRoleDetails = 'Tell us about your role is required';
     }
@@ -102,13 +99,12 @@ export default function ASG() {
     setIsSubmitting(true);
 
     try {
-      // Submit application details directly to community-applications API
       const res = await fetch('/api/v1/community-applications', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData)
       });
 
       if (!res.ok) {
@@ -130,7 +126,7 @@ export default function ASG() {
         otherRoleDetails: ''
       });
     } catch (err: any) {
-      alert(err.message || 'An error occurred during submission.');
+      alert(err.message || 'An error occurred while submitting your application.');
     } finally {
       setIsSubmitting(false);
     }
@@ -553,7 +549,7 @@ export default function ASG() {
                   {formErrors.description && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.description}</span>}
                 </div>
 
-                {/* Photo Upload with Crop and constraints info */}
+                {/* Photo Upload Zone */}
                 <div>
                   <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Profile Photo / Company Logo *</label>
                   <ImageUpload
@@ -561,12 +557,12 @@ export default function ASG() {
                     value={formData.photoUrl}
                     onChange={(url) => {
                       setFormData(prev => ({ ...prev, photoUrl: url }));
-                      if (formErrors.photo) {
-                        setFormErrors(prev => ({ ...prev, photo: '' }));
+                      if (formErrors.photoUrl) {
+                        setFormErrors(prev => ({ ...prev, photoUrl: '' }));
                       }
                     }}
                   />
-                  {formErrors.photo && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.photo}</span>}
+                  {formErrors.photoUrl && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.photoUrl}</span>}
                 </div>
 
                 <button
