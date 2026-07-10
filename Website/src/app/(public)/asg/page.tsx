@@ -26,7 +26,6 @@ export default function ASG() {
   const router = useRouter();
   const pillarsAnim = useScrollAnimation();
   const programsAnim = useScrollAnimation();
-  const membersAnim = useScrollAnimation();
 
   // ASG Member Listing Application Form State
   const [formData, setFormData] = useState<FormDataState>({
