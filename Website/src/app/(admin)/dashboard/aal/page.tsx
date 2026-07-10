@@ -402,7 +402,10 @@ export default function AALPage() {
           } catch { /* ignore */ }
         }
         
-        const problemStatements = baseItems.filter(i => i.type === "Problem Statement");
+        let problemStatements = baseItems.filter(i => i.type === "Problem Statement");
+        if (problemStatements.length === 0) {
+          problemStatements = INITIAL.filter(i => i.type === "Problem Statement");
+        }
         setItems([...problemStatements, ...dbInterns, ...dbApplications]);
       } catch (err) {
         console.error("Failed to load live AAL data:", err);
