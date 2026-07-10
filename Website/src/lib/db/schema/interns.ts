@@ -5,6 +5,8 @@ export const internStatusEnum = pgEnum('intern_status', ['active', 'completed'])
 export const interns = pgTable('interns', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
   photo: text('photo').notNull(),
   college: text('college').notNull(),
   domain: text('domain').notNull(),

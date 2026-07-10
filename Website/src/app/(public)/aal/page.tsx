@@ -80,6 +80,8 @@ export default function AAL() {
     shortDescription: '',
     aiToolsUsed: ''
   });
+  const [selectedCollege, setSelectedCollege] = useState('');
+  const [customCollege, setCustomCollege] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -171,7 +173,11 @@ export default function AAL() {
       errors.email = 'Please enter a valid email';
     }
     if (!formData.phone.trim()) errors.phone = 'Phone number is required';
-    if (!formData.college.trim()) errors.college = 'College/University Name is required';
+    if (!selectedCollege) {
+      errors.college = 'College selection is required';
+    } else if (selectedCollege === 'Others' && !customCollege.trim()) {
+      errors.customCollege = 'Please specify your college name';
+    }
     if (!formData.degree.trim()) errors.degree = 'Degree/Course of study is required';
     if (!formData.year) errors.year = 'Year of study is required';
     if (!formData.linkedin.trim()) errors.linkedin = 'LinkedIn Profile Link is required';
@@ -192,12 +198,17 @@ export default function AAL() {
     }
     setIsSubmitting(true);
     try {
+      const submissionData = {
+        ...formData,
+        college: selectedCollege === 'Others' ? 'Others' : selectedCollege
+      };
+
       const res = await fetch('/api/v1/applications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       });
 
       if (!res.ok) {
@@ -206,6 +217,8 @@ export default function AAL() {
       }
 
       setSubmitSuccess(true);
+      setSelectedCollege('');
+      setCustomCollege('');
       setFormData({
         name: '',
         email: '',
@@ -745,23 +758,57 @@ export default function AAL() {
                   {/* College / University */}
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>College / University Name *</label>
-                    <input
-                      type="text"
-                      name="college"
-                      value={formData.college}
-                      onChange={handleFormChange}
-                      placeholder="e.g. SSBT COET, Jalgaon"
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--apex-bg-surface-elevated)',
-                        border: formErrors.college ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
-                        color: 'var(--apex-text-white)',
-                        fontSize: '0.9rem'
+                    <ApexDropdown
+                      label={selectedCollege || 'Select College'}
+                      options={[
+                        { value: 'Government College of Engineering Jalgaon', label: 'Government College of Engineering Jalgaon' },
+                        { value: 'SSBT College of Engineering and Technology', label: 'SSBT College of Engineering and Technology' },
+                        { value: "KCE's College of Engineering", label: "KCE's College of Engineering" },
+                        { value: 'M. J. College', label: 'M. J. College' },
+                        { value: 'IMR College', label: 'IMR College' },
+                        { value: "Godavari Foundation's College of Engineering", label: "Godavari Foundation's College of Engineering" },
+                        { value: 'Others', label: 'Others' }
+                      ]}
+                      onSelect={(val) => {
+                        setSelectedCollege(val);
+                        if (val !== 'Others') {
+                          setFormData(prev => ({ ...prev, college: val }));
+                        } else {
+                          setFormData(prev => ({ ...prev, college: 'Others' }));
+                        }
+                        if (formErrors.college) {
+                          setFormErrors(prev => ({ ...prev, college: '' }));
+                        }
                       }}
+                      minWidth="100%"
                     />
                     {formErrors.college && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.college}</span>}
+                    
+                    {selectedCollege === 'Others' && (
+                      <div style={{ marginTop: '10px' }}>
+                        <input
+                          type="text"
+                          value={customCollege}
+                          onChange={(e) => {
+                            setCustomCollege(e.target.value);
+                            if (formErrors.customCollege) {
+                              setFormErrors(prev => ({ ...prev, customCollege: '' }));
+                            }
+                          }}
+                          placeholder="Type your college name..."
+                          style={{
+                            width: '100%',
+                            padding: '10px 14px',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: 'var(--apex-bg-surface-elevated)',
+                            border: formErrors.customCollege ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
+                            color: 'var(--apex-text-white)',
+                            fontSize: '0.9rem'
+                          }}
+                        />
+                        {formErrors.customCollege && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.customCollege}</span>}
+                      </div>
+                    )}
                   </div>
 
                   {/* Degree / Course */}

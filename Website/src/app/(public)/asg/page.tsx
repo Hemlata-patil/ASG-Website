@@ -7,6 +7,7 @@ import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import ApexDropdown from '@/components/common/ApexDropdown/ApexDropdown';
+import ImageUpload from '@/components/shared/ImageUpload';
 
 interface FormDataState {
   name: string;
@@ -17,7 +18,7 @@ interface FormDataState {
   company: string;
   companyWebsite: string;
   description: string;
-  photo: File | null;
+  photoUrl: string;
   otherRoleDetails: string;
 }
 
@@ -37,13 +38,12 @@ export default function ASG() {
     company: '',
     companyWebsite: '',
     description: '',
-    photo: null,
+    photoUrl: '',
     otherRoleDetails: ''
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [isDragActive, setIsDragActive] = useState(false);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -71,37 +71,6 @@ export default function ASG() {
     setFormData(prev => ({ ...prev, socialLinks: newLinks.length ? newLinks : [''] }));
   };
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setIsDragActive(true);
-    } else if (e.type === "dragleave") {
-      setIsDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFormData(prev => ({ ...prev, photo: e.dataTransfer.files[0] }));
-      if (formErrors.photo) {
-        setFormErrors(prev => ({ ...prev, photo: '' }));
-      }
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, photo: e.target.files[0] }));
-      if (formErrors.photo) {
-        setFormErrors(prev => ({ ...prev, photo: '' }));
-      }
-    }
-  };
-
   const validateForm = () => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = 'Full Name is required';
@@ -114,14 +83,14 @@ export default function ASG() {
     if (!formData.role) errors.role = 'Ecosystem role is required';
     if (!formData.company.trim()) errors.company = 'Company / Affiliation is required';
     if (!formData.description.trim()) errors.description = 'Short Description is required';
-    if (!formData.photo) errors.photo = 'Profile Photo / Company Logo is required';
+    if (!formData.photoUrl) errors.photoUrl = 'Profile Photo / Company Logo is required';
     if (formData.role === 'other' && !formData.otherRoleDetails?.trim()) {
       errors.otherRoleDetails = 'Tell us about your role is required';
     }
     return errors;
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -130,30 +99,20 @@ export default function ASG() {
     }
     setIsSubmitting(true);
 
-    const saveApplication = (photoBase64: string | ArrayBuffer | null) => {
-      const newApp = {
-        id: Date.now(),
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role,
-        otherRoleDetails: formData.otherRoleDetails || '',
-        company: formData.company,
-        companyWebsite: formData.companyWebsite,
-        socialLinks: formData.socialLinks.filter(l => l.trim()),
-        description: formData.description,
-        photo: photoBase64 || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
-        status: "Pending",
-        date: new Date().toISOString().split("T")[0]
-      };
+    try {
+      const res = await fetch('/api/v1/community-applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
 
-      if (typeof window !== 'undefined') {
-        const existingApps = JSON.parse(localStorage.getItem("asg_listing_applications") || "[]");
-        existingApps.push(newApp);
-        localStorage.setItem("asg_listing_applications", JSON.stringify(existingApps));
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || 'Failed to submit application.');
       }
 
-      setIsSubmitting(false);
       setSubmitSuccess(true);
       setFormData({
         name: '',
@@ -164,19 +123,13 @@ export default function ASG() {
         company: '',
         companyWebsite: '',
         description: '',
-        photo: null,
+        photoUrl: '',
         otherRoleDetails: ''
       });
-    };
-
-    if (formData.photo instanceof File) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        saveApplication(event.target?.result ?? null);
-      };
-      reader.readAsDataURL(formData.photo);
-    } else {
-      saveApplication(null);
+    } catch (err: any) {
+      alert(err.message || 'An error occurred while submitting your application.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -597,47 +550,20 @@ export default function ASG() {
                   {formErrors.description && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.description}</span>}
                 </div>
 
-                {/* Photo Upload Drag & Drop Zone */}
+                {/* Photo Upload Zone */}
                 <div>
                   <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Profile Photo / Company Logo *</label>
-                  <div
-                    onDragEnter={handleDrag}
-                    onDragOver={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDrop={handleDrop}
-                    style={{
-                      border: formErrors.photo ? '2px dashed var(--apex-primary)' : (isDragActive ? '2px dashed var(--apex-primary)' : '2px dashed var(--apex-border-dark)'),
-                      borderRadius: 'var(--radius-sm)',
-                      backgroundColor: isDragActive ? 'rgba(255, 90, 20, 0.05)' : 'var(--apex-bg-surface-elevated)',
-                      padding: '20px',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
+                  <ImageUpload
+                    uploadType="community_member_photo"
+                    value={formData.photoUrl}
+                    onChange={(url) => {
+                      setFormData(prev => ({ ...prev, photoUrl: url }));
+                      if (formErrors.photoUrl) {
+                        setFormErrors(prev => ({ ...prev, photoUrl: '' }));
+                      }
                     }}
-                    onClick={() => {
-                      const inputEl = document.getElementById('photo-upload-input') as HTMLInputElement;
-                      inputEl?.click();
-                    }}
-                  >
-                    <input
-                      id="photo-upload-input"
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleFileChange}
-                    />
-                    {formData.photo ? (
-                      <div style={{ color: 'var(--apex-text-white)', fontSize: '0.85rem' }}>
-                        Selected: <strong>{formData.photo.name}</strong>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--apex-primary)', marginTop: '4px' }}>Click or drag to change</div>
-                      </div>
-                    ) : (
-                      <div style={{ color: 'var(--apex-text-muted)', fontSize: '0.85rem' }}>
-                        Drag & drop photo here or <span style={{ color: 'var(--apex-primary)', fontWeight: '600' }}>browse</span>
-                      </div>
-                    )}
-                  </div>
-                  {formErrors.photo && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.photo}</span>}
+                  />
+                  {formErrors.photoUrl && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.photoUrl}</span>}
                 </div>
 
                 <button
