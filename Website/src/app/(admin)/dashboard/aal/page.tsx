@@ -354,7 +354,7 @@ export default function AALPage() {
             domain: app.preferredDomain || 'General',
             status: app.status.charAt(0).toUpperCase() + app.status.slice(1),
             startDate: new Date(app.createdAt).toISOString().split('T')[0],
-            isExistingIntern: false,
+            isExistingIntern: app.isExistingIntern || false,
             photo: app.photoUrl || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
             github: app.githubUrl || '',
             linkedin: app.linkedinUrl || '',
@@ -529,8 +529,25 @@ export default function AALPage() {
     close();
   };
 
-  const remove = () => {
-    if (modal.item) saveItems(items.filter((i) => i.id !== modal.item!.id));
+  const remove = async () => {
+    if (modal.item) {
+      if (modal.item.type === "Intern") {
+        try {
+          const res = await fetch(`/api/v1/admin/interns?id=${modal.item.id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) {
+            alert("Failed to delete intern on database server.");
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Network error deleting intern.");
+          return;
+        }
+      }
+      saveItems(items.filter((i) => i.id !== modal.item!.id));
+    }
     close();
   };
 
@@ -669,12 +686,12 @@ export default function AALPage() {
   const tabCounts = tabs.map(t => ({
     type: t,
     count: t === "Application"
-      ? items.filter(i => i.type === "Application" && i.status !== "Accepted").length
+      ? items.filter(i => i.type === "Application" && i.status !== "Accepted" && i.status !== "Rejected").length
       : items.filter(i => i.type === t).length
   }));
 
-  const newApplications = filtered.filter(i => !i.isExistingIntern && i.status !== "Accepted");
-  const existingApplications = filtered.filter(i => i.isExistingIntern && i.status !== "Accepted");
+  const newApplications = filtered.filter(i => !i.isExistingIntern && i.status !== "Accepted" && i.status !== "Rejected");
+  const existingApplications = filtered.filter(i => i.isExistingIntern && i.status !== "Accepted" && i.status !== "Rejected");
 
   return (
     <div>

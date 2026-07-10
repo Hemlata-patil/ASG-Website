@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, pgEnum, boolean } from 'drizzle-orm/pg-core';
 
 export const applicationStatusEnum = pgEnum('application_status', ['pending', 'reviewed', 'accepted', 'rejected']);
 
@@ -19,6 +19,7 @@ export const internApplications = pgTable('intern_applications', {
   preferredDomain: text('preferred_domain').notNull(),
   motivation: text('motivation').notNull(),
   status: applicationStatusEnum('status').default('pending').notNull(),
+  isExistingIntern: boolean('is_existing_intern').default(false).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

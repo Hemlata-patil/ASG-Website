@@ -22,7 +22,8 @@ export async function POST(req: Request) {
       github,
       project,
       notes,
-      photoUrl
+      photoUrl,
+      internStatus
     } = body;
 
     // Simple server-side validation
@@ -112,6 +113,7 @@ export async function POST(req: Request) {
       preferredDomain: project || 'General',
       motivation: notes || '',
       status: 'pending',
+      isExistingIntern: internStatus === 'existing',
     }).returning();
 
     return NextResponse.json(
