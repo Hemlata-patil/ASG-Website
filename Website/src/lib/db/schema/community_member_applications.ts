@@ -15,6 +15,7 @@ export const communityMemberApplications = pgTable('community_member_application
   linkedinUrl: text('linkedin_url'),
   expertise: text('expertise').notNull(),
   motivation: text('motivation').notNull(),
+  photoUrl: text('photo_url'),
   status: applicationStatusEnum('status').default('pending').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

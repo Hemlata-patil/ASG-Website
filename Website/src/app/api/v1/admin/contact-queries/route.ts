@@ -2,9 +2,20 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { contactQueries } from '@/lib/db/schema/contact_queries';
 import { desc } from 'drizzle-orm';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(req: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'You must be logged in to view queries' } },
+        { status: 401 }
+      );
+    }
+
     const queries = await db
       .select()
       .from(contactQueries)

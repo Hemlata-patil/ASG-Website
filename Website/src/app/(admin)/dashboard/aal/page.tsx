@@ -20,7 +20,7 @@ const DUMMY_MENTORS = [
 type AALType = "Intern" | "Problem Statement" | "Application";
 
 interface AALItem {
-  id: number;
+  id: number | string;
   type: AALType;
   title: string; // Used as Name for Interns/Applications, and Title for Problem Statements
   description: string;
@@ -34,6 +34,7 @@ interface AALItem {
   mentor?: string;
   photo?: string;
   github?: string;
+  linkedin?: string;
   notes?: string; // Why join
   aiToolsUsed?: string;
   shortDescription?: string;
@@ -332,12 +333,14 @@ export default function AALPage() {
   const [items, setItems, undo, redo, canUndo, canRedo] = useUndoRedoState<AALItem[]>(INITIAL);
 
   useEffect(() => {
-    async function loadLiveApplications() {
+    async function loadLiveAALData() {
       try {
-        const res = await fetch('http://localhost:3000/api/v1/admin/applications');
-        if (res.ok) {
-          const { data } = await res.json();
-          const dbApplications = data.map((app: any) => ({
+        // 1. Fetch applications
+        const appRes = await fetch('/api/v1/admin/applications');
+        let dbApplications: AALItem[] = [];
+        if (appRes.ok) {
+          const { data } = await appRes.json();
+          dbApplications = data.map((app: any) => ({
             id: app.id,
             type: "Application",
             title: app.fullName,
@@ -354,36 +357,60 @@ export default function AALPage() {
             isExistingIntern: false,
             photo: app.photoUrl || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
             github: app.githubUrl || '',
+            linkedin: app.linkedinUrl || '',
             notes: app.motivation || '',
             aiToolsUsed: app.skills || '',
             shortDescription: app.skills || '',
           }));
+        }
 
-          const raw = localStorage.getItem("asg_aal_items");
-          let baseItems = INITIAL;
-          if (raw) {
-            try {
-              baseItems = JSON.parse(raw) as AALItem[];
-            } catch { /* ignore */ }
-          }
-          
-          const nonApplications = baseItems.filter(i => i.type !== "Application");
-          setItems([...nonApplications, ...dbApplications]);
-        } else {
-          const raw = localStorage.getItem("asg_aal_items");
-          if (raw) {
-            setItems(JSON.parse(raw));
-          }
+        // 2. Fetch interns
+        const internRes = await fetch('/api/v1/admin/interns');
+        let dbInterns: AALItem[] = [];
+        if (internRes.ok) {
+          const { data } = await internRes.json();
+          dbInterns = data.map((intern: any) => ({
+            id: intern.id,
+            type: "Intern",
+            title: intern.name,
+            internName: intern.name,
+            internEmail: intern.email || '',
+            phone: intern.phone || '',
+            college: intern.college,
+            course: "B.Tech/Other",
+            year: "Graduated/Active",
+            description: `Working on ${intern.domain} Platform`,
+            domain: intern.domain,
+            mentor: "TBD",
+            status: intern.status === 'active' ? 'Active' : 'Completed',
+            startDate: new Date(intern.createdAt).toISOString().split('T')[0],
+            isExistingIntern: false,
+            photo: intern.photo || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop",
+            github: intern.githubUrl || '',
+            linkedin: intern.linkedinUrl || '',
+            notes: '',
+            aiToolsUsed: '',
+            shortDescription: ''
+          }));
         }
-      } catch (err) {
-        console.error("Failed to load live applications:", err);
+
         const raw = localStorage.getItem("asg_aal_items");
+        let baseItems = INITIAL;
         if (raw) {
-          setItems(JSON.parse(raw));
+          try {
+            baseItems = JSON.parse(raw) as AALItem[];
+          } catch { /* ignore */ }
         }
+        
+        const problemStatements = baseItems.filter(i => i.type === "Problem Statement");
+        setItems([...problemStatements, ...dbInterns, ...dbApplications]);
+      } catch (err) {
+        console.error("Failed to load live AAL data:", err);
+        const raw = localStorage.getItem("asg_aal_items");
+        if (raw) setItems(JSON.parse(raw));
       }
     }
-    loadLiveApplications();
+    loadLiveAALData();
   }, [setItems]);
 
   useEffect(() => {
@@ -444,7 +471,7 @@ export default function AALPage() {
     reader.readAsDataURL(file);
   };
 
-  const toggleStatus = (id: number) => {
+  const toggleStatus = (id: number | string) => {
     const updated = items.map((item) => {
       if (item.id === id) {
         const newStatus = (item.status === "Active" ? "Inactive" : "Active") as AALItem["status"];
@@ -455,7 +482,7 @@ export default function AALPage() {
     saveItems(updated);
   };
 
-  const updateStatusDirectly = (id: number, newStatus: AALItem["status"]) => {
+  const updateStatusDirectly = (id: number | string, newStatus: AALItem["status"]) => {
     saveItems(items.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
   };
 
@@ -507,50 +534,132 @@ export default function AALPage() {
   const set = (k: keyof typeof form, v: any) => setForm((f) => ({ ...f, [k]: v }));
 
   // For EXISTING intern applications (unchanged workflow)
-  const handleAcceptApplication = (item: AALItem) => {
-    const updated = items.map((i) => {
-      if (i.id === item.id) return { ...i, status: "Accepted" as const };
-      if (i.type === "Intern" && i.internEmail === item.internEmail) {
-        return { ...i, domain: item.domain || i.domain, description: item.description || i.description };
+  const handleAcceptApplication = async (item: AALItem) => {
+    try {
+      // 1. Save intern to database
+      const internRes = await fetch('/api/v1/admin/interns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: item.internName || item.title,
+          photo: item.photo,
+          college: item.college || 'SSBT',
+          domain: item.domain || 'General',
+          linkedinUrl: item.linkedin || null,
+          githubUrl: item.github || null,
+          email: item.internEmail || null,
+          phone: item.phone || null
+        })
+      });
+
+      if (!internRes.ok) {
+        alert("Failed to save intern details on server.");
+        return;
       }
-      return i;
-    });
-    saveItems(updated);
+
+      // 2. Delete application
+      const res = await fetch(`/api/v1/admin/applications?id=${item.id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        const updated = items.map((i) => {
+          if (i.id === item.id) return { ...i, status: "Accepted" as const };
+          if (i.type === "Intern" && i.internEmail === item.internEmail) {
+            return { ...i, domain: item.domain || i.domain, description: item.description || i.description };
+          }
+          return i;
+        });
+        saveItems(updated);
+      } else {
+        alert("Failed to approve application on server.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // For NEW intern applications
-  const handleAcceptNewInternApplication = (item: AALItem, problemStatement: string, mentor: string) => {
-    const updatedItems = items.map((i) =>
-      i.id === item.id ? { ...i, status: "Accepted" as const, domain: problemStatement } : i
-    );
-    const newIntern: AALItem = {
-      id: Date.now(),
-      type: "Intern",
-      title: item.internName || item.title,
-      internName: item.internName || item.title,
-      internEmail: item.internEmail,
-      phone: item.phone,
-      college: item.college,
-      course: item.course,
-      year: item.year,
-      description: item.shortDescription || `Working on ${problemStatement} Platform`,
-      domain: problemStatement,
-      mentor: mentor || "TBD (To Be Assigned)",
-      status: "Active",
-      photo: item.photo || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop",
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      github: item.github,
-      notes: item.notes,
-      aiToolsUsed: item.aiToolsUsed,
-      shortDescription: item.shortDescription
-    };
-    saveItems([...updatedItems, newIntern]);
-    close();
+  const handleAcceptNewInternApplication = async (item: AALItem, problemStatement: string, mentor: string) => {
+    try {
+      // 1. Save intern to database
+      const internRes = await fetch('/api/v1/admin/interns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: item.internName || item.title,
+          photo: item.photo,
+          college: item.college || 'SSBT',
+          domain: problemStatement,
+          linkedinUrl: item.linkedin || null,
+          githubUrl: item.github || null,
+          email: item.internEmail || null,
+          phone: item.phone || null
+        })
+      });
+
+      if (!internRes.ok) {
+        alert("Failed to save intern details on server.");
+        return;
+      }
+
+      // 2. Delete application
+      const res = await fetch(`/api/v1/admin/applications?id=${item.id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        const updatedItems = items.map((i) =>
+          i.id === item.id ? { ...i, status: "Accepted" as const, domain: problemStatement } : i
+        );
+        const newIntern: AALItem = {
+          id: Date.now(),
+          type: "Intern",
+          title: item.internName || item.title,
+          internName: item.internName || item.title,
+          internEmail: item.internEmail,
+          phone: item.phone,
+          college: item.college,
+          course: item.course,
+          year: item.year,
+          description: item.shortDescription || `Working on ${problemStatement} Platform`,
+          domain: problemStatement,
+          mentor: mentor || "TBD (To Be Assigned)",
+          status: "Active",
+          photo: item.photo || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop",
+          startDate: new Date().toISOString().split("T")[0],
+          endDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+          github: item.github,
+          linkedin: item.linkedin,
+          notes: item.notes,
+          aiToolsUsed: item.aiToolsUsed,
+          shortDescription: item.shortDescription
+        };
+        saveItems([...updatedItems, newIntern]);
+        close();
+      } else {
+        alert("Failed to approve application on server.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleRejectApplication = (item: AALItem) => {
-    saveItems(items.map((i) => (i.id === item.id ? { ...i, status: "Rejected" as const } : i)));
+  const handleRejectApplication = async (item: AALItem) => {
+    try {
+      const res = await fetch(`/api/v1/admin/applications?id=${item.id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        saveItems(items.map((i) => (i.id === item.id ? { ...i, status: "Rejected" as const } : i)));
+      } else {
+        alert("Failed to reject application on server.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const tabs: AALType[] = ["Intern", "Problem Statement", "Application"];
@@ -678,7 +787,7 @@ export default function AALPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#fafafa" }}>
-                  {activeTab === "Intern" && ["Photo", "Name", "Email", "Role/Description", "Domain", "Mentor", "Status", "Actions"].map((h) => (
+                  {activeTab === "Intern" && ["Photo", "Name", "Email", "Phone Number", "Domain", "Mentor", "Status", "Actions"].map((h) => (
                     <th key={h} style={{ textAlign: "left", fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", padding: "12px 16px" }}>{h}</th>
                   ))}
                   {activeTab === "Problem Statement" && ["Icon", "Title", "Description", "Domain", "Status", "Actions"].map((h) => (
@@ -698,9 +807,7 @@ export default function AALPage() {
                           <div style={{ fontSize: "14px", fontWeight: 600, color: "#0d0d0d" }}>{item.internName}</div>
                         </td>
                         <td style={{ padding: "14px 16px", fontSize: "12px", color: "#aaa" }}>{item.internEmail}</td>
-                        <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555", maxWidth: "220px" }}>
-                          <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.description}</div>
-                        </td>
+                        <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>{item.phone || "—"}</td>
                         <td style={{ padding: "14px 16px" }}>
                           <span style={{ fontSize: "12px", fontWeight: 500, padding: "3px 10px", borderRadius: "99px", background: "rgba(59,130,246,0.1)", color: "#3b82f6" }}>{item.domain}</span>
                         </td>
@@ -846,7 +953,7 @@ export default function AALPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "#fafafa" }}>
-                      {["Photo", "Candidate", "Email", "Background/College", "Domain", "Status", "Actions"].map((h) => (
+                      {["Photo", "Candidate", "Email", "College", "Domain", "Status", "Actions"].map((h) => (
                         <th key={h} style={{ textAlign: "left", fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", padding: "12px 16px" }}>{h}</th>
                       ))}
                     </tr>
@@ -861,7 +968,7 @@ export default function AALPage() {
                           <div style={{ fontSize: "14px", fontWeight: 600, color: "#0d0d0d" }}>{item.internName}</div>
                         </td>
                         <td style={{ padding: "14px 16px", fontSize: "13px", color: "#aaa" }}>{item.internEmail}</td>
-                        <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>{item.description}</td>
+                        <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>{item.college || "—"}</td>
                         <td style={{ padding: "14px 16px" }}><span style={{ fontSize: "12px", fontWeight: 500, padding: "3px 10px", borderRadius: "99px", background: "rgba(59,130,246,0.1)", color: "#3b82f6" }}>{item.domain}</span></td>
                         <td style={{ padding: "14px 16px" }}><StatusBadge status={item.status} /></td>
                         <td style={{ padding: "14px 16px" }}>
@@ -894,7 +1001,7 @@ export default function AALPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "#fafafa" }}>
-                      {["Photo", "Candidate", "Email", "Updated Project Domain", "Reason/Proposal", "Status", "Actions"].map((h) => (
+                      {["Photo", "Candidate", "Email", "Updated Project Domain", "Status", "Actions"].map((h) => (
                         <th key={h} style={{ textAlign: "left", fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", padding: "12px 16px" }}>{h}</th>
                       ))}
                     </tr>
@@ -910,7 +1017,6 @@ export default function AALPage() {
                         </td>
                         <td style={{ padding: "14px 16px", fontSize: "13px", color: "#aaa" }}>{item.internEmail}</td>
                         <td style={{ padding: "14px 16px" }}><span style={{ fontSize: "12px", fontWeight: 500, padding: "3px 10px", borderRadius: "99px", background: "rgba(59,130,246,0.1)", color: "#3b82f6" }}>{item.domain}</span></td>
-                        <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>{item.description}</td>
                         <td style={{ padding: "14px 16px" }}><StatusBadge status={item.status} /></td>
                         <td style={{ padding: "14px 16px" }}>
                           {item.status === "Pending" ? (
@@ -994,14 +1100,24 @@ export default function AALPage() {
               )}
             </div>
 
-            {modal.item.github && (
-              <div>
-                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>GitHub / Portfolio</label>
-                <div style={{ fontSize: "13px", marginTop: "2px" }}>
-                  <a href={modal.item.github} target="_blank" rel="noopener noreferrer" style={{ color: "#FF6B00", textDecoration: "none", fontWeight: 500 }}>{modal.item.github} ↗</a>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              {modal.item.github && (
+                <div>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>GitHub / Portfolio</label>
+                  <div style={{ fontSize: "13px", marginTop: "2px" }}>
+                    <a href={modal.item.github} target="_blank" rel="noopener noreferrer" style={{ color: "#FF6B00", textDecoration: "none", fontWeight: 500 }}>{modal.item.github} ↗</a>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+              {modal.item.linkedin && (
+                <div>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>LinkedIn Profile</label>
+                  <div style={{ fontSize: "13px", marginTop: "2px" }}>
+                    <a href={modal.item.linkedin} target="_blank" rel="noopener noreferrer" style={{ color: "#0077b5", textDecoration: "none", fontWeight: 500 }}>{modal.item.linkedin} ↗</a>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {modal.item.notes && (
               <div>
