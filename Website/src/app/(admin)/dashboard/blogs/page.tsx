@@ -968,10 +968,11 @@ export default function BlogsPage() {
                   <div 
                     ref={editorRef}
                     contentEditable
+                    dir="ltr"
                     onInput={handleEditorInput}
                     onBlur={handleEditorInput}
                     className="p-6 overflow-y-auto flex-1 bg-white outline-none prose prose-orange max-w-none min-h-[400px] text-gray-800 font-sans"
-                    style={{ minHeight: "450px" }}
+                    style={{ minHeight: "450px", direction: "ltr" }}
                     data-placeholder="Start typing your rich-text blog content here..."
                   />
                 )}
