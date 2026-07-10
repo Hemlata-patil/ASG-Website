@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { internApplications } from '@/lib/db/schema/intern_applications';
+import { eq, or } from 'drizzle-orm';
 
 export async function POST(req: Request) {
   try {
@@ -28,6 +29,43 @@ export async function POST(req: Request) {
         { error: { code: 'VALIDATION_ERROR', message: 'Missing required fields' } },
         { status: 400 }
       );
+    }
+
+    // Check for duplicate application credentials
+    const duplicateChecks = [];
+    if (email) duplicateChecks.push(eq(internApplications.email, email));
+    if (phone) duplicateChecks.push(eq(internApplications.phone, phone));
+    if (linkedin) duplicateChecks.push(eq(internApplications.linkedinUrl, linkedin));
+    if (github) duplicateChecks.push(eq(internApplications.githubUrl, github));
+    if (photoUrl) duplicateChecks.push(eq(internApplications.photoUrl, photoUrl));
+
+    if (duplicateChecks.length > 0) {
+      const existing = await db
+        .select()
+        .from(internApplications)
+        .where(or(...duplicateChecks));
+
+      if (existing.length > 0) {
+        const record = existing[0];
+        let message = 'An application with similar credentials has already been submitted.';
+        
+        if (record.email === email) {
+          message = 'An application with this email address has already been submitted.';
+        } else if (record.phone === phone) {
+          message = 'An application with this phone number has already been submitted.';
+        } else if (record.linkedinUrl === linkedin) {
+          message = 'An application with this LinkedIn profile has already been submitted.';
+        } else if (github && record.githubUrl === github) {
+          message = 'An application with this GitHub profile has already been submitted.';
+        } else if (photoUrl && record.photoUrl === photoUrl) {
+          message = 'An application with this photo has already been submitted.';
+        }
+
+        return NextResponse.json(
+          { error: { code: 'DUPLICATE_ERROR', message } },
+          { status: 400 }
+        );
+      }
     }
 
     // Insert into Supabase database via Drizzle ORM
