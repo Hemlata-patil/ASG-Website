@@ -16,6 +16,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'Please enter a valid email address' } },
+        { status: 400 }
+      );
+    }
+
+    // Phone validation
+    if (phone && phone.trim() !== '') {
+      const sanitizedPhone = phone.replace(/[\s-()]/g, "");
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (!phoneRegex.test(sanitizedPhone)) {
+        return NextResponse.json(
+          { error: { code: 'VALIDATION_ERROR', message: 'Please enter a valid 10-digit mobile number starting with 6, 7, 8 or 9' } },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check for existing duplicates in contact_queries
     const conditions = [
       eq(contactQueries.email, email)

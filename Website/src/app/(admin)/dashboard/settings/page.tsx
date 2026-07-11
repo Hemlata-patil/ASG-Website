@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Settings, Bell, Shield, Globe, Save, Check } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 
 export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [general, setGeneral] = useState({
     siteName: "ASG Admin Panel",
     siteEmail: "admin@asg.io",
@@ -14,6 +15,16 @@ export default function SettingsPage() {
     timezone: "Asia/Kolkata",
     language: "en",
   });
+  const [contact, setContact] = useState({
+    email: "reachus.asg@gmail.com",
+    location: "Jalgaon, Maharashtra, India",
+    whatsapp: "https://chat.whatsapp.com/CoG7rugANv166E6p51uLcI",
+    instagram: "https://www.instagram.com/apexstartupgroup",
+    linkedin: "https://www.linkedin.com/company/apex-startup-group",
+    twitter: "https://x.com/apexstartupgrp",
+    youtube: "https://youtube.com/@apexstartupgroup"
+  });
+
   const [notifications, setNotifications] = useState({
     newMember: true,
     newEvent: true,
@@ -27,9 +38,76 @@ export default function SettingsPage() {
     loginAlerts: true,
   });
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const [resContact, resGeneral, resNotifications, resSecurity] = await Promise.all([
+          fetch('/api/v1/admin/site-settings?key=contact_details'),
+          fetch('/api/v1/admin/site-settings?key=general_settings'),
+          fetch('/api/v1/admin/site-settings?key=notification_preferences'),
+          fetch('/api/v1/admin/site-settings?key=security_settings')
+        ]);
+
+        if (resContact.ok) {
+          const json = await resContact.json();
+          if (json.data && json.data.value) setContact(json.data.value);
+        }
+        if (resGeneral.ok) {
+          const json = await resGeneral.json();
+          if (json.data && json.data.value) setGeneral(json.data.value);
+        }
+        if (resNotifications.ok) {
+          const json = await resNotifications.json();
+          if (json.data && json.data.value) setNotifications(json.data.value);
+        }
+        if (resSecurity.ok) {
+          const json = await resSecurity.json();
+          if (json.data && json.data.value) setSecurity(json.data.value);
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSettings();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const [resContact, resGeneral, resNotifications, resSecurity] = await Promise.all([
+        fetch('/api/v1/admin/site-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'contact_details', value: contact })
+        }),
+        fetch('/api/v1/admin/site-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'general_settings', value: general })
+        }),
+        fetch('/api/v1/admin/site-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'notification_preferences', value: notifications })
+        }),
+        fetch('/api/v1/admin/site-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'security_settings', value: security })
+        })
+      ]);
+
+      if (resContact.ok && resGeneral.ok && resNotifications.ok && resSecurity.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      } else {
+        alert("Failed to save changes.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save changes.");
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -106,6 +184,62 @@ export default function SettingsPage() {
               <Field label="Platform Tagline">
                 <input style={inputStyle} value={general.tagline}
                   onChange={(e) => setGeneral((g) => ({ ...g, tagline: e.target.value }))}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B00"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,0,0.1)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#ebebeb"; e.currentTarget.style.background = "#f8f8f8"; e.currentTarget.style.boxShadow = "none"; }}
+                />
+              </Field>
+            </div>
+          </div>
+        </Section>
+
+        <Section icon={<Globe size={18} style={{ color: "#FF6B00" }} />} title="Contact & Social Info">
+          <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 1fr" }}>
+            <Field label="Contact Email">
+              <input style={inputStyle} value={contact.email}
+                onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B00"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,0,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#ebebeb"; e.currentTarget.style.background = "#f8f8f8"; e.currentTarget.style.boxShadow = "none"; }}
+              />
+            </Field>
+            <Field label="HQ Location">
+              <input style={inputStyle} value={contact.location}
+                onChange={(e) => setContact((c) => ({ ...c, location: e.target.value }))}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B00"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,0,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#ebebeb"; e.currentTarget.style.background = "#f8f8f8"; e.currentTarget.style.boxShadow = "none"; }}
+              />
+            </Field>
+            <Field label="WhatsApp Community Link">
+              <input style={inputStyle} value={contact.whatsapp}
+                onChange={(e) => setContact((c) => ({ ...c, whatsapp: e.target.value }))}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B00"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,0,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#ebebeb"; e.currentTarget.style.background = "#f8f8f8"; e.currentTarget.style.boxShadow = "none"; }}
+              />
+            </Field>
+            <Field label="Instagram URL">
+              <input style={inputStyle} value={contact.instagram}
+                onChange={(e) => setContact((c) => ({ ...c, instagram: e.target.value }))}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B00"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,0,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#ebebeb"; e.currentTarget.style.background = "#f8f8f8"; e.currentTarget.style.boxShadow = "none"; }}
+              />
+            </Field>
+            <Field label="LinkedIn URL">
+              <input style={inputStyle} value={contact.linkedin}
+                onChange={(e) => setContact((c) => ({ ...c, linkedin: e.target.value }))}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B00"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,0,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#ebebeb"; e.currentTarget.style.background = "#f8f8f8"; e.currentTarget.style.boxShadow = "none"; }}
+              />
+            </Field>
+            <Field label="Twitter/X URL">
+              <input style={inputStyle} value={contact.twitter}
+                onChange={(e) => setContact((c) => ({ ...c, twitter: e.target.value }))}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B00"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,0,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#ebebeb"; e.currentTarget.style.background = "#f8f8f8"; e.currentTarget.style.boxShadow = "none"; }}
+              />
+            </Field>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field label="YouTube Channel URL">
+                <input style={inputStyle} value={contact.youtube}
+                  onChange={(e) => setContact((c) => ({ ...c, youtube: e.target.value }))}
                   onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B00"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,0,0.1)"; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = "#ebebeb"; e.currentTarget.style.background = "#f8f8f8"; e.currentTarget.style.boxShadow = "none"; }}
                 />

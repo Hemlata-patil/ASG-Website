@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Cropper from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 import { Area } from '@/lib/utils/image';
 
 interface CropModalProps {

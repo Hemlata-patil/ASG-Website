@@ -15,59 +15,99 @@ export default function BlogDetail() {
 
   useEffect(() => {
     if (!slug) return;
-    try {
-      const raw = localStorage.getItem("asg_blogs");
-      let allBlogs: any[] = [];
-      if (raw) {
-        allBlogs = JSON.parse(raw);
-      } else {
-        // Fallback mapping if not in localStorage
-        allBlogs = staticBlogs.map(b => ({
-          id: b.id,
-          title: b.title,
-          slug: b.title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-"),
-          author: "ASG Editor",
-          category: b.category,
-          status: "Published",
-          date: b.date,
-          excerpt: b.summary,
-          content: `
-            <h2>${b.title}</h2>
-            <p>${b.summary}</p>
-            <p>Full content of this post is managed inside the Admin CMS. Please publish content from the dashboard to render custom rich HTML formatting.</p>
-          `,
-          readTime: b.readTime,
-          thumbnailUrl: b.cover,
-          tags: [b.category]
-        }));
+    const loadBlogData = async () => {
+      try {
+        // Fetch current blog
+        const res = await fetch(`/api/v1/blogs/${slug}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            setBlog(json.data);
+
+            // Fetch other blogs for related list
+            const listRes = await fetch('/api/v1/blogs');
+            if (listRes.ok) {
+              const listJson = await listRes.json();
+              const allBlogs = listJson.data || [];
+              const related = allBlogs
+                .filter((b: any) => b.id !== json.data.id && b.category === json.data.category)
+                .slice(0, 3);
+              
+              if (related.length < 3) {
+                const others = allBlogs.filter((b: any) => b.id !== json.data.id && !related.find((r: any) => r.id === b.id));
+                related.push(...others.slice(0, 3 - related.length));
+              }
+              setRelatedBlogs(related);
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Error loading blog details from API:", e);
       }
 
-      // Find current blog by slug or id
-      const current = allBlogs.find(b => b.slug === slug || String(b.id) === slug);
+      // Fallback mapping if not in database
+      const allStaticBlogsMapped = staticBlogs.map(b => ({
+        id: b.id.toString(),
+        title: b.title,
+        slug: b.title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-"),
+        author: "ASG Editor",
+        category: b.category,
+        status: "Published",
+        date: b.date,
+        excerpt: b.summary,
+        content: `
+          <h2>${b.title}</h2>
+          <p>${b.summary}</p>
+          <p>Full content of this post is managed inside the Admin CMS. Please publish content from the dashboard to render custom rich HTML formatting.</p>
+        `,
+        readTime: b.readTime,
+        thumbnailUrl: b.cover,
+        tags: [b.category]
+      }));
+
+      const current = allStaticBlogsMapped.find(b => b.slug === slug || String(b.id) === slug);
       if (current) {
         setBlog(current);
-
-        // Find related blogs (same category, published, excluding current)
-        const related = allBlogs
-          .filter(b => b.id !== current.id && b.category === current.category && (b.status === "Published" || !b.status))
+        const related = allStaticBlogsMapped
+          .filter(b => b.id !== current.id && b.category === current.category)
           .slice(0, 3);
 
-        // If not enough related, fill with any other published blogs
         if (related.length < 3) {
-          const others = allBlogs.filter(b => b.id !== current.id && !related.find(r => r.id === b.id) && (b.status === "Published" || !b.status));
+          const others = allStaticBlogsMapped.filter(b => b.id !== current.id && !related.find(r => r.id === b.id));
           related.push(...others.slice(0, 3 - related.length));
         }
-
         setRelatedBlogs(related);
       } else {
-        // Redirect to list if not found
         router.push('/blogs');
       }
-    } catch (e) {
-      console.error("Error loading blog details:", e);
-      router.push('/blogs');
-    }
+    };
+
+    loadBlogData();
   }, [slug, router]);
+
+  useEffect(() => {
+    if (!blog) return;
+    if (typeof window !== 'undefined') {
+      document.title = blog.metaTitle || `${blog.title} - APEX Startup Group`;
+      
+      let descMeta = document.querySelector('meta[name="description"]');
+      if (!descMeta) {
+        descMeta = document.createElement('meta');
+        descMeta.setAttribute('name', 'description');
+        document.head.appendChild(descMeta);
+      }
+      descMeta.setAttribute('content', blog.metaDescription || blog.excerpt || '');
+
+      let keywordsMeta = document.querySelector('meta[name="keywords"]');
+      if (!keywordsMeta) {
+        keywordsMeta = document.createElement('meta');
+        keywordsMeta.setAttribute('name', 'keywords');
+        document.head.appendChild(keywordsMeta);
+      }
+      keywordsMeta.setAttribute('content', blog.keywords || (blog.tags ? blog.tags.join(', ') : ''));
+    }
+  }, [blog]);
 
   if (!blog) {
     return (
@@ -263,21 +303,23 @@ export default function BlogDetail() {
           </div>
 
           {/* Featured Image Cover */}
-          <div style={{
-            width: '100%',
-            height: '420px',
-            borderRadius: 'var(--radius-xl)',
-            overflow: 'hidden',
-            marginBottom: 'var(--space-6)',
-            border: '1px solid var(--apex-border-dark)',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <img
-              src={blog.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=420&fit=crop"}
-              alt={blog.title}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
+          {blog.thumbnailUrl && (
+            <div style={{
+              width: '100%',
+              height: '420px',
+              borderRadius: 'var(--radius-xl)',
+              overflow: 'hidden',
+              marginBottom: 'var(--space-6)',
+              border: '1px solid var(--apex-border-dark)',
+              boxShadow: 'var(--shadow-lg)'
+            }}>
+              <img
+                src={blog.thumbnailUrl}
+                alt={blog.title}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          )}
 
           {/* Dynamic Article Content */}
           <div
@@ -296,15 +338,29 @@ export default function BlogDetail() {
               <h5 style={{ color: 'var(--apex-text-white)', fontSize: '0.9rem', fontWeight: '700', marginBottom: '12px', textTransform: 'uppercase' }}>Tags</h5>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {blog.tags.map((t: string) => (
-                  <span key={t} style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--apex-text-muted)',
-                    backgroundColor: 'var(--apex-bg-surface-elevated)',
-                    border: '1px solid var(--apex-border-dark)',
-                    padding: '4px 10px',
-                    borderRadius: 'var(--radius-full)',
-                    fontWeight: '600'
-                  }}>
+                  <span
+                    key={t}
+                    onClick={() => router.push(`/blogs?tag=${encodeURIComponent(t)}`)}
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--apex-primary)',
+                      backgroundColor: 'var(--apex-primary-tint)',
+                      border: '1px solid rgba(253, 91, 35, 0.25)',
+                      padding: '4px 12px',
+                      borderRadius: 'var(--radius-full)',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--apex-primary)';
+                      e.currentTarget.style.color = '#fff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--apex-primary-tint)';
+                      e.currentTarget.style.color = 'var(--apex-primary)';
+                    }}
+                  >
                     #{t}
                   </span>
                 ))}
