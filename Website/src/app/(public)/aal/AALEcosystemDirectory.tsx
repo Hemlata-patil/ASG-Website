@@ -2,21 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { getExpertsAction, type ExpertRecord } from '@/app/actions/experts';
-import { getPartnersAction, type PartnerRecord } from '@/app/actions/partners';
 
 export default function AALEcosystemDirectory() {
   const [experts, setExperts] = useState<ExpertRecord[]>([]);
-  const [partners, setPartners] = useState<PartnerRecord[]>([]);
 
   useEffect(() => {
     const loadDirectory = async () => {
       try {
-        const [expertRows, partnerRows] = await Promise.all([
-          getExpertsAction({ publicOnly: true }),
-          getPartnersAction({ publicOnly: true }),
-        ]);
+        const expertRows = await getExpertsAction({ publicOnly: true });
         setExperts(expertRows);
-        setPartners(partnerRows);
       } catch (error) {
         console.error('Failed to load AAL ecosystem directory', error);
       }
@@ -25,7 +19,7 @@ export default function AALEcosystemDirectory() {
     void loadDirectory();
   }, []);
 
-  if (experts.length === 0 && partners.length === 0) {
+  if (experts.length === 0) {
     return null;
   }
 
@@ -37,71 +31,43 @@ export default function AALEcosystemDirectory() {
             AAL ECOSYSTEM
           </span>
           <h2 className="display-md" style={{ color: 'var(--apex-text-white)', marginBottom: 'var(--space-3)' }}>
-            Industry Experts & Partners
+            Industry Experts
           </h2>
           <div style={{ width: '72px', height: '3px', background: 'var(--apex-primary)', margin: '0 auto var(--space-3)', borderRadius: '999px' }} />
           <p className="body-md" style={{ color: 'var(--apex-text-muted)', maxWidth: '720px', margin: '0 auto' }}>
-            Approved mentors and partner organizations supporting AAL cohorts.
+            Approved mentors supporting AAL cohorts.
           </p>
         </div>
 
-        {experts.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }} className="grid-3">
-            {experts.map((expert) => (
-              <article key={expert.id} style={{ background: 'var(--apex-bg-surface)', border: '1px solid var(--apex-border-dark)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
-                <img
-                  src={expert.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=160&h=160&fit=crop'}
-                  alt={expert.name}
-                  style={{ width: '96px', height: '96px', borderRadius: '50%', objectFit: 'cover', border: '4px solid var(--apex-primary)', padding: '3px', background: '#fff', margin: '0 auto var(--space-3)' }}
-                />
-                <h3 className="heading-sm" style={{ color: 'var(--apex-text-white)', marginBottom: '6px' }}>{expert.name}</h3>
-                <p style={{ color: 'var(--apex-primary)', fontWeight: 700, marginBottom: '6px' }}>{expert.role || expert.designation}</p>
-                <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginBottom: '12px' }}>{expert.company}</p>
-                {expert.currentProblemStatement && (
-                  <span style={{ display: 'inline-block', color: 'var(--apex-primary)', background: 'var(--apex-primary-tint)', padding: '4px 12px', borderRadius: '999px', fontSize: '0.78rem', fontWeight: 700, marginBottom: '12px' }}>
-                    PS: {expert.currentProblemStatement}
-                  </span>
-                )}
-                {expert.description && <p className="body-sm" style={{ color: 'var(--apex-text-muted)', fontStyle: 'italic' }}>"{expert.description}"</p>}
-                {expert.socialLinks.length > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '14px' }}>
-                    {expert.socialLinks.map((link) => (
-                      <a key={link} href={link} target="_blank" rel="noreferrer" style={{ color: 'var(--apex-primary)', background: 'var(--apex-primary-tint)', border: '1px solid rgba(255,107,0,0.25)', borderRadius: '999px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none' }}>
-                        {link.includes('linkedin') ? 'LinkedIn' : 'Website'}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </article>
-            ))}
-          </div>
-        )}
-
-        {partners.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-3)' }} className="grid-4">
-            {partners.map((partner) => (
-              <article key={partner.id} style={{ background: 'var(--apex-bg-surface)', border: '1px solid var(--apex-border-dark)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'inherit', boxShadow: 'var(--shadow-sm)' }}>
-                {partner.logo ? (
-                  <img src={partner.logo} alt={partner.name} style={{ width: '54px', height: '54px', borderRadius: '14px', objectFit: 'contain', background: '#fff' }} />
-                ) : (
-                  <div style={{ width: '54px', height: '54px', borderRadius: '14px', background: 'var(--apex-primary-tint)', color: 'var(--apex-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{partner.name[0]}</div>
-                )}
-                <div>
-                  <strong style={{ color: 'var(--apex-text-white)', display: 'block' }}>{partner.name}</strong>
-                  <span style={{ color: 'var(--apex-primary)', fontSize: '0.85rem', fontWeight: 700 }}>Partner</span>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-                    {partner.websiteUrl && (
-                      <a href={partner.websiteUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--apex-primary)', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}>Website</a>
-                    )}
-                    {partner.linkedinUrl && (
-                      <a href={partner.linkedinUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--apex-primary)', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}>LinkedIn</a>
-                    )}
-                  </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }} className="grid-3">
+          {experts.map((expert) => (
+            <article key={expert.id} style={{ background: 'var(--apex-bg-surface)', border: '1px solid var(--apex-border-dark)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+              <img
+                src={expert.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=160&h=160&fit=crop'}
+                alt={expert.name}
+                style={{ width: '96px', height: '96px', borderRadius: '50%', objectFit: 'cover', border: '4px solid var(--apex-primary)', padding: '3px', background: '#fff', margin: '0 auto var(--space-3)' }}
+              />
+              <h3 className="heading-sm" style={{ color: 'var(--apex-text-white)', marginBottom: '6px' }}>{expert.name}</h3>
+              <p style={{ color: 'var(--apex-primary)', fontWeight: 700, marginBottom: '6px' }}>{expert.role || expert.designation}</p>
+              <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginBottom: '12px' }}>{expert.company}</p>
+              {expert.currentProblemStatement && (
+                <span style={{ display: 'inline-block', color: 'var(--apex-primary)', background: 'var(--apex-primary-tint)', padding: '4px 12px', borderRadius: '999px', fontSize: '0.78rem', fontWeight: 700, marginBottom: '12px' }}>
+                  PS: {expert.currentProblemStatement}
+                </span>
+              )}
+              {expert.description && <p className="body-sm" style={{ color: 'var(--apex-text-muted)', fontStyle: 'italic' }}>"{expert.description}"</p>}
+              {expert.socialLinks.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '14px' }}>
+                  {expert.socialLinks.map((link) => (
+                    <a key={link} href={link} target="_blank" rel="noreferrer" style={{ color: 'var(--apex-primary)', background: 'var(--apex-primary-tint)', border: '1px solid rgba(255,107,0,0.25)', borderRadius: '999px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none' }}>
+                      {link.includes('linkedin') ? 'LinkedIn' : 'Website'}
+                    </a>
+                  ))}
                 </div>
-              </article>
-            ))}
-          </div>
-        )}
+              )}
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Rocket, Compass, Briefcase, Wrench, CheckCircle } from 'lucide-react';
 import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
@@ -8,8 +8,6 @@ import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import ApexDropdown from '@/components/common/ApexDropdown/ApexDropdown';
 import ImageUpload from '@/components/shared/ImageUpload';
-import { getExpertsAction } from '@/app/actions/experts';
-import { getPartnersAction } from '@/app/actions/partners';
 
 interface FormDataState {
   name: string;
@@ -46,25 +44,6 @@ export default function ASG() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [activePartners, setActivePartners] = useState<any[]>([]);
-  const [activeExperts, setActiveExperts] = useState<any[]>([]);
-
-  useEffect(() => {
-    const loadPublicListings = async () => {
-      try {
-        const [partners, experts] = await Promise.all([
-          getPartnersAction({ publicOnly: true }),
-          getExpertsAction({ publicOnly: true }),
-        ]);
-        setActivePartners(partners);
-        setActiveExperts(experts);
-      } catch (error) {
-        console.error('Failed to load public listings', error);
-      }
-    };
-
-    void loadPublicListings();
-  }, []);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -261,68 +240,6 @@ export default function ASG() {
         </div>
       </section>
 
-      {/* Public Directory Preview */}
-      <section className="section" style={{ borderTop: '1px solid var(--apex-border-dark)' }}>
-        <div className="container">
-          <SectionHeading
-            overline="Live Directory"
-            title="Approved Industry Partners & Experts"
-            subtitle="Only items approved for website visibility are surfaced here."
-          />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }} className="grid-2">
-            <div style={{ backgroundColor: 'var(--apex-bg-surface)', border: '1px solid var(--apex-border-dark)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-              <h3 className="heading-sm" style={{ color: 'var(--apex-text-white)', marginBottom: 'var(--space-3)' }}>Industry Partners</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                {activePartners.length === 0 ? (
-                  <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0 }}>No approved partners yet.</p>
-                ) : activePartners.map((partner) => (
-                  <a
-                    key={partner.id}
-                    href={partner.website || partner.websiteUrl || '#'}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ border: '1px solid var(--apex-border-dark)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textDecoration: 'none' }}
-                  >
-                    {partner.logo ? (
-                      <img src={partner.logo} alt={partner.name} style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover', background: '#fff' }} />
-                    ) : (
-                      <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--apex-primary-tint)', color: 'var(--apex-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{partner.name?.[0]}</div>
-                    )}
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ color: 'var(--apex-text-white)', display: 'block' }}>{partner.name}</strong>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--apex-primary)' }}>{partner.category || 'Partner'}</span>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-            <div style={{ backgroundColor: 'var(--apex-bg-surface)', border: '1px solid var(--apex-border-dark)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-              <h3 className="heading-sm" style={{ color: 'var(--apex-text-white)', marginBottom: 'var(--space-3)' }}>Industry Experts</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                {activeExperts.length === 0 ? (
-                  <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0 }}>No approved experts yet.</p>
-                ) : activeExperts.map((expert) => (
-                  <div key={expert.id} style={{ border: '1px solid var(--apex-border-dark)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
-                    {expert.photo ? (
-                      <img src={expert.photo} alt={expert.name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', background: '#fff' }} />
-                    ) : (
-                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--apex-primary-tint)', color: 'var(--apex-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{expert.name?.[0]}</div>
-                    )}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-2)' }}>
-                        <strong style={{ color: 'var(--apex-text-white)' }}>{expert.name}</strong>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--apex-primary)' }}>{expert.role || expert.designation || 'Expert'}</span>
-                      </div>
-                      <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginTop: '6px', marginBottom: 0 }}>{expert.company || ''}</p>
-                      {expert.description && <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginTop: '6px', marginBottom: 0 }}>{expert.description}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Community Listing Form Section */}
       <section className="section" style={{ borderTop: '1px solid var(--apex-border-dark)', backgroundColor: 'var(--apex-bg-surface-elevated)' }}>

@@ -3,6 +3,7 @@ import { pgTable, uuid, text, timestamp, integer, boolean } from 'drizzle-orm/pg
 export const industryPartners = pgTable('industry_partners', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  description: text('description'), // Description column added
   logo: text('logo').notNull(), // Storage URL for logo
   websiteUrl: text('website_url').notNull(),
   linkedinUrl: text('linkedin_url'),
