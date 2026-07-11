@@ -5,12 +5,56 @@ import { useSearchParams } from 'next/navigation';
 import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
 import Lightbox from '@/components/common/Lightbox/Lightbox';
-import { galleryEntries } from '@/data/gallery';
+import { galleryEntries as staticGalleryEntries } from '@/data/gallery';
+import { createClient } from '@/lib/supabase/client';
 
 function GalleryContent() {
-  const [yearFilter, setYearFilter] = useState('All'); // All | 2024 | 2025 | 2026
+  const [yearFilter, setYearFilter] = useState('All');
+  const [galleryEntries, setGalleryEntries] = useState<any[]>([]);
   const searchParams = useSearchParams();
   const highlightId = searchParams.get('highlight');
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      const supabase = createClient();
+      
+      const { data: albumsData, error: albumsError } = await supabase
+        .from('gallery_albums')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (albumsError) {
+        console.error("Error fetching gallery albums:", albumsError);
+        setGalleryEntries([]);
+        return;
+      }
+      if (!albumsData) return;
+
+      const { data: photosData } = await supabase
+        .from('gallery_photos')
+        .select('*');
+
+      const mapped = albumsData.map((album: any) => {
+        const albumPhotos = (photosData || [])
+          .filter((p: any) => p.album_id === album.id)
+          .map((p: any) => p.image_url);
+
+        return {
+          id: album.id,
+          date: album.event_date ? String(album.event_date).slice(0, 10) : (album.created_at ? String(album.created_at).slice(0, 10) : ''),
+          year: album.event_date ? String(album.event_date).slice(0, 4) : (album.created_at ? String(album.created_at).slice(0, 4) : '2026'),
+          title: album.title,
+          description: album.description || '', // Use description from album
+          photos: albumPhotos.length > 0 ? albumPhotos : [album.cover_photo],
+          tags: [], 
+          photographer: 'ASG Media Team',
+        };
+      });
+      setGalleryEntries(mapped);
+    };
+    fetchItems();
+  }, []);
+
 
   // Lightbox State
   const [lightboxOpen, setLightboxOpen] = useState(false);

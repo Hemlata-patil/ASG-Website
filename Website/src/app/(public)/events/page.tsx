@@ -1,19 +1,83 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, MapPin } from 'lucide-react';
 import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
-import { events } from '@/data/events';
+import { events as staticEvents } from '@/data/events';
 import { galleryEntries } from '@/data/gallery';
+import { createClient } from '@/lib/supabase/client';
 
 export default function Events() {
-  const [activeTab, setActiveTab] = useState('all'); // all | upcoming | past
+  const [activeTab, setActiveTab] = useState('all');
+  const [events, setEvents] = useState<any[]>([]);
+  const [albums, setAlbums] = useState<any[]>([]);
 
-  const filteredEvents = events.filter(event => {
-    const matchesTab = activeTab === 'all' || event.status === activeTab;
-    return matchesTab;
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient();
+      
+      // Fetch Albums
+      const { data: albumsData } = await supabase
+        .from('gallery_albums')
+        .select('id, event_id');
+        
+      if (albumsData) setAlbums(albumsData);
+
+      // Fetch Events
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('start_date', { ascending: false });
+        
+      if (error) {
+        console.error("Error fetching events:", error);
+        setEvents([]);
+        return;
+      }
+      if (!data) return;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const mapped = data.map((e: any) => {
+        let computedStatus = e.status || 'upcoming';
+        if (e.start_date) {
+          const eventDate = new Date(e.start_date);
+          eventDate.setHours(0, 0, 0, 0);
+          if (eventDate < today) {
+            computedStatus = 'past';
+          } else if (eventDate.getTime() === today.getTime()) {
+            computedStatus = 'upcoming'; // Or 'today', but 'upcoming' keeps it in the upcoming tab.
+          } else {
+            computedStatus = 'upcoming';
+          }
+        }
+        if (e.status === 'completed') computedStatus = 'past';
+
+        return {
+          id: e.id,
+          title: e.title,
+          type: e.type || 'Meetup',
+          status: computedStatus,
+          date: e.start_date ? e.start_date.slice(0, 10) : '',
+          venue: e.location || '',
+          description: e.description || '',
+          tags: e.tags || [],
+          thumbnail: e.cover_image_url || '',
+          registrationUrl: null,
+          recapUrl: null,
+        };
+      });
+      setEvents(mapped);
+    };
+    
+    fetchData();
+  }, []);
+
+
+  const filteredEvents = events.filter((event: any) => {
+    return activeTab === 'all' || event.status === activeTab;
   });
 
   return (
@@ -141,14 +205,8 @@ export default function Events() {
                       {(() => {
                         if (item.status !== 'past') return null;
 
-                        const cleanEventTags = (item.tags || []).map(t => t.replace('#', '').toLowerCase());
-                        const match = galleryEntries.find(entry => {
-                          const entryTags = (entry.tags || []).map(t => t.toLowerCase());
-                          const hasTagMatch = entryTags.some(t => cleanEventTags.includes(t));
-                          const titleMatch = entry.title.toLowerCase().includes(item.title.split(':')[0].split('(')[0].trim().toLowerCase()) ||
-                            item.title.toLowerCase().includes(entry.title.split('-')[0].trim().toLowerCase());
-                          return hasTagMatch || titleMatch;
-                        });
+                        // Find album linked to this event
+                        const match = albums.find(album => album.event_id === item.id);
 
                         if (match) {
                           return (

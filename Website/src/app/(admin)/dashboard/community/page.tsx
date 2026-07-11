@@ -13,6 +13,8 @@ import Modal, {
 } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 
 interface Member {
   id: number;
@@ -463,8 +465,18 @@ export default function CommunityPage() {
     close();
   };
 
-  const remove = () => {
+  const remove = async () => {
     if (modal.item) {
+      try {
+        if (modal.item.photo && modal.item.photo.includes('supabase.co')) {
+          const filePath = modal.item.photo.split('/public/avatars/')[1];
+          if (filePath) {
+            await fetch('/api/v1/delete', { method: 'POST', body: JSON.stringify({ bucket: 'avatars', paths: [filePath] }) });
+          }
+        }
+      } catch (err) {
+        console.error('Storage delete error:', err);
+      }
       const next = members.filter((m) => m.id !== modal.item!.id);
       saveMembers(next);
     }
