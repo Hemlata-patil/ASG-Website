@@ -2,21 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { getPartnersAction, type PartnerRecord } from '@/app/actions/partners';
-import { getExpertsAction } from '@/app/actions/experts';
 
 export default function PartnersAndExpertsLogos() {
   const [partners, setPartners] = useState<PartnerRecord[]>([]);
-  const [experts, setExperts] = useState<any[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [fetchedPartners, fetchedExperts] = await Promise.all([
-          getPartnersAction({ publicOnly: true }),
-          getExpertsAction({ publicOnly: true })
-        ]);
+        const fetchedPartners = await getPartnersAction({ publicOnly: true });
         setPartners(fetchedPartners);
-        setExperts(fetchedExperts);
       } catch (error) {
         console.error('Failed to load logos', error);
       }
@@ -25,12 +19,12 @@ export default function PartnersAndExpertsLogos() {
     void loadData();
   }, []);
 
-  const hasItems = partners.length > 0 || experts.length > 0;
+  const hasItems = partners.length > 0;
 
   if (!hasItems) {
     return (
       <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0, textAlign: 'center' }}>
-        Approved partner and expert logos will appear here.
+        Approved partner logos will appear here.
       </p>
     );
   }
@@ -94,7 +88,6 @@ export default function PartnersAndExpertsLogos() {
 
       {partners.length > 0 && (
         <div style={{ marginBottom: '48px' }}>
-          <h3 className="heading-sm" style={{ color: 'var(--apex-text-white)', textAlign: 'center', marginBottom: '24px' }}>Industry Partners</h3>
           <div className="marquee-container">
             <div className="marquee-track">
               {/* Render 10 times to ensure enough width for any screen size and seamless looping at -50% */}
@@ -124,40 +117,6 @@ export default function PartnersAndExpertsLogos() {
         </div>
       )}
 
-      {experts.length > 0 && (
-        <div>
-          <h3 className="heading-sm" style={{ color: 'var(--apex-text-white)', textAlign: 'center', marginBottom: '24px' }}>Industry Experts</h3>
-          <div className="marquee-container">
-            <div className="marquee-track" style={{ animationDirection: 'reverse' }}>
-              {[...Array(10)].map((_, i) => (
-                <React.Fragment key={`expert-group-${i}`}>
-                  {experts.map((expert) => {
-                    const socialLinks = expert.socialLinks || [];
-                    const link = expert.linkedin || socialLinks[0] || '#';
-                    return (
-                      <a
-                        key={`expert-${expert.id}-${i}`}
-                        className="interactive-logo"
-                        href={link}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`${expert.name} profile`}
-                        title={`${expert.name} - ${expert.role || 'Expert'}`}
-                      >
-                        {expert.photo ? (
-                          <img src={expert.photo} alt={expert.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'cover', borderRadius: '8px' }} />
-                        ) : (
-                          <span style={{ color: '#000', fontWeight: 800, fontSize: '0.8rem', textAlign: 'center', whiteSpace: 'normal' }}>{expert.name}</span>
-                        )}
-                      </a>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
