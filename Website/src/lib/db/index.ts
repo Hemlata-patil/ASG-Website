@@ -8,6 +8,15 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is not set in environment variables');
 }
 
-// Disable prefetch as recommended for serverless environments / poolers like Supabase connection pooler
-const client = postgres(connectionString, { prepare: false });
+// Storing client in global scope to prevent duplicate pools on hot reloads
+declare global {
+  var postgresClient: postgres.Sql | undefined;
+}
+
+const client = globalThis.postgresClient || postgres(connectionString, { prepare: false });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.postgresClient = client;
+}
+
 export const db = drizzle(client, { schema });

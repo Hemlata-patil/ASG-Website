@@ -13,11 +13,44 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { events } from '@/data/events';
 import { galleryEntries } from '@/data/gallery';
 import Logo from '@/components/common/Logo';
-import { blogs } from '@/data/blogs';
+import { blogs as staticBlogs } from '@/data/blogs';
 import anime from 'animejs';
 
 export default function Home() {
   const router = useRouter();
+  const [blogsList, setBlogsList] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadBlogs = async () => {
+      try {
+        const res = await fetch('/api/v1/blogs');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            setBlogsList(json.data);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching blogs on homepage:", e);
+      }
+
+      // Fallback to static mapping
+      const mapped = staticBlogs.map(b => ({
+        id: b.id.toString(),
+        title: b.title,
+        slug: b.title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-"),
+        category: b.category,
+        date: b.date,
+        excerpt: b.summary,
+        thumbnailUrl: b.cover,
+        readTime: b.readTime
+      }));
+      setBlogsList(mapped);
+    };
+
+    loadBlogs();
+  }, []);
 
   // Hero word-cycle animation
   const words = ["Community", "Innovation", "Growth"];
@@ -585,7 +618,7 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-4)' }} className="grid-3">
-            {blogs.slice(0, 3).map((blog) => (
+            {blogsList.slice(0, 3).map((blog) => (
               <article
                 key={blog.id}
                 style={{
@@ -612,7 +645,7 @@ export default function Home() {
                 {/* Image Cover */}
                 <div style={{ height: '180px', overflow: 'hidden' }}>
                   <img
-                    src={blog.cover}
+                    src={blog.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=200&fit=crop"}
                     alt={blog.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
@@ -634,17 +667,24 @@ export default function Home() {
                     </div>
 
                     <h4 className="heading-sm" style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--apex-text-white)' }}>{blog.title}</h4>
-                    <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginBottom: 'var(--space-4)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>{blog.summary}</p>
+                    <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginBottom: 'var(--space-4)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>{blog.excerpt}</p>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--apex-border-dark)', paddingTop: '12px' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--apex-text-muted)' }}>{blog.date}</span>
-                    <Link href={`/blogs/${blog.id}`} style={{ color: 'var(--apex-primary)', fontWeight: '600', fontSize: '0.85rem' }}>Read Article →</Link>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--apex-text-muted)' }}>
+                      {new Date(blog.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                    <Link href={`/blogs/${blog.slug}`} style={{ color: 'var(--apex-primary)', fontWeight: '600', fontSize: '0.85rem' }}>Read Article →</Link>
                   </div>
                 </div>
               </article>
             ))}
           </div>
+          {blogsList.length === 0 && (
+            <div style={{ textAlign: 'center', color: 'var(--apex-text-muted)', paddingTop: '24px', width: '100%' }}>
+              No articles published yet. Check back soon!
+            </div>
+          )}
         </div>
       </section>
 
