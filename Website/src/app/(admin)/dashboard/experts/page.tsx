@@ -1,33 +1,45 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Search, Award, Plus, Pencil, Trash2, UploadCloud, Eye, Link2, X as XIcon, Undo, Redo } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Search, Award, Plus, Pencil, Trash2, UploadCloud, Eye, Link2, X as XIcon } from "lucide-react";
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import { createExpertAction, deleteExpertAction, getExpertsAction, toggleExpertStatusAction, updateExpertAction } from "@/app/actions/experts";
+import ImageUpload from "@/components/shared/ImageUpload";
 
 interface Expert {
-  id: number;
+  id: string;
   name: string;
   role: string;
   company: string;
-  description: string; // replaces expertise
-  socialLinks: string[]; // replaces linkedin
-  currentProblemStatement: string; // new field
+  description: string;
+  socialLinks: string[];
+  currentProblemStatement: string;
+  photo: string;
+  bio: string;
+  status: "Active" | "Inactive";
+}
+
+interface ExpertForm {
+  name: string;
+  role: string;
+  company: string;
+  description: string;
+  socialLinks: string[];
+  currentProblemStatement: string;
   photo: string;
   bio: string;
   status: "Active" | "Inactive";
 }
 
 function getProblemStatements(): string[] {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     try {
       const raw = localStorage.getItem("asg_aal_items");
       if (raw) {
         const items = JSON.parse(raw);
-        return items
-          .filter((i: any) => i.type === "Problem Statement")
-          .map((i: any) => i.title);
+        return items.filter((i: any) => i.type === "Problem Statement").map((i: any) => i.title);
       }
     } catch { /* ignore */ }
   }
@@ -36,50 +48,11 @@ function getProblemStatements(): string[] {
     "ASG Ecosystem Portal",
     "Digital Economy Tracker",
     "Healthcare AI Assistant",
-    "AgriTech Dashboard"
+    "AgriTech Dashboard",
   ];
 }
 
-const INITIAL: Expert[] = [
-  {
-    id: 1,
-    name: "Dr. Ravi Kumar",
-    role: "Professor & Researcher",
-    company: "IIT Bombay",
-    description: "Professor at IIT Bombay specializing in deep learning architectures. Mentoring AAL students on AI/ML applications.",
-    socialLinks: ["https://linkedin.com/in/drravikumar"],
-    currentProblemStatement: "Career Intelligence Platform",
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=250&auto=format&fit=crop",
-    bio: "Professor at IIT Bombay. Mentoring AAL students on deep learning architectures.",
-    status: "Active"
-  },
-  {
-    id: 2,
-    name: "Sneha Joshi",
-    role: "Lead Product Manager",
-    company: "Google India",
-    description: "Helping cohort startups build user journeys and define go-to-market strategies. Expert in product lifecycle management.",
-    socialLinks: ["https://linkedin.com/in/snehajoshi", "https://twitter.com/snehajoshi"],
-    currentProblemStatement: "ASG Ecosystem Portal",
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=250&auto=format&fit=crop",
-    bio: "Helping cohort startups build user journeys and define go-to-market strategies.",
-    status: "Active"
-  },
-  {
-    id: 3,
-    name: "Kiran Rao",
-    role: "Developer Relations",
-    company: "Polygon",
-    description: "Tech advisor helping developers deploy robust smart contracts and decentralized applications on Web3 networks.",
-    socialLinks: ["https://linkedin.com/in/kiranrao"],
-    currentProblemStatement: "Digital Economy Tracker",
-    photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=250&auto=format&fit=crop",
-    bio: "Tech advisor helping developers deploy robust smart contracts and decentralized apps.",
-    status: "Active"
-  }
-];
-
-const empty: Omit<Expert, "id"> = {
+const empty: ExpertForm = {
   name: "",
   role: "",
   company: "",
@@ -88,51 +61,80 @@ const empty: Omit<Expert, "id"> = {
   currentProblemStatement: "",
   photo: "",
   bio: "",
-  status: "Active"
+  status: "Active",
 };
 
 export default function IndustryExpertsPage() {
-  const [experts, setExperts, undo, redo, canUndo, canRedo] = useUndoRedoState<Expert[]>(INITIAL);
+  const router = useRouter();
+  const [experts, setExperts] = useState<Expert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
   const [modal, setModal] = useState<{ open: boolean; mode: "add" | "edit" | "delete" | "view"; item: Expert | null }>({
-    open: false, mode: "add", item: null
+    open: false, mode: "add", item: null,
   });
-  const [form, setForm] = useState<Omit<Expert, "id">>(empty);
+  const [form, setForm] = useState<ExpertForm>(empty);
   const [dragActive, setDragActive] = useState(false);
   const [problemStatements, setProblemStatements] = useState<string[]>([]);
 
+  const loadExperts = async () => {
+    setLoading(true);
+    try {
+      const data = await getExpertsAction();
+      setExperts(
+        data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          role: item.role,
+          company: item.company,
+          description: item.description,
+          socialLinks: item.socialLinks,
+          currentProblemStatement: item.currentProblemStatement,
+          photo: item.photo,
+          bio: item.bio,
+          status: item.status,
+        }))
+      );
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load experts.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     setProblemStatements(getProblemStatements());
+    void loadExperts();
+  }, []);
+
+  const filtered = useMemo(() => {
+    return experts.filter((e) => {
+      const matchSearch =
+        e.name.toLowerCase().includes(search.toLowerCase()) ||
+        e.company.toLowerCase().includes(search.toLowerCase()) ||
+        e.description.toLowerCase().includes(search.toLowerCase()) ||
+        e.role.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = filterStatus === "All" || e.status === filterStatus;
+      return matchSearch && matchStatus;
+    });
+  }, [experts, search, filterStatus]);
+
+  const toggleStatus = async (item: Expert) => {
+    setSaving(true);
+    setError(null);
     try {
-      const local = localStorage.getItem("asg_experts");
-      if (local) {
-        const saved = JSON.parse(local) as Expert[];
-        const savedIds = new Set(saved.map((e) => e.id));
-        const newEntries = INITIAL.filter((e) => !savedIds.has(e.id));
-        setExperts([...saved, ...newEntries]);
-      }
-    } catch { /* ignore */ }
-  }, [setExperts]);
-
-  useEffect(() => {
-    if (experts !== INITIAL) {
-      localStorage.setItem("asg_experts", JSON.stringify(experts));
+      const nextStatus = item.status === "Active" ? "Inactive" : "Active";
+      await toggleExpertStatusAction(item.id, nextStatus);
+      setExperts((prev) => prev.map((expert) => (expert.id === item.id ? { ...expert, status: nextStatus } : expert)));
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update expert status.");
+    } finally {
+      setSaving(false);
     }
-  }, [experts]);
-
-  const filtered = experts.filter((e) => {
-    const matchSearch =
-      e.name.toLowerCase().includes(search.toLowerCase()) ||
-      e.company.toLowerCase().includes(search.toLowerCase()) ||
-      e.description.toLowerCase().includes(search.toLowerCase()) ||
-      e.role.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === "All" || e.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
-  const toggleStatus = (id: number) => {
-    setExperts((prev) => prev.map((e) => (e.id === id ? { ...e, status: e.status === "Active" ? "Inactive" : "Active" } : e)));
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -184,33 +186,77 @@ export default function IndustryExpertsPage() {
     setForm({ ...empty, socialLinks: [""] });
     setModal({ open: true, mode: "add", item: null });
   };
+
   const openEdit = (item: Expert) => {
-    const { id, ...rest } = item;
-    setForm({ ...rest, socialLinks: rest.socialLinks?.length ? rest.socialLinks : [""] });
+    setForm({
+      name: item.name,
+      role: item.role,
+      company: item.company,
+      description: item.description,
+      socialLinks: item.socialLinks?.length ? item.socialLinks : [""],
+      currentProblemStatement: item.currentProblemStatement,
+      photo: item.photo,
+      bio: item.bio,
+      status: item.status,
+    });
     setModal({ open: true, mode: "edit", item });
   };
+
   const openDelete = (item: Expert) => setModal({ open: true, mode: "delete", item });
   const openView = (item: Expert) => setModal({ open: true, mode: "view", item });
   const close = () => setModal((m) => ({ ...m, open: false }));
 
-  const save = () => {
+  const save = async () => {
     if (!form.name || !form.role || !form.company) return;
-    if (modal.mode === "add") {
-      setExperts((prev) => [...prev, { ...form, id: Date.now() }]);
-    } else if (modal.item) {
-      setExperts((prev) => prev.map((e) => (e.id === modal.item!.id ? { ...modal.item!, ...form } : e)));
+    setSaving(true);
+    setError(null);
+    try {
+      const payload = {
+        name: form.name,
+        role: form.role,
+        designation: form.role,
+        company: form.company,
+        description: form.description,
+        bio: form.bio,
+        photo: form.photo,
+        socialLinks: form.socialLinks,
+        currentProblemStatement: form.currentProblemStatement,
+        status: form.status,
+      };
+
+      if (modal.mode === "add") {
+        await createExpertAction(payload);
+      } else if (modal.item) {
+        await updateExpertAction(modal.item.id, payload);
+      }
+
+      close();
+      router.refresh();
+      await loadExperts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save expert.");
+    } finally {
+      setSaving(false);
     }
-    close();
   };
 
-  const remove = () => {
-    if (modal.item) {
-      setExperts((prev) => prev.filter((e) => e.id !== modal.item!.id));
+  const remove = async () => {
+    if (!modal.item) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await deleteExpertAction(modal.item.id);
+      close();
+      router.refresh();
+      await loadExperts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete expert.");
+    } finally {
+      setSaving(false);
     }
-    close();
   };
 
-  const set = (k: keyof typeof form, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof ExpertForm, v: any) => setForm((f) => ({ ...f, [k]: v }));
 
   return (
     <div>
@@ -220,24 +266,6 @@ export default function IndustryExpertsPage() {
         subtitle={`${experts.length} total experts · ${experts.filter((e) => e.status === "Active").length} active`}
         action={
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
-              <button
-                onClick={undo}
-                disabled={!canUndo}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
-                title="Undo Action"
-              >
-                <Undo size={14} />
-              </button>
-              <button
-                onClick={redo}
-                disabled={!canRedo}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
-                title="Redo Action"
-              >
-                <Redo size={14} />
-              </button>
-            </div>
             <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90 animate-fade-in"
               style={{ background: "#FF6B00", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
               <Plus size={16} /> Add Expert
@@ -245,6 +273,12 @@ export default function IndustryExpertsPage() {
           </div>
         }
       />
+
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)", border: "1px solid #f0f0f0" }}>
         <div className="flex flex-wrap items-center gap-3 px-5 py-4" style={{ borderBottom: "1px solid #f5f5f5" }}>
@@ -290,7 +324,15 @@ export default function IndustryExpertsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((expert) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: "40px 16px", textAlign: "center", color: "#bbb", fontSize: "14px" }}>Loading experts…</td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: "40px 16px", textAlign: "center", color: "#bbb", fontSize: "14px" }}>No experts found.</td>
+                </tr>
+              ) : filtered.map((expert) => (
                 <tr key={expert.id} style={{ borderTop: "1px solid #f5f5f5" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
@@ -318,7 +360,8 @@ export default function IndustryExpertsPage() {
                   <td style={{ padding: "14px 16px" }}>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => toggleStatus(expert.id)}
+                        onClick={() => { void toggleStatus(expert); }}
+                        disabled={saving}
                         className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out align-middle border-none"
                         style={{
                           background: expert.status === "Active" ? "#10b981" : "#e5e7eb",
@@ -328,9 +371,7 @@ export default function IndustryExpertsPage() {
                       >
                         <span
                           className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out"
-                          style={{
-                            transform: expert.status === "Active" ? "translateX(16px)" : "translateX(0)"
-                          }}
+                          style={{ transform: expert.status === "Active" ? "translateX(16px)" : "translateX(0)" }}
                         />
                       </button>
                       <span style={{ fontSize: "12px", fontWeight: 500, color: expert.status === "Active" ? "#10b981" : "#888" }}>
@@ -365,11 +406,6 @@ export default function IndustryExpertsPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} style={{ padding: "40px 16px", textAlign: "center", color: "#bbb", fontSize: "14px" }}>No experts found.</td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
@@ -400,11 +436,11 @@ export default function IndustryExpertsPage() {
                 <p style={{ fontSize: "13.5px", color: "#555", marginTop: "2px", lineHeight: "1.4" }}>{modal.item.bio}</p>
               </div>
             )}
-            {modal.item.socialLinks && modal.item.socialLinks.filter(l => l.trim()).length > 0 && (
+            {modal.item.socialLinks && modal.item.socialLinks.filter((l) => l.trim()).length > 0 && (
               <div>
                 <label style={{ fontSize: "11px", textTransform: "uppercase", fontWeight: 600, color: "#aaa" }}>Social Media Links</label>
                 <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                  {modal.item.socialLinks.filter(l => l.trim()).map((link, i) => (
+                  {modal.item.socialLinks.filter((l) => l.trim()).map((link, i) => (
                     <a key={i} href={link} target="_blank" rel="noopener noreferrer" style={{ color: "#FF6B00", textDecoration: "none", fontSize: "13px", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: "4px" }}>
                       <Link2 size={13} /> {link}
                     </a>
@@ -483,41 +519,11 @@ export default function IndustryExpertsPage() {
 
             <div>
               <FormField label="Expert Photo (Drag & Drop or Click to Upload)">
-                <div
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={() => document.getElementById("expert-photo-upload")?.click()}
-                  style={{
-                    borderColor: dragActive ? "#FF6B00" : "#ebebeb",
-                    background: dragActive ? "rgba(255,107,0,0.04)" : "#fcfcfc",
-                    borderStyle: "dashed",
-                    borderWidth: "2px",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    transition: "all 0.2s"
-                  }}
-                >
-                  <input id="expert-photo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFile(e.target.files[0]);
-                    }
-                  }} />
-                  {form.photo ? (
-                    <div className="flex flex-col items-center">
-                      <img src={form.photo} alt="Preview" className="w-16 h-16 rounded-full object-cover mb-2" />
-                      <span className="text-[11px] text-gray-400">Click to select a different photo</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <UploadCloud size={24} className="text-[#FF6B00] mb-1" />
-                      <span className="text-xs font-semibold text-gray-700">Drag & drop profile picture here</span>
-                    </div>
-                  )}
-                </div>
+                <ImageUpload
+                  uploadType="community_member_photo"
+                  value={form.photo}
+                  onChange={(url) => set("photo", url)}
+                />
               </FormField>
             </div>
 
@@ -526,7 +532,7 @@ export default function IndustryExpertsPage() {
             </FormField>
 
             <FormField label="Status">
-              <Select value={form.status} onChange={(e) => set("status", e.target.value)}>
+              <Select value={form.status} onChange={(e) => set("status", e.target.value as "Active" | "Inactive")}>
                 <option>Active</option>
                 <option>Inactive</option>
               </Select>
@@ -534,7 +540,7 @@ export default function IndustryExpertsPage() {
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
               <GhostBtn onClick={close}>Cancel</GhostBtn>
-              <PrimaryBtn onClick={save}>{modal.mode === "add" ? "Add Expert" : "Save Changes"}</PrimaryBtn>
+              <PrimaryBtn onClick={() => { void save(); }} disabled={saving}>{saving ? "Saving..." : modal.mode === "add" ? "Add Expert" : "Save Changes"}</PrimaryBtn>
             </div>
           </div>
         </Modal>
@@ -546,7 +552,7 @@ export default function IndustryExpertsPage() {
         </p>
         <div className="flex justify-end gap-3">
           <GhostBtn onClick={close}>Cancel</GhostBtn>
-          <DangerBtn onClick={remove}>Remove</DangerBtn>
+          <DangerBtn onClick={() => { void remove(); }}>Remove</DangerBtn>
         </div>
       </Modal>
     </div>

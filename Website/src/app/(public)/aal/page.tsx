@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
+import AALEcosystemDirectory from './AALEcosystemDirectory';
 import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
 import { domains } from '@/data/domains';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
@@ -989,6 +990,7 @@ export default function AAL() {
           </div>
         </div>
       </section>
+      <AALEcosystemDirectory />
     </PageWrapper>
   );
 }
