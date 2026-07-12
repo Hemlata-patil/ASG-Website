@@ -9,7 +9,7 @@ export default async function Page() {
 
     const { data, error } = await supabase
       .from('gallery_albums')
-      .select('id, title, description, cover_photo, event_date, tags, gallery_photos(id, image_url, display_order)')
+      .select('id, title, description, cover_photo, event_date, gallery_photos(id, image_url, display_order)')
       .order('event_date', { ascending: false });
 
     if (!error && data) {
