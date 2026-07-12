@@ -1,49 +1,45 @@
 import { useState, useCallback } from "react";
 
-export interface UndoRedoAction {
-  undo: () => Promise<void>;
-  redo: () => Promise<void>;
-}
+export function useUndoRedoState<T>(initialState: T | (() => T)) {
+  const [present, setPresent] = useState<T>(initialState);
+  const [past, setPast] = useState<T[]>([]);
+  const [future, setFuture] = useState<T[]>([]);
 
-export function useUndoRedoState() {
-  const [past, setPast] = useState<UndoRedoAction[]>([]);
-  const [future, setFuture] = useState<UndoRedoAction[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const undo = useCallback(() => {
+    if (past.length === 0) return;
+    const previous = past[past.length - 1];
+    const newPast = past.slice(0, past.length - 1);
 
-  const pushAction = useCallback((action: UndoRedoAction) => {
-    setPast((prev) => [...prev, action]);
-    setFuture([]);
+    setPast(newPast);
+    setFuture([present, ...future]);
+    setPresent(previous);
+  }, [past, future, present]);
+
+  const redo = useCallback(() => {
+    if (future.length === 0) return;
+    const next = future[0];
+    const newFuture = future.slice(1);
+
+    setPast([...past, present]);
+    setFuture(newFuture);
+    setPresent(next);
+  }, [past, future, present]);
+
+  const updateState = useCallback((newVal: T | ((prev: T) => T)) => {
+    setPresent((prev) => {
+      const resolved = typeof newVal === "function" ? (newVal as Function)(prev) : newVal;
+      setPast((p) => [...p, prev]);
+      setFuture([]);
+      return resolved;
+    });
   }, []);
 
-  const undo = useCallback(async () => {
-    if (past.length === 0 || isProcessing) return;
-    setIsProcessing(true);
-    const action = past[past.length - 1];
-    try {
-      await action.undo();
-      setPast((prev) => prev.slice(0, prev.length - 1));
-      setFuture((prev) => [action, ...prev]);
-    } catch (error) {
-      console.error("Undo failed", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [past, isProcessing]);
-
-  const redo = useCallback(async () => {
-    if (future.length === 0 || isProcessing) return;
-    setIsProcessing(true);
-    const action = future[0];
-    try {
-      await action.redo();
-      setFuture((prev) => prev.slice(1));
-      setPast((prev) => [...prev, action]);
-    } catch (error) {
-      console.error("Redo failed", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [future, isProcessing]);
-
-  return { pushAction, undo, redo, canUndo: past.length > 0, canRedo: future.length > 0, isProcessing };
+  return [
+    present,
+    updateState,
+    undo,
+    redo,
+    past.length > 0,
+    future.length > 0,
+  ] as const;
 }
