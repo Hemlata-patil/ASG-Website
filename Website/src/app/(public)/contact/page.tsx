@@ -35,7 +35,7 @@ function ContactFormContent() {
     }
   }, [initialRole]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (formErrors[name]) {
@@ -45,47 +45,16 @@ function ContactFormContent() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [contactDetails, setContactDetails] = useState({
-    email: "reachus.asg@gmail.com",
-    location: "Jalgaon, Maharashtra, India",
-    whatsapp: "https://chat.whatsapp.com/CoG7rugANv166E6p51uLcI",
-    instagram: "https://www.instagram.com/apexstartupgroup",
-    linkedin: "https://www.linkedin.com/company/apex-startup-group",
-    twitter: "https://x.com/apexstartupgrp",
-    youtube: "https://youtube.com/@apexstartupgroup"
-  });
-
-  useEffect(() => {
-    async function fetchContactDetails() {
-      try {
-        const res = await fetch('/api/v1/site-settings?key=contact_details');
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data && json.data.value) {
-            setContactDetails(json.data.value);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load contact details settings:", err);
-      }
-    }
-    fetchContactDetails();
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = 'Full Name is required';
     if (!formData.email.trim()) {
       errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email';
     }
-    if (!formData.phone.trim()) {
-      errors.phone = 'Mobile Number is required';
-    } else if (!/^[6-9]\d{9}$/.test(formData.phone.replace(/[\s-()]/g, ""))) {
-      errors.phone = 'Please enter a valid 10-digit mobile number starting with 6, 7, 8 or 9';
-    }
+    if (!formData.phone.trim()) errors.phone = 'Mobile Number is required';
     if (!formData.message.trim()) errors.message = 'Message is required';
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -144,7 +113,7 @@ function ContactFormContent() {
             </div>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--apex-text-muted)', display: 'block' }}>Email</span>
-              <a href={`mailto:${contactDetails.email}`} style={{ fontSize: '0.9rem', fontWeight: '600' }}>{contactDetails.email}</a>
+              <a href="mailto:reachus.asg@gmail.com" style={{ fontSize: '0.9rem', fontWeight: '600' }}>reachus.asg@gmail.com</a>
             </div>
           </div>
 
@@ -159,7 +128,7 @@ function ContactFormContent() {
             </div>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--apex-text-muted)', display: 'block' }}>HQ Location</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{contactDetails.location}</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>Jalgaon, Maharashtra, India</span>
             </div>
           </div>
 
@@ -174,7 +143,7 @@ function ContactFormContent() {
             </div>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--apex-text-muted)', display: 'block' }}>WhatsApp Group</span>
-              <a href={contactDetails.whatsapp} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--apex-primary)' }}>Join WhatsApp Community →</a>
+              <a href="https://chat.whatsapp.com/CoG7rugANv166E6p51uLcI" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--apex-primary)' }}>Join WhatsApp Community →</a>
             </div>
           </div>
         </div>
@@ -182,69 +151,25 @@ function ContactFormContent() {
         {/* Social Channels */}
         <div style={{ borderTop: '1px solid var(--apex-border-dark)', paddingTop: 'var(--space-4)' }}>
           <h4 className="label" style={{ color: 'var(--apex-text-muted)', marginBottom: 'var(--space-3)' }}>Follow our updates</h4>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <a href={contactDetails.instagram} target="_blank" rel="noopener noreferrer" 
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)',
-                transition: 'all 0.25s ease', cursor: 'pointer', textDecoration: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#E1306C';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--apex-text-muted)';
-                e.currentTarget.style.transform = 'none';
-              }}
-            >
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <a href="https://www.instagram.com/apexstartupgroup" target="_blank" rel="noopener noreferrer" style={{
+              display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)'
+            }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg> Instagram
             </a>
-            <a href={contactDetails.linkedin} target="_blank" rel="noopener noreferrer" 
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)',
-                transition: 'all 0.25s ease', cursor: 'pointer', textDecoration: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#0077B5';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--apex-text-muted)';
-                e.currentTarget.style.transform = 'none';
-              }}
-            >
+            <a href="https://www.linkedin.com/company/apex-startup-group" target="_blank" rel="noopener noreferrer" style={{
+              display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)'
+            }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect width="4" height="12" x="2" y="9" /><circle cx="4" cy="4" r="2" /></svg> LinkedIn
             </a>
-            <a href={contactDetails.twitter} target="_blank" rel="noopener noreferrer" 
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)',
-                transition: 'all 0.25s ease', cursor: 'pointer', textDecoration: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#1DA1F2';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--apex-text-muted)';
-                e.currentTarget.style.transform = 'none';
-              }}
-            >
+            <a href="https://x.com/apexstartupgrp" target="_blank" rel="noopener noreferrer" style={{
+              display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)'
+            }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M4 4l11.733 16h4.267l-11.733 -16z" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg> Twitter/X
             </a>
-            <a href={contactDetails.youtube} target="_blank" rel="noopener noreferrer" 
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)',
-                transition: 'all 0.25s ease', cursor: 'pointer', textDecoration: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#FF0000';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--apex-text-muted)';
-                e.currentTarget.style.transform = 'none';
-              }}
-            >
+            <a href="https://youtube.com/@apexstartupgroup" target="_blank" rel="noopener noreferrer" style={{
+              display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--apex-text-muted)'
+            }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25a29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" /></svg> YouTube
             </a>
           </div>
@@ -310,11 +235,9 @@ function ContactFormContent() {
                 type="tel"
                 name="phone"
                 required
-                maxLength={10}
-                pattern="[6-9]{1}[0-9]{9}"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="9876543210"
+                placeholder="Your Mobile Number"
                 style={{
                   width: '100%',
                   backgroundColor: 'var(--apex-bg-base)',
@@ -326,34 +249,6 @@ function ContactFormContent() {
                 }}
               />
               {formErrors.phone && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.phone}</span>}
-            </div>
-
-            <div>
-              <label style={{ fontSize: '0.85rem', color: 'var(--apex-text-muted)', display: 'block', marginBottom: '6px' }}>I am a... (Subject) *</label>
-              <select
-                name="role"
-                required
-                value={formData.role}
-                onChange={handleChange}
-                style={{
-                  width: '100%',
-                  backgroundColor: 'var(--apex-bg-base)',
-                  border: '1px solid var(--apex-border-dark)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '10px 14px',
-                  color: '#000000ff',
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="Student">Student (Academic Inquiry)</option>
-                <option value="Startup">Startup (Incubation/Acceleration Inquiry)</option>
-                <option value="Community Member">Community Member (General/Event Inquiry)</option>
-                <option value="Industry Partner">Industry Partner (Sponsorship/Collaboration)</option>
-                <option value="Industry Expert">Industry Expert (Mentorship/Speaker request)</option>
-                <option value="Investor">Investor (Partnership/Co-investment)</option>
-                <option value="General">General Inquiry</option>
-              </select>
             </div>
 
             <div>

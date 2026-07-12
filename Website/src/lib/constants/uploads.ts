@@ -16,15 +16,8 @@ export const UPLOAD_CONFIGS: Record<string, UploadConfig> = {
   },
   blog_cover: {
     label: "Blog Cover",
-    maxSize: 2 * 1024 * 1024, // 2MB
+    maxSize: 1 * 1024 * 1024, // 1MB
     aspectRatio: 16 / 9,
-    maxWidth: 1200,
-    bucket: "media",
-  },
-  blog_inline: {
-    label: "Blog Inline Image",
-    maxSize: 1.5 * 1024 * 1024, // 1.5MB
-    aspectRatio: 0,
     maxWidth: 1200,
     bucket: "media",
   },

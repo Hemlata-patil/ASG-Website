@@ -5,8 +5,8 @@ export const queryStatusEnum = pgEnum('query_status', ['pending', 'responded', '
 export const contactQueries = pgTable('contact_queries', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  phone: text('phone').unique(),
+  email: text('email').notNull(),
+  phone: text('phone'),
   subject: text('subject').notNull(),
   message: text('message').notNull(),
   status: queryStatusEnum('status').default('pending').notNull(),
