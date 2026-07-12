@@ -30,6 +30,15 @@ cd Website
 npm install
 ```
 
+> If `npm install` fails with a dependency conflict involving `react-day-picker` and `date-fns`, run:
+>
+> ```bash
+> npm install date-fns@^3.6.0
+> npm install
+> ```
+>
+> This is required because `react-day-picker@8.x` expects `date-fns` version 2 or 3.
+
 ---
 
 ### 3. Setup Supabase & Environment Variables

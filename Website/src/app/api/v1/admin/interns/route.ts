@@ -93,3 +93,40 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'You must be logged in to manage interns' } },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'Missing ID parameter' } },
+        { status: 400 }
+      );
+    }
+
+    await db.delete(interns).where(eq(interns.id, id));
+
+    return NextResponse.json({
+      success: true,
+      message: 'Intern deleted successfully'
+    });
+  } catch (err: any) {
+    console.error('Failed to delete intern:', err);
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: err.message || 'Failed to delete intern' } },
+      { status: 500 }
+    );
+  }
+}

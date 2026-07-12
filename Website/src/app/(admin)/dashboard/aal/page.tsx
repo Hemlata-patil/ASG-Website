@@ -312,12 +312,12 @@ const empty: Omit<AALItem, "id"> = {
 
 function StatusBadge({ status }: { status: AALItem["status"] }) {
   const styles: Record<string, { bg: string; color: string }> = {
-    Pending:  { bg: "rgba(245,158,11,0.12)",  color: "#d97706" },
-    Accepted: { bg: "rgba(16,185,129,0.12)",  color: "#059669" },
-    Rejected: { bg: "rgba(239,68,68,0.12)",   color: "#dc2626" },
-    Active:   { bg: "rgba(16,185,129,0.12)",  color: "#059669" },
+    Pending: { bg: "rgba(245,158,11,0.12)", color: "#d97706" },
+    Accepted: { bg: "rgba(16,185,129,0.12)", color: "#059669" },
+    Rejected: { bg: "rgba(239,68,68,0.12)", color: "#dc2626" },
+    Active: { bg: "rgba(16,185,129,0.12)", color: "#059669" },
     Inactive: { bg: "rgba(107,114,128,0.12)", color: "#6b7280" },
-    Completed:{ bg: "rgba(59,130,246,0.12)",  color: "#3b82f6" },
+    Completed: { bg: "rgba(59,130,246,0.12)", color: "#3b82f6" },
   };
   const s = styles[status] || { bg: "#f4f4f5", color: "#888" };
   return (
@@ -356,7 +356,7 @@ export default function AALPage() {
             domain: app.preferredDomain || 'General',
             status: app.status.charAt(0).toUpperCase() + app.status.slice(1),
             startDate: new Date(app.createdAt).toISOString().split('T')[0],
-            isExistingIntern: false,
+            isExistingIntern: app.isExistingIntern || false,
             photo: app.photoUrl || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
             github: app.githubUrl || '',
             linkedin: app.linkedinUrl || '',
@@ -403,7 +403,7 @@ export default function AALPage() {
             baseItems = JSON.parse(raw) as AALItem[];
           } catch { /* ignore */ }
         }
-        
+
         let problemStatements = baseItems.filter(i => i.type === "Problem Statement");
         if (problemStatements.length === 0) {
           problemStatements = INITIAL.filter(i => i.type === "Problem Statement");
@@ -542,6 +542,22 @@ export default function AALPage() {
         }
       } catch (err) {
         console.error('Storage delete error:', err);
+      }
+
+      if (modal.item.type === "Intern") {
+        try {
+          const res = await fetch(`/api/v1/admin/interns?id=${modal.item.id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) {
+            alert("Failed to delete intern on database server.");
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Network error deleting intern.");
+          return;
+        }
       }
       saveItems(items.filter((i) => i.id !== modal.item!.id));
     }
@@ -683,12 +699,12 @@ export default function AALPage() {
   const tabCounts = tabs.map(t => ({
     type: t,
     count: t === "Application"
-      ? items.filter(i => i.type === "Application" && i.status !== "Accepted").length
+      ? items.filter(i => i.type === "Application" && i.status !== "Accepted" && i.status !== "Rejected").length
       : items.filter(i => i.type === t).length
   }));
 
-  const newApplications = filtered.filter(i => !i.isExistingIntern && i.status !== "Accepted");
-  const existingApplications = filtered.filter(i => i.isExistingIntern && i.status !== "Accepted");
+  const newApplications = filtered.filter(i => !i.isExistingIntern && i.status !== "Accepted" && i.status !== "Rejected");
+  const existingApplications = filtered.filter(i => i.isExistingIntern && i.status !== "Accepted" && i.status !== "Rejected");
 
   return (
     <div>
