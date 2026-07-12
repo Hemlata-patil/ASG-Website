@@ -7,7 +7,7 @@ import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, Ghost
 import { PageHeader } from "@/components/admin/PageHeader";
 import { createPartnerAction, deletePartnerAction, getPartnersAction, togglePartnerStatusAction, updatePartnerAction } from "@/app/actions/partners";
 import ImageUpload from "@/components/shared/ImageUpload";
-import { useActionStack } from "@/hooks/admin/useActionStack";
+import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
 import { Undo2, Redo2 } from "lucide-react";
 
 interface Partner {
@@ -50,7 +50,7 @@ export default function IndustryPartnersPage() {
     open: false, mode: "add", item: null,
   });
   const [form, setForm] = useState<PartnerForm>(empty);
-  const { pushAction, undo, redo, canUndo, canRedo, isProcessing } = useActionStack();
+  const { pushAction, undo, redo, canUndo, canRedo, isProcessing } = useUndoRedoState();
 
   const loadPartners = async () => {
     setLoading(true);

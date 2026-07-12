@@ -7,7 +7,7 @@ import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, Ghost
 import { PageHeader } from "@/components/admin/PageHeader";
 import { createExpertAction, deleteExpertAction, getExpertsAction, toggleExpertStatusAction, updateExpertAction } from "@/app/actions/experts";
 import ImageUpload from "@/components/shared/ImageUpload";
-import { useActionStack } from "@/hooks/admin/useActionStack";
+import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
 import { Undo2, Redo2 } from "lucide-react";
 
 interface Expert {
@@ -80,7 +80,7 @@ export default function IndustryExpertsPage() {
   const [form, setForm] = useState<ExpertForm>(empty);
   const [dragActive, setDragActive] = useState(false);
   const [problemStatements, setProblemStatements] = useState<string[]>([]);
-  const { pushAction, undo, redo, canUndo, canRedo, isProcessing } = useActionStack();
+  const { pushAction, undo, redo, canUndo, canRedo, isProcessing } = useUndoRedoState();
 
   const loadExperts = async () => {
     setLoading(true);
