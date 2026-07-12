@@ -6,6 +6,7 @@ import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import ApexDropdown from '@/components/common/ApexDropdown/ApexDropdown';
+import { getExpertsAction, type ExpertRecord } from '@/app/actions/experts';
 import ImageUpload from '@/components/shared/ImageUpload';
 import { FileText, Users, Brain, Code, Award } from 'lucide-react';
 
@@ -51,27 +52,24 @@ export default function AAL() {
     fetchProblemStatements();
   }, []);
 
-  const [experts, setExperts] = useState<any[]>([]);
+  const [experts, setExperts] = useState<ExpertRecord[]>([]);
 
   useEffect(() => {
-    async function fetchExperts() {
+    const loadExperts = async () => {
       try {
-        const res = await fetch('/api/v1/industry-experts');
-        if (res.ok) {
-          const { data } = await res.json();
-          setExperts(data);
-        }
+        const fetched = await getExpertsAction({ publicOnly: true });
+        setExperts(fetched);
       } catch (err) {
-        console.error("Failed to fetch industry experts:", err);
+        console.error('Failed to fetch experts', err);
       }
-    }
-    fetchExperts();
+    };
+    void loadExperts();
   }, []);
 
   const activeExperts = experts.map(e => {
-    const socialLinks = e.linkedinUrl ? [e.linkedinUrl] : [];
-    const currentProblemStatement = e.domain || "";
-    const description = e.bio || "";
+    const socialLinks = e.socialLinks || [];
+    const currentProblemStatement = e.currentProblemStatement || e.expertise || "";
+    const description = e.description || e.bio || "";
     return { ...e, socialLinks, currentProblemStatement, description };
   });
 
@@ -445,7 +443,7 @@ export default function AAL() {
                 </h3>
 
                 <p className="body-sm" style={{ color: 'var(--apex-primary-warm)', fontWeight: '600', marginBottom: '4px' }}>
-                  {expert.role}
+                  {expert.role || expert.designation}
                 </p>
                 <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0 }}>
                   {expert.company}

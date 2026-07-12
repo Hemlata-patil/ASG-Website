@@ -14,6 +14,8 @@ import Modal, {
 import { PageHeader } from "@/components/admin/PageHeader";
 import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
 import ImageUpload from "@/components/shared/ImageUpload";
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 
 interface Member {
   id: number;
@@ -420,6 +422,12 @@ export default function CommunityPage() {
   const remove = async () => {
     if (modal.item) {
       try {
+        if (modal.item.photo && modal.item.photo.includes('supabase.co')) {
+          const filePath = modal.item.photo.split('/public/avatars/')[1];
+          if (filePath) {
+            await fetch('/api/v1/delete', { method: 'POST', body: JSON.stringify({ bucket: 'avatars', paths: [filePath] }) });
+          }
+        }
         const res = await fetch(`/api/v1/admin/community-members?id=${modal.item.id}`, {
           method: 'DELETE'
         });
@@ -429,7 +437,7 @@ export default function CommunityPage() {
           alert("Failed to delete community member on server.");
         }
       } catch (err) {
-        console.error(err);
+        console.error("Delete error:", err);
       }
     }
     close();

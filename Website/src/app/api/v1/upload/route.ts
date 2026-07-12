@@ -96,12 +96,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Generate Folder Path and UUID Filename: {year}/{month}/{uuid}.webp
-    const date = new Date();
-    const year = date.getFullYear();
+    // 3. Generate Folder Path and UUID Filename
+    const eventDateStr = formData.get('eventDate') as string;
+    const date = eventDateStr ? new Date(eventDateStr) : new Date();
+    const year = isNaN(date.getFullYear()) ? new Date().getFullYear() : date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const filename = `${crypto.randomUUID()}.webp`;
-    const filePath = `${year}/${month}/${filename}`;
+
+    let basePath = '';
+    if (uploadType === 'event_banner') {
+      basePath = `events/${year}/`;
+    } else if (uploadType === 'gallery_photo') {
+      basePath = `gallery/${year}/`;
+    } else {
+      basePath = `${year}/${month}/`;
+    }
+    const filePath = `${basePath}${filename}`;
 
     // 4. Upload to Supabase Storage
     const { error: uploadError } = await supabaseService.storage

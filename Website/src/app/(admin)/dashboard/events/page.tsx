@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Plus,
   Pencil,
@@ -32,6 +32,9 @@ import Modal, {
 } from "@/components/admin/Modal";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { createClient } from "@/lib/supabase/client";
+
+const supabase = createClient();
 
 interface Event {
   id: number;
@@ -106,12 +109,57 @@ const emptyForm: Omit<Event, "id"> = {
 };
 
 export default function EventsPage() {
-  const [events, setEvents, undo, redo, canUndo, canRedo] = useUndoRedoState<Event[]>(INITIAL_EVENTS);
+  const [events, setEvents, undo, redo, canUndo, canRedo] = useUndoRedoState<Event[]>([]);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "upcoming" | "past">("all");
   
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+
+  // Fetch events from Supabase on mount
+  useEffect(() => {
+    supabase
+      .from('events')
+      .select('*')
+      .order('start_date', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) { console.error('Fetch events error:', error.message); return; }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const mapped = (data || []).map((e: any) => {
+          let computedStatus = e.status || 'upcoming';
+          if (e.start_date) {
+            const eventDate = new Date(e.start_date);
+            eventDate.setHours(0, 0, 0, 0);
+            if (eventDate < today) {
+              computedStatus = 'past';
+            } else if (eventDate.getTime() === today.getTime()) {
+              computedStatus = 'upcoming'; 
+            } else {
+              computedStatus = 'upcoming';
+            }
+          }
+          if (e.status === 'completed') computedStatus = 'past';
+
+          return {
+            id: e.id,
+            title: e.title,
+            type: (e.type as string).charAt(0).toUpperCase() + (e.type as string).slice(1).replace('_', ' ') as Event['type'],
+            date: e.start_date || '',
+            venue: e.location || '',
+            status: computedStatus,
+            thumbnail: e.cover_image_url || '',
+            description: e.description || '',
+            tags: Array.isArray(e.tags) ? e.tags : [],
+            registrationUrl: '',
+            recapUrl: '',
+          };
+        });
+        setEvents(mapped as any);
+      });
+  }, []);
 
   const [modal, setModal] = useState<{
     open: boolean;
@@ -244,35 +292,126 @@ export default function EventsPage() {
 
   const close = () => setModal((m) => ({ ...m, open: false }));
 
-  const save = () => {
+  const save = async () => {
     if (!form.title || !form.date || !form.venue) return;
+    setSaving(true);
+
     const parsedTags = tagsInput
       .split(",")
       .map(t => t.trim())
       .filter(t => t.length > 0)
       .map(t => (t.startsWith("#") ? t : `#${t}`));
 
-    const finalForm = { ...form, tags: parsedTags };
-
-    if (modal.mode === "add") {
-      setEvents((prev) => [
-        { ...finalForm, id: Date.now() },
-        ...prev
-      ]);
-    } else if (modal.item) {
-      setEvents((prev) =>
-        prev.map((e) => (e.id === modal.item!.id ? { ...modal.item!, ...finalForm } : e))
-      );
+    let coverImageUrl = form.thumbnail;
+    if (form.thumbnail && form.thumbnail.startsWith('data:')) {
+      try {
+        const blob = await fetch(form.thumbnail).then(r => r.blob());
+        const fd = new FormData();
+        fd.append('file', blob, `event-${Date.now()}.jpg`);
+        fd.append('bucket', 'media');
+        fd.append('uploadType', 'event_banner');
+        if (form.date) fd.append('eventDate', form.date);
+        const res = await fetch('/api/v1/upload', { method: 'POST', body: fd });
+        if (res.ok) { 
+          const json = await res.json(); 
+          coverImageUrl = json.url; 
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error?.message || 'Server rejected the file upload (e.g. file too large or invalid image type)');
+        }
+      } catch (err: any) {
+        alert(`Thumbnail upload failed: ${err.message}`);
+        setSaving(false);
+        return;
+      }
     }
-    close();
+
+    // Map UI form fields → actual DB column names
+    const typeMap: Record<string, string> = {
+      'Workshop': 'workshop', 'Meetup': 'meetup', 'Expert Session': 'expert_session',
+      'Demo Day': 'demo_day', 'Founder Circle': 'founder_circle', 'Community': 'community',
+    };
+    const payload: Record<string, any> = {
+      title: form.title,
+      start_date: form.date,          // UI: date → DB: start_date
+      location: form.venue,           // UI: venue → DB: location
+      status: form.status,
+      cover_image_url: coverImageUrl, // UI: thumbnail → DB: cover_image_url
+      description: form.description,
+      tags: parsedTags,
+      type: typeMap[form.type] || 'meetup',
+    };
+
+    try {
+      if (modal.mode === "add") {
+        payload.slug = form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+        const { data, error } = await supabase.from('events').insert([payload]).select().single();
+        if (error) {
+          console.error('Insert event error — code:', error.code, 'message:', error.message);
+          alert(`Failed to create event:\n${error.message}`);
+        } else {
+          const created: Event = {
+            id: data.id, title: data.title,
+            type: form.type, date: data.start_date, venue: data.location || '',
+            status: data.status === 'completed' ? 'past' : 'upcoming',
+            thumbnail: data.cover_image_url || '', description: data.description || '',
+            tags: data.tags || [], registrationUrl: '', recapUrl: '',
+          };
+          setEvents(prev => [created, ...prev]);
+          close();
+        }
+      } else if (modal.item) {
+        const { data, error } = await supabase.from('events').update(payload).eq('id', modal.item.id).select().single();
+        if (error) {
+          console.error('Update event error — code:', error.code, 'message:', error.message);
+          alert(`Failed to update event:\n${error.message}`);
+        } else {
+          const updated: Event = {
+            id: data.id, title: data.title,
+            type: form.type, date: data.start_date, venue: data.location || '',
+            status: data.status === 'completed' ? 'past' : 'upcoming',
+            thumbnail: data.cover_image_url || '', description: data.description || '',
+            tags: data.tags || [], registrationUrl: '', recapUrl: '',
+          };
+          setEvents(prev => prev.map(e => e.id === modal.item!.id ? updated : e));
+          close();
+        }
+      }
+    } catch (err: any) {
+      console.error('Unexpected save error:', err?.message);
+      alert(`Unexpected error: ${err?.message}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const remove = () => {
+  const remove = async () => {
     if (modal.item) {
-      setEvents((prev) => prev.filter((e) => e.id !== modal.item!.id));
+      setSaving(true);
+      try {
+        if (modal.item.thumbnail && modal.item.thumbnail.includes('supabase.co')) {
+          const filePath = modal.item.thumbnail.split('/public/media/')[1];
+          if (filePath) {
+            await fetch('/api/v1/delete', { method: 'POST', body: JSON.stringify({ bucket: 'media', paths: [filePath] }) });
+          }
+        }
+
+        const { error } = await supabase.from('events').delete().eq('id', modal.item.id);
+        if (error) {
+          console.error('Delete event error:', error.message);
+          alert(`Failed to delete:\n${error.message}`);
+          return;
+        }
+        setEvents(prev => prev.filter(e => e.id !== modal.item!.id));
+      } catch (err: any) {
+        console.error('Delete error:', err.message);
+      } finally {
+        setSaving(false);
+        close();
+      }
     }
-    close();
   };
+
 
   const setField = (k: keyof typeof form, v: any) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -548,11 +687,6 @@ export default function EventsPage() {
             </FormField>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Recap URL (Past)">
-              <Input value={form.recapUrl} onChange={(e) => setField("recapUrl", e.target.value)} placeholder="e.g. #" />
-            </FormField>
-          </div>
 
           <FormField label="Tags (Comma separated)">
             <Input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} placeholder="Meetup, Community, ArtificialIntelligence" />

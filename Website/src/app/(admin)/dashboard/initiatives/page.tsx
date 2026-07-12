@@ -5,6 +5,8 @@ import { Search, Plus, Pencil, Trash2, Milestone, Undo, Redo } from "lucide-reac
 import Modal, { FormField, Input, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 
 interface Initiative {
   id: number;
@@ -83,8 +85,18 @@ export default function ASGInitiativesPage() {
     close();
   };
 
-  const remove = () => {
+  const remove = async () => {
     if (modal.item) {
+      try {
+        if (modal.item.icon && modal.item.icon.includes('supabase.co')) {
+          const filePath = modal.item.icon.split('/public/media/')[1];
+          if (filePath) {
+            await fetch('/api/v1/delete', { method: 'POST', body: JSON.stringify({ bucket: 'media', paths: [filePath] }) });
+          }
+        }
+      } catch (err) {
+        console.error('Storage delete error:', err);
+      }
       setInitiatives((prev) => prev.filter((i) => i.id !== modal.item!.id));
     }
     close();
