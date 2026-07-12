@@ -183,18 +183,7 @@ export default async function BlogDetailPage({ params }) {
                     borderRadius: 'var(--radius-full)',
                     fontWeight: '600'
                   }}>
-<<<<<<< HEAD
-                  <span key={t} style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--apex-text-muted)',
-                    backgroundColor: 'var(--apex-bg-surface-elevated)',
-                    border: '1px solid var(--apex-border-dark)',
-                    padding: '4px 10px',
-                    borderRadius: 'var(--radius-full)',
-                    fontWeight: '600'
-                  }}>
-=======
->>>>>>> parent of 7a33bbd (Merge pull request #3 from Hemlata-patil/Aniket-Blogs-and-Contacts)
+
                     #{t}
                   </span>
                 ))}

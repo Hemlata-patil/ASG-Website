@@ -10,6 +10,8 @@ import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, Ghost
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 
 interface Blog {
   id: number;
@@ -487,8 +489,18 @@ export default function BlogsPage() {
     setViewState("add");
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deleteModal.item) {
+      try {
+        if (deleteModal.item.thumbnailUrl && deleteModal.item.thumbnailUrl.includes('supabase.co')) {
+          const filePath = deleteModal.item.thumbnailUrl.split('/public/media/')[1];
+          if (filePath) {
+            await fetch('/api/v1/delete', { method: 'POST', body: JSON.stringify({ bucket: 'media', paths: [filePath] }) });
+          }
+        }
+      } catch (err) {
+        console.error('Storage delete error:', err);
+      }
       setBlogs(blogs.filter(b => b.id !== deleteModal.item!.id));
       setDeleteModal({ open: false, item: null });
     }

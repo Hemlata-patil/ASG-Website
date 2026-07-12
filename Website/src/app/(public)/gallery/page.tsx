@@ -9,21 +9,20 @@ export default async function Page() {
 
     const { data, error } = await supabase
       .from('gallery_albums')
-      .select('id, title, description, cover_photo, event_date, tags, gallery_photos(id, image_url, display_order)')
-      .eq('status', 'published')
+      .select('id, title, description, cover_photo, event_date, gallery_photos(id, image_url, display_order)')
       .order('event_date', { ascending: false });
 
     if (!error && data) {
-      entries = data.map((entry) => ({
+      entries = data.map((entry: any) => ({
         id: String(entry.id),
         title: entry.title,
-        description: entry.description,
+        description: entry.description || '',
         coverPhoto: entry.cover_photo,
-        eventDate: entry.event_date ? new Date(entry.event_date).toISOString() : '',
+        eventDate: entry.event_date ? String(entry.event_date).slice(0, 10) : (entry.created_at ? String(entry.created_at).slice(0, 10) : ''),
         tags: entry.tags || [],
         photos: (entry.gallery_photos || [])
-          .sort((a, b) => a.display_order - b.display_order)
-          .map((photo) => photo.image_url),
+          .sort((a: any, b: any) => a.display_order - b.display_order)
+          .map((photo: any) => photo.image_url),
       }));
     }
   } catch (error) {

@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Trash2, Pencil, Images, Search, Filter, UploadCloud, X, Undo, Redo } from "lucide-react";
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 
 interface GalleryItem {
   id: number;
@@ -14,6 +16,7 @@ interface GalleryItem {
   description: string;
   photos: string[]; // array of strings (base64 or URL)
   photographer?: string;
+  event_id?: string | null;
 }
 
 const INITIAL: GalleryItem[] = [
@@ -31,13 +34,73 @@ const empty: Omit<GalleryItem, "id"> = {
   date: "",
   description: "",
   photos: [],
-  photographer: "APEX Media Team"
+  photographer: "APEX Media Team",
+  event_id: null
 };
 
 export default function GalleryPage() {
-  const [items, setItems, undo, redo, canUndo, canRedo] = useUndoRedoState<GalleryItem[]>(INITIAL);
+  const [items, setItems, undo, redo, canUndo, canRedo] = useUndoRedoState<GalleryItem[]>([]);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [filterYear, setFilterYear] = useState("All");
+  const [events, setEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      // Fetch albums
+      const { data: albumsData, error: albumsError } = await supabase
+        .from('gallery_albums')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (albumsError) {
+        console.error('Fetch error:', albumsError.message);
+        return;
+      }
+
+      // Fetch photos for these albums
+      const { data: photosData, error: photosError } = await supabase
+        .from('gallery_photos')
+        .select('*');
+        
+      if (photosError) {
+        console.error('Fetch photos error:', photosError.message);
+        return;
+      }
+
+      // Fetch events for dropdown
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('id, title')
+        .order('start_date', { ascending: false });
+        
+      if (!eventsError && eventsData) {
+        setEvents(eventsData);
+      }
+
+      const mapped = (albumsData || []).map((album: any) => {
+        // Find all photos for this album
+        const albumPhotos = (photosData || [])
+          .filter((p: any) => p.album_id === album.id)
+          .map((p: any) => p.image_url);
+
+        return {
+          id: album.id,
+          title: album.title,
+          year: album.created_at ? String(album.created_at).slice(0, 4) : '2026',
+          date: album.created_at ? String(album.created_at).slice(0, 10) : '',
+          description: '', // You can add description to albums if needed
+          photos: albumPhotos.length > 0 ? albumPhotos : ["https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=400&fit=crop"],
+          photographer: 'APEX Media Team',
+          event_id: album.event_id,
+        };
+      });
+      
+      setItems(mapped as any);
+    };
+    fetchItems();
+  }, []);
+
   const [modal, setModal] = useState<{ open: boolean; mode: "add" | "edit" | "delete"; item: GalleryItem | null }>({
     open: false, mode: "add", item: null,
   });
@@ -104,23 +167,143 @@ export default function GalleryPage() {
   const openDelete = (item: GalleryItem) => setModal({ open: true, mode: "delete", item });
   const close = () => setModal((m) => ({ ...m, open: false }));
 
-  const save = () => {
+  const save = async () => {
     if (!form.title || !form.date) return;
-    const finalPhotos = form.photos.length > 0 ? form.photos : ["https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=400&fit=crop"];
+    setSaving(true);
+
+    // Upload base64 photos to Supabase Storage, keep URLs as-is
+    const uploadedPhotos: string[] = [];
+    for (const photo of form.photos) {
+      if (photo.startsWith('data:')) {
+        try {
+          const blob = await fetch(photo).then(r => r.blob());
+          const fd = new FormData();
+          fd.append('file', blob, `gallery-${Date.now()}.jpg`);
+          fd.append('bucket', 'media');
+          fd.append('uploadType', 'gallery_photo');
+          if (form.date) fd.append('eventDate', form.date);
+          const res = await fetch('/api/v1/upload', { method: 'POST', body: fd });
+          if (res.ok) {
+            const json = await res.json();
+            uploadedPhotos.push(json.url);
+          } else {
+            uploadedPhotos.push(photo);
+          }
+        } catch {
+          uploadedPhotos.push(photo);
+        }
+      } else {
+        uploadedPhotos.push(photo);
+      }
+    }
+
+    const finalPhotos = uploadedPhotos.length > 0 ? uploadedPhotos : ["https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=400&fit=crop"];
     const entryYear = form.date.split("-")[0] || form.year;
 
-    if (modal.mode === "add") {
-      setItems((prev) => [...prev, { ...form, year: entryYear, photos: finalPhotos, id: Date.now() }]);
-    } else if (modal.item) {
-      setItems((prev) => prev.map((i) => (i.id === modal.item!.id ? { ...modal.item!, ...form, year: entryYear, photos: finalPhotos } : i)));
+    try {
+      if (modal.mode === "add") {
+        // 1. Create the Album
+        const albumPayload = {
+          title: form.title,
+          cover_photo: finalPhotos[0],
+          description: form.description,
+          event_date: form.date,
+          event_id: form.event_id || null,
+        };
+        
+        const { data: albumData, error: albumError } = await supabase
+          .from('gallery_albums')
+          .insert([albumPayload])
+          .select()
+          .single();
+          
+        if (albumError) { 
+          alert(`Failed to add album: ${albumError.message}`); 
+          return;
+        }
+
+        // 2. Create the Photos linked to the album
+        const photosPayload = finalPhotos.map((url, index) => ({
+          album_id: albumData.id,
+          image_url: url,
+          description: form.description,
+          display_order: index,
+          date: new Date(form.date).toISOString(),
+          photographer: form.photographer || 'APEX Media Team'
+        }));
+
+        const { error: photosError } = await supabase
+          .from('gallery_photos')
+          .insert(photosPayload);
+          
+        if (photosError) {
+           console.error('Error adding photos:', photosError.message);
+        }
+
+        // Update local state
+        const newItem = {
+          id: albumData.id,
+          title: albumData.title,
+          year: entryYear,
+          date: form.date,
+          description: form.description,
+          photos: finalPhotos,
+          photographer: form.photographer || 'APEX Media Team'
+        };
+        setItems(prev => [newItem as any, ...prev]);
+
+      } else if (modal.item) {
+        // Update Album title/cover
+        const albumPayload = {
+          title: form.title,
+          cover_photo: finalPhotos[0],
+          description: form.description,
+          event_date: form.date,
+          event_id: form.event_id || null
+        };
+        const { error: albumError } = await supabase.from('gallery_albums').update(albumPayload).eq('id', modal.item.id);
+        if (albumError) { alert(`Failed to update album: ${albumError.message}`); }
+        else { 
+          setItems(prev => prev.map(i => i.id === modal.item!.id ? { ...modal.item!, ...form, photos: finalPhotos } as any : i)); 
+        }
+      }
+    } catch (err: any) {
+      console.error('Gallery save error:', err?.message);
+    } finally {
+      setSaving(false);
     }
     close();
   };
 
-  const remove = () => {
-    if (modal.item) setItems((prev) => prev.filter((i) => i.id !== modal.item!.id));
-    close();
+  const remove = async () => {
+    if (modal.item) {
+      setSaving(true);
+      try {
+        const filePathsToDelete: string[] = [];
+        for (const photoUrl of modal.item.photos) {
+          if (photoUrl && photoUrl.includes('supabase.co')) {
+            const filePath = photoUrl.split('/public/media/')[1];
+            if (filePath) {
+              filePathsToDelete.push(filePath);
+            }
+          }
+        }
+        if (filePathsToDelete.length > 0) {
+          await fetch('/api/v1/delete', { method: 'POST', body: JSON.stringify({ bucket: 'media', paths: filePathsToDelete }) });
+        }
+
+        const { error } = await supabase.from('gallery_albums').delete().eq('id', modal.item.id);
+        if (error) { alert(`Failed to delete: ${error.message}`); return; }
+        setItems(prev => prev.filter(i => i.id !== modal.item!.id));
+      } catch (err: any) {
+        console.error('Delete error:', err.message);
+      } finally {
+        setSaving(false);
+        close();
+      }
+    }
   };
+
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -270,9 +453,21 @@ export default function GalleryPage() {
       {/* Add / Edit Modal */}
       <Modal isOpen={modal.open && (modal.mode === "add" || modal.mode === "edit")} onClose={close} title={modal.mode === "add" ? "Create Timeline Log Entry" : "Modify Timeline Log"} size="lg">
         <div className="space-y-4">
-          <FormField label="Timeline Title *">
-            <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. APEX AI Launchpad: Cohort 3 Demo Day" />
-          </FormField>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Timeline Title *">
+              <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. APEX AI Launchpad: Cohort 3 Demo Day" />
+            </FormField>
+            <FormField label="Associated Event (Optional)">
+              <Select value={form.event_id || ""} onChange={(e) => set("event_id", e.target.value)}>
+                <option value="">-- Select Event --</option>
+                {events.map((evt) => (
+                  <option key={evt.id} value={evt.id}>
+                    {evt.title}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Date Captured *">

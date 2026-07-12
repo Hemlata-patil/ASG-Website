@@ -5,6 +5,8 @@ import { Plus, Search, GraduationCap, Check, X as XIcon, UploadCloud, Eye, Penci
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 
 const DUMMY_MENTORS = [
   { id: 1, name: "Dr. Sandeep Joshi", expertise: "IP & Academic Research" },
@@ -310,12 +312,12 @@ const empty: Omit<AALItem, "id"> = {
 
 function StatusBadge({ status }: { status: AALItem["status"] }) {
   const styles: Record<string, { bg: string; color: string }> = {
-    Pending:  { bg: "rgba(245,158,11,0.12)",  color: "#d97706" },
-    Accepted: { bg: "rgba(16,185,129,0.12)",  color: "#059669" },
-    Rejected: { bg: "rgba(239,68,68,0.12)",   color: "#dc2626" },
-    Active:   { bg: "rgba(16,185,129,0.12)",  color: "#059669" },
+    Pending: { bg: "rgba(245,158,11,0.12)", color: "#d97706" },
+    Accepted: { bg: "rgba(16,185,129,0.12)", color: "#059669" },
+    Rejected: { bg: "rgba(239,68,68,0.12)", color: "#dc2626" },
+    Active: { bg: "rgba(16,185,129,0.12)", color: "#059669" },
     Inactive: { bg: "rgba(107,114,128,0.12)", color: "#6b7280" },
-    Completed:{ bg: "rgba(59,130,246,0.12)",  color: "#3b82f6" },
+    Completed: { bg: "rgba(59,130,246,0.12)", color: "#3b82f6" },
   };
   const s = styles[status] || { bg: "#f4f4f5", color: "#888" };
   return (
@@ -401,7 +403,7 @@ export default function AALPage() {
             baseItems = JSON.parse(raw) as AALItem[];
           } catch { /* ignore */ }
         }
-        
+
         let problemStatements = baseItems.filter(i => i.type === "Problem Statement");
         if (problemStatements.length === 0) {
           problemStatements = INITIAL.filter(i => i.type === "Problem Statement");
@@ -531,6 +533,17 @@ export default function AALPage() {
 
   const remove = async () => {
     if (modal.item) {
+      try {
+        if (modal.item.photo && modal.item.photo.includes('supabase.co')) {
+          const filePath = modal.item.photo.split('/public/avatars/')[1];
+          if (filePath) {
+            await fetch('/api/v1/delete', { method: 'POST', body: JSON.stringify({ bucket: 'avatars', paths: [filePath] }) });
+          }
+        }
+      } catch (err) {
+        console.error('Storage delete error:', err);
+      }
+
       if (modal.item.type === "Intern") {
         try {
           const res = await fetch(`/api/v1/admin/interns?id=${modal.item.id}`, {

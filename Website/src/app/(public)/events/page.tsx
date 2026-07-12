@@ -12,31 +12,61 @@ export default async function EventsPage() {
 
     const { data: evtData, error: evtErr } = await supabase
       .from('events')
-      .select('id, title, scheduled_date, venue, status, tags, thumbnail_url, description, recap_url')
-      .order('scheduled_date', { ascending: false });
+      .select('*')
+      .order('start_date', { ascending: false });
 
     if (!evtErr && evtData) {
-      events = evtData.map((event) => ({
-        ...event,
-        date: event.scheduled_date ? new Date(event.scheduled_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
-        thumbnail: event.thumbnail_url,
-      }));
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      events = evtData.map((e: any) => {
+        let computedStatus = e.status || 'upcoming';
+        if (e.start_date) {
+          const eventDate = new Date(e.start_date);
+          eventDate.setHours(0, 0, 0, 0);
+          if (eventDate < today) {
+            computedStatus = 'past';
+          } else if (eventDate.getTime() === today.getTime()) {
+            computedStatus = 'upcoming';
+          } else {
+            computedStatus = 'upcoming';
+          }
+        }
+        if (e.status === 'completed') computedStatus = 'past';
+
+        return {
+          id: e.id,
+          title: e.title,
+          type: e.type || 'Meetup',
+          status: computedStatus,
+          date: e.start_date ? e.start_date.slice(0, 10) : '',
+          venue: e.location || '',
+          description: e.description || '',
+          tags: e.tags || [],
+          thumbnail: e.cover_image_url || '',
+          registrationUrl: null,
+          recapUrl: null,
+        };
+      });
     }
 
     const { data: galData, error: galErr } = await supabase
       .from('gallery_albums')
       .select('id, title, description, cover_photo, event_date, gallery_photos(id, image_url, display_order)')
-      .eq('status', 'published')
       .order('event_date', { ascending: false });
 
     if (!galErr && galData) {
       galleryEntries = galData.map((entry) => ({
-        ...entry,
+        id: entry.id,
+        title: entry.title,
+        description: entry.description,
         photos: (entry.gallery_photos || [])
-          .sort((a, b) => a.display_order - b.display_order)
-          .map((photo) => photo.image_url),
+          .sort((a: any, b: any) => a.display_order - b.display_order)
+          .map((photo: any) => photo.image_url),
         coverPhoto: entry.cover_photo,
-        date: entry.event_date ? new Date(entry.event_date).toISOString() : null,
+        date: entry.event_date ? String(entry.event_date).slice(0, 10) : null,
+        year: entry.event_date ? String(entry.event_date).slice(0, 4) : '2026',
+        event_id: entry.event_id || null
       }));
     }
   } catch (e) {
