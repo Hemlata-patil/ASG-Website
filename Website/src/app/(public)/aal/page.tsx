@@ -7,7 +7,7 @@ import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
 import { domains } from '@/data/domains';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import ApexDropdown from '@/components/common/ApexDropdown/ApexDropdown';
-import { expertsData } from '@/data/experts';
+import { getExpertsAction, type ExpertRecord } from '@/app/actions/experts';
 import ImageUpload from '@/components/shared/ImageUpload';
 
 interface FormDataState {
@@ -36,32 +36,26 @@ export default function AAL() {
 
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  const [experts, setExperts] = useState<any[]>([]);
+  const [experts, setExperts] = useState<ExpertRecord[]>([]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const local = localStorage.getItem('asg_experts');
-      if (local) {
-        try {
-          setExperts(JSON.parse(local));
-          return;
-        } catch (e) {
-          // Fallback below
-        }
+    const loadExperts = async () => {
+      try {
+        const fetched = await getExpertsAction({ publicOnly: true });
+        setExperts(fetched);
+      } catch (err) {
+        console.error('Failed to fetch experts', err);
       }
-      localStorage.setItem('asg_experts', JSON.stringify(expertsData));
-      setExperts(expertsData);
-    }
+    };
+    void loadExperts();
   }, []);
 
   const activeExperts = experts.map(e => {
-    const socialLinks = e.socialLinks && e.socialLinks.length > 0
-      ? e.socialLinks
-      : (e.linkedin ? [e.linkedin] : []);
+    const socialLinks = e.socialLinks || [];
     const currentProblemStatement = e.currentProblemStatement || e.expertise || "";
     const description = e.description || e.bio || "";
     return { ...e, socialLinks, currentProblemStatement, description };
-  }).filter(e => e.status === 'Active');
+  });
 
   // Form states
   const [formData, setFormData] = useState<FormDataState>({
@@ -430,7 +424,7 @@ export default function AAL() {
                 </h3>
 
                 <p className="body-sm" style={{ color: 'var(--apex-primary-warm)', fontWeight: '600', marginBottom: '4px' }}>
-                  {expert.role}
+                  {expert.role || expert.designation}
                 </p>
                 <p className="body-sm" style={{ color: 'var(--apex-text-muted)', margin: 0 }}>
                   {expert.company}
