@@ -1,5 +1,6 @@
 "use client";
-
+import { useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import React, { useState, useMemo } from "react";
 import {
   Plus,
@@ -34,63 +35,18 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { PageHeader } from "@/components/admin/PageHeader";
 
 interface Event {
-  id: number;
+  id: string | number;
   title: string;
-  type: "Workshop" | "Meetup" | "Expert Session" | "Demo Day" | "Founder Circle" | "Community";
+  type: string;
   date: string;
   venue: string;
-  status: "upcoming" | "past";
+  status: string;
   thumbnail: string;
   description: string;
   tags: string[];
   registrationUrl?: string;
   recapUrl?: string;
 }
-
-const CATEGORIES = ["Workshop", "Meetup", "Expert Session", "Demo Day", "Founder Circle", "Community"] as const;
-const STATUSES = ["upcoming", "past"] as const;
-
-const INITIAL_EVENTS: Event[] = [
-  {
-    id: 1,
-    title: "Monthly Meetups (22 Cohorts Completed)",
-    type: "Meetup",
-    status: "past",
-    date: "2026-06-15",
-    venue: "IMR Seminar Hall / Jalgaon HQ",
-    description: "Our flagship monthly gathering bringing together startup founders, tech experts, and developers.",
-    tags: ["#Meetup", "#Community", "#Networking", "#22Cohorts"],
-    registrationUrl: "",
-    recapUrl: "#",
-    thumbnail: "https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=400&auto=format&fit=crop"
-  },
-  {
-    id: 2,
-    title: "Breakfast with Brilliance: Morning Founder Networking (4 Cohorts)",
-    type: "Founder Circle",
-    status: "past",
-    date: "2026-06-20",
-    venue: "Hotel President Cottage, Jalgaon",
-    description: "Interactive morning coffee meetups with leading industry veterans and domain experts to exchange growth strategies.",
-    tags: ["#FounderCircle", "#Mentorship", "#Breakfast", "#4Cohorts"],
-    registrationUrl: "",
-    recapUrl: "#",
-    thumbnail: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=400&auto=format&fit=crop"
-  },
-  {
-    id: 3,
-    title: "Pickel Ball Meetup (1 Cohort)",
-    type: "Community",
-    status: "upcoming",
-    date: "2026-07-10",
-    venue: "Jalgaon Sports Arena",
-    description: "A fun fitness-focused networking event where community founders, developers, and designers hang out over pickleball.",
-    tags: ["#Pickleball", "#Community", "#Sports", "#1Cohort"],
-    registrationUrl: "https://forms.gle/apex-pickleball",
-    recapUrl: "",
-    thumbnail: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=400&auto=format&fit=crop"
-  }
-];
 
 const emptyForm: Omit<Event, "id"> = {
   title: "",
@@ -105,11 +61,47 @@ const emptyForm: Omit<Event, "id"> = {
   recapUrl: "",
 };
 
+const CATEGORIES = ["Workshop", "Meetup", "Expert Session", "Demo Day", "Founder Circle", "Community"] as const;
+const STATUSES = ["upcoming", "past"] as const;
+
 export default function EventsPage() {
-  const [events, setEvents, undo, redo, canUndo, canRedo] = useUndoRedoState<Event[]>(INITIAL_EVENTS);
+  const supabase = createClient();
+  const [events, setEvents, undo, redo, canUndo, canRedo] = useUndoRedoState<Event[]>([]);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "upcoming" | "past">("all");
-  
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  async function fetchEvents() {
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .order("start_date", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const mappedData = (data || []).map(row => ({
+      id: row.id,
+      title: row.title,
+      type: row.type || "Meetup",
+      date: row.start_date,
+      venue: row.location,
+      status: row.status,
+      thumbnail: row.cover_image_url || "",
+      description: row.description || "",
+      tags: row.tags || [],
+      registrationUrl: row.registration_url || "",
+      recapUrl: row.recap_url || "",
+    }));
+
+    setEvents(mappedData);
+  }
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
@@ -200,7 +192,7 @@ export default function EventsPage() {
       `"${e.registrationUrl || ""}"`,
       `"${e.recapUrl || ""}"`
     ]);
-    const csvContent = "data:text/csv;charset=utf-8," 
+    const csvContent = "data:text/csv;charset=utf-8,"
       + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -379,11 +371,10 @@ export default function EventsPage() {
                       setActiveTab(tab as any);
                       setCurrentPage(1);
                     }}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer capitalize ${
-                      isActive
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer capitalize ${isActive
                         ? "bg-white text-gray-900 shadow-xs border border-gray-100"
                         : "text-gray-500 hover:text-gray-950"
-                    }`}
+                      }`}
                     style={{ fontFamily: "'Satoshi', sans-serif" }}
                   >
                     {tab} Events

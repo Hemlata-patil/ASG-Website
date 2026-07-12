@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/admin/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 import {
   CalendarDays,
   Clock,
@@ -27,13 +28,6 @@ const STATS = [
   { label: "Community Members", value: "1,240", icon: Users, color: "#ec4899", bg: "rgba(236,72,153,0.1)", delta: "+87 this month" },
 ];
 
-const RECENT_EVENTS = [
-  { title: "Tech Summit 2025", date: "Mar 15, 2025", location: "Bangalore", status: "Upcoming", attendees: 240 },
-  { title: "AI Hackathon", date: "Feb 20, 2025", location: "Mumbai", status: "Completed", attendees: 180 },
-  { title: "Startup Pitch Night", date: "Apr 5, 2025", location: "Delhi", status: "Upcoming", attendees: 90 },
-  { title: "Web Dev Bootcamp", date: "Feb 1, 2025", location: "Pune", status: "Completed", attendees: 120 },
-  { title: "Innovation Conclave", date: "May 10, 2025", location: "Hyderabad", status: "Upcoming", attendees: 300 },
-];
 
 const RECENT_BLOGS = [
   { title: "The Future of AI in India", author: "Priya Singh", date: "Feb 14, 2025", status: "Published" },
@@ -55,6 +49,208 @@ export default function DashboardHome() {
   const { adminEmail } = useAuth();
   const firstName = adminEmail?.split("@")[0] || "Admin";
   const router = useRouter();
+
+  const supabase = createClient();
+
+  const [collegeData, setCollegeData] = useState<
+    { name: string; students: number }[]
+  >([]);
+  const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [totalEvents, setTotalEvents] = useState<number | string>("...");
+  // 1. Added state to hold the count of upcoming events
+  const [upcomingEvents, setUpcomingEvents] = useState<number | string>("...");
+  // Added state to hold the count of total gallery photos
+  const [totalGalleryPhotos, setTotalGalleryPhotos] = useState<number | string>("...");
+  // 5. Added state to hold the count of total blog posts
+  const [totalBlogs, setTotalBlogs] = useState<number | string>("...");
+  // 9. Added state to hold the count of total interns
+  const [totalInterns, setTotalInterns] = useState<number | string>("...");
+  // 13. Added state to hold the count of total problem statements
+  const [totalProblemStatements, setTotalProblemStatements] = useState<number | string>("...");
+  // 17. Added state to hold the count of total community members
+  const [totalCommunityMembers, setTotalCommunityMembers] = useState<number | string>("...");
+
+  useEffect(() => {
+    fetchChartData();
+    fetchRecentEvents();
+    fetchTotalEvents();
+    fetchUpcomingEvents(); // 2. Call the fetch function when dashboard loads
+    fetchTotalGalleryPhotos(); // Call the gallery photos fetch function
+    fetchTotalBlogs(); // 6. Call the blog posts fetch function on load
+    fetchTotalInterns(); // 10. Call the interns fetch function on load
+    fetchTotalProblemStatements(); // 14. Call the problem statements fetch function on load
+    fetchTotalCommunityMembers(); // 18. Call the community members fetch function on load
+  }, []);
+
+  // 19. Created function to fetch the exact count of community members from Supabase
+  async function fetchTotalCommunityMembers() {
+    const { count, error } = await supabase
+      .from("community_members")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.error("Error fetching community members:", error);
+      return;
+    }
+    setTotalCommunityMembers(count ?? 0);
+  }
+
+  // 15. Created function to fetch the exact count of problem statements from Supabase
+  async function fetchTotalProblemStatements() {
+    const { count, error } = await supabase
+      .from("problem_statements")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "open"); // Added filter to only count open/in-progress problem statements
+
+    if (error) {
+      console.error("Error fetching problem statements:", error);
+      return;
+    }
+    setTotalProblemStatements(count ?? 0);
+  }
+
+  // 11. Created function to fetch the exact count of interns from Supabase
+  async function fetchTotalInterns() {
+    const { count, error } = await supabase
+      .from("interns")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.error("Error fetching interns:", error);
+      return;
+    }
+    setTotalInterns(count ?? 0);
+  }
+
+  // 7. Created function to fetch the exact count of blogs from Supabase
+  async function fetchTotalBlogs() {
+    const { count, error } = await supabase
+      .from("blogs")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.error("Error fetching blogs:", error);
+      return;
+    }
+    setTotalBlogs(count ?? 0);
+  }
+
+  // Created function to fetch the total count of gallery photos from Supabase
+  async function fetchTotalGalleryPhotos() {
+    const { count, error } = await supabase
+      .from("gallery_photos")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.error("Error fetching gallery photos:", error);
+      return;
+    }
+    setTotalGalleryPhotos(count ?? 0);
+  }
+
+  // 3. Created function to fetch the exact count of "upcoming" events from Supabase
+  async function fetchUpcomingEvents() {
+    const { count, error } = await supabase
+      .from("events")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "upcoming");
+
+    if (error) {
+      console.error("Error fetching upcoming events:", error);
+      return;
+    }
+    setUpcomingEvents(count ?? 0);
+  }
+
+  async function fetchTotalEvents() {
+    const { count, error } = await supabase
+      .from("events")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.error("Error fetching total events:", error);
+      return;
+    }
+    setTotalEvents(count ?? 0);
+  }
+
+  async function fetchRecentEvents() {
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .order("start_date", { ascending: false })
+      .limit(5);
+
+    if (error) {
+      console.error("Error fetching recent events:", error);
+      return;
+    }
+    setRecentEvents(data || []);
+  }
+
+  async function fetchChartData() {
+    const { data, error } = await supabase
+      .from("interns")
+      .select("college");
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const nameMapping: Record<string, string> = {
+      "Government Polytechnic Jalgaon": "GCOEJ",
+      "Government Polytechnic": "GCOEJ",
+      "GCOEJ": "GCOEJ",
+      
+      "SSBT College of Engineering and Technology": "SSBT COET",
+      "SSBT COET": "SSBT COET",
+      
+      "KCE's College of Engineering": "KCES COE",
+      "KCES": "KCES COE",
+      "KCES COE": "KCES COE",
+      
+      "Godavari Foundation's College of Engineering": "GF COE",
+      "GF COE": "GF COE",
+      
+      "M. J. College": "M. J. College",
+      "IMR College": "IMR College",
+      
+      "B. Tech Comp Engineering": "Others" // Map specific unknowns to Others if desired, or let the fallback handle it
+    };
+
+    const counts: Record<string, number> = {
+      "GCOEJ": 0,
+      "SSBT COET": 0,
+      "KCES COE": 0,
+      "GF COE": 0,
+      "M. J. College": 0,
+      "IMR College": 0,
+      "Others": 0
+    };
+
+    data?.forEach((item) => {
+      const rawCollege = item.college?.trim();
+      if (!rawCollege) {
+        counts["Others"] += 1;
+        return;
+      }
+      
+      const mapped = nameMapping[rawCollege];
+      if (mapped) {
+        counts[mapped] += 1;
+      } else {
+        counts["Others"] += 1;
+      }
+    });
+
+    setCollegeData(
+      Object.entries(counts).map(([name, students]) => ({
+        name,
+        students,
+      }))
+    );
+  }
 
   return (
     <div>
@@ -85,7 +281,21 @@ export default function DashboardHome() {
         }}
       >
         {STATS.map((s) => (
-          <StatCard key={s.label} {...s} />
+          <StatCard 
+            key={s.label} 
+            {...s} 
+            // 4. Update the mapped value dynamically based on the label, preserving other cards
+            value={
+              s.label === "Total Events" ? totalEvents.toString() : 
+              s.label === "Upcoming Events" ? upcomingEvents.toString() : 
+              s.label === "Gallery Photos" ? totalGalleryPhotos.toString() : // Dynamically substitute the total gallery photos
+              s.label === "Blog Posts" ? totalBlogs.toString() : // 8. Dynamically substitute the total blog posts
+              s.label === "AAL Interns" ? totalInterns.toString() : // 12. Dynamically substitute the total interns
+              s.label === "Problem Statements" ? totalProblemStatements.toString() : // 16. Dynamically substitute the total problem statements
+              s.label === "Community Members" ? totalCommunityMembers.toString() : // 20. Dynamically substitute the total community members
+              s.value
+            } 
+          />
         ))}
       </div>
 
@@ -106,7 +316,7 @@ export default function DashboardHome() {
           Students Distribution by Engineering & Local Colleges in Jalgaon
         </h2>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={COLLEGE_DATA}>
+          <BarChart data={collegeData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#8a8a8a" }} />
             <YAxis tick={{ fontSize: 11, fill: "#8a8a8a" }} />
@@ -119,7 +329,7 @@ export default function DashboardHome() {
                 boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
               }}
             />
-            <Bar dataKey="students" fill="#FF6B00" radius={[8, 8, 0, 0]} maxBarSize={60} />
+            <Bar dataKey="students" fill="#FF6B00" radius={[8, 8, 0, 0]} maxBarSize={60} minPointSize={4} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -154,7 +364,7 @@ export default function DashboardHome() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid #f0f0f0" }}>
-                  {["Event", "Date", "Location", "Attendees", "Status"].map((h) => (
+                  {["Event", "Date", "Venue", "Status"].map((h) => (
                     <th
                        key={h}
                        style={{
@@ -174,17 +384,18 @@ export default function DashboardHome() {
                 </tr>
               </thead>
               <tbody>
-                {RECENT_EVENTS.map((ev, i) => (
+                {recentEvents.map((ev, i) => (
                   <tr
                     key={i}
-                    style={{ borderBottom: i < RECENT_EVENTS.length - 1 ? "1px solid #f8f8f8" : "none" }}
+                    style={{ borderBottom: i < recentEvents.length - 1 ? "1px solid #f8f8f8" : "none" }}
                   >
                     <td style={{ padding: "12px 16px 12px 0", fontSize: "13.5px", fontWeight: 500, color: "#0d0d0d" }}>
                       {ev.title}
                     </td>
-                    <td style={{ padding: "12px 16px 12px 0", fontSize: "13px", color: "#8a8a8a" }}>{ev.date}</td>
+                    <td style={{ padding: "12px 16px 12px 0", fontSize: "13px", color: "#8a8a8a" }}>
+                      {new Date(ev.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </td>
                     <td style={{ padding: "12px 16px 12px 0", fontSize: "13px", color: "#8a8a8a" }}>{ev.location}</td>
-                    <td style={{ padding: "12px 16px 12px 0", fontSize: "13px", color: "#555" }}>{ev.attendees}</td>
                     <td style={{ padding: "12px 0" }}>
                       <StatusBadge status={ev.status} />
                     </td>
