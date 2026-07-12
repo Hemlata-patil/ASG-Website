@@ -9,6 +9,7 @@ export default async function BlogDetailPage({ params }) {
   try {
     const supabase = await createServerSupabase();
 
+<<<<<<< HEAD
     const { data: blogData, error: blogError } = await supabase
       .from('blogs')
       .select('id, title, slug, category, excerpt, cover_image, body, published_at, created_at, updated_at')
@@ -46,6 +47,72 @@ export default async function BlogDetailPage({ params }) {
     }
   } catch (error) {
     console.error('Error loading blog detail from Supabase:', error);
+=======
+  useEffect(() => {
+    if (!slug) return;
+    try {
+      const raw = localStorage.getItem("asg_blogs");
+      let allBlogs: any[] = [];
+      if (raw) {
+        allBlogs = JSON.parse(raw);
+      } else {
+        // Fallback mapping if not in localStorage
+        allBlogs = staticBlogs.map(b => ({
+          id: b.id,
+          title: b.title,
+          slug: b.title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-"),
+          author: "ASG Editor",
+          category: b.category,
+          status: "Published",
+          date: b.date,
+          excerpt: b.summary,
+          content: `
+            <h2>${b.title}</h2>
+            <p>${b.summary}</p>
+            <p>Full content of this post is managed inside the Admin CMS. Please publish content from the dashboard to render custom rich HTML formatting.</p>
+          `,
+          readTime: b.readTime,
+          thumbnailUrl: b.cover,
+          tags: [b.category]
+        }));
+      }
+
+      // Find current blog by slug or id
+      const current = allBlogs.find(b => b.slug === slug || String(b.id) === slug);
+      if (current) {
+        setBlog(current);
+
+        // Find related blogs (same category, published, excluding current)
+        const related = allBlogs
+          .filter(b => b.id !== current.id && b.category === current.category && (b.status === "Published" || !b.status))
+          .slice(0, 3);
+
+        // If not enough related, fill with any other published blogs
+        if (related.length < 3) {
+          const others = allBlogs.filter(b => b.id !== current.id && !related.find(r => r.id === b.id) && (b.status === "Published" || !b.status));
+          related.push(...others.slice(0, 3 - related.length));
+        }
+
+        setRelatedBlogs(related);
+      } else {
+        // Redirect to list if not found
+        router.push('/blogs');
+      }
+    } catch (e) {
+      console.error("Error loading blog details:", e);
+      router.push('/blogs');
+    }
+  }, [slug, router]);
+
+  if (!blog) {
+    return (
+      <PageWrapper>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', color: 'var(--apex-text-white)' }}>
+          Loading blog post...
+        </div>
+      </PageWrapper>
+    );
+>>>>>>> parent of 7a33bbd (Merge pull request #3 from Hemlata-patil/Aniket-Blogs-and-Contacts)
   }
 
   return <BlogDetail blog={blog} relatedBlogs={relatedBlogs} />;
@@ -71,6 +138,7 @@ export default async function BlogDetailPage({ params }) {
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
+<<<<<<< HEAD
           <div style={{
             width: '100%',
             height: '420px',
@@ -86,6 +154,8 @@ export default async function BlogDetailPage({ params }) {
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
+=======
+>>>>>>> parent of 7a33bbd (Merge pull request #3 from Hemlata-patil/Aniket-Blogs-and-Contacts)
 
           {/* Dynamic Article Content */}
           <div
@@ -113,6 +183,7 @@ export default async function BlogDetailPage({ params }) {
                     borderRadius: 'var(--radius-full)',
                     fontWeight: '600'
                   }}>
+<<<<<<< HEAD
                   <span key={t} style={{
                     fontSize: '0.75rem',
                     color: 'var(--apex-text-muted)',
@@ -122,6 +193,8 @@ export default async function BlogDetailPage({ params }) {
                     borderRadius: 'var(--radius-full)',
                     fontWeight: '600'
                   }}>
+=======
+>>>>>>> parent of 7a33bbd (Merge pull request #3 from Hemlata-patil/Aniket-Blogs-and-Contacts)
                     #{t}
                   </span>
                 ))}
