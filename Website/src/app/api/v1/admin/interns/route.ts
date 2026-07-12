@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { interns } from '@/lib/db/schema/interns';
-import { desc, eq } from 'drizzle-orm';
+import { desc, asc, eq } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
+import { deleteStorageFile } from '@/lib/supabase/service';
 
 export async function GET(req: Request) {
   try {
@@ -19,7 +20,7 @@ export async function GET(req: Request) {
     const allInterns = await db
       .select()
       .from(interns)
-      .orderBy(desc(interns.createdAt));
+      .orderBy(asc(interns.displayOrder), desc(interns.createdAt));
 
     return NextResponse.json({
       data: allInterns,
@@ -50,12 +51,15 @@ export async function POST(req: Request) {
       name,
       photo,
       college,
+      course,
+      year,
       domain,
       linkedinUrl,
       githubUrl,
       portfolioUrl,
       email,
-      phone
+      phone,
+      description
     } = body;
 
     if (!name || !college || !domain) {
@@ -70,6 +74,8 @@ export async function POST(req: Request) {
       name,
       photo: photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
       college,
+      course: course || null,
+      year: year || null,
       domain,
       cohortNumber: 1, // default cohort
       linkedinUrl: linkedinUrl || null,
@@ -77,6 +83,7 @@ export async function POST(req: Request) {
       portfolioUrl: portfolioUrl || null,
       email: email || null,
       phone: phone || null,
+      description: description || null,
       status: 'active',
       displayOrder: 0
     }).returning();
@@ -89,6 +96,80 @@ export async function POST(req: Request) {
     console.error('Failed to save intern profile:', err);
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: err.message || 'Failed to save intern' } },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'You must be logged in to manage interns' } },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const {
+      id,
+      name,
+      photo,
+      college,
+      course,
+      year,
+      domain,
+      linkedinUrl,
+      githubUrl,
+      portfolioUrl,
+      email,
+      phone,
+      status,
+      description
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'Missing intern ID' } },
+        { status: 400 }
+      );
+    }
+
+    const updateFields: any = {};
+    if (name !== undefined) updateFields.name = name;
+    if (photo !== undefined) updateFields.photo = photo;
+    if (college !== undefined) updateFields.college = college;
+    if (course !== undefined) updateFields.course = course;
+    if (year !== undefined) updateFields.year = year;
+    if (domain !== undefined) updateFields.domain = domain;
+    if (linkedinUrl !== undefined) updateFields.linkedinUrl = linkedinUrl;
+    if (githubUrl !== undefined) updateFields.githubUrl = githubUrl;
+    if (portfolioUrl !== undefined) updateFields.portfolioUrl = portfolioUrl;
+    if (email !== undefined) updateFields.email = email;
+    if (phone !== undefined) updateFields.phone = phone;
+    if (description !== undefined) updateFields.description = description;
+    if (status !== undefined) {
+      updateFields.status = status.toLowerCase() === 'active' ? 'active' : 'completed';
+    }
+    updateFields.updatedAt = new Date();
+
+    const [updatedIntern] = await db
+      .update(interns)
+      .set(updateFields)
+      .where(eq(interns.id, id))
+      .returning();
+
+    return NextResponse.json({
+      success: true,
+      data: updatedIntern
+    });
+  } catch (err: any) {
+    console.error('Failed to update intern profile:', err);
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: err.message || 'Failed to update intern' } },
       { status: 500 }
     );
   }
@@ -114,6 +195,17 @@ export async function DELETE(req: Request) {
         { error: { code: 'VALIDATION_ERROR', message: 'Missing ID parameter' } },
         { status: 400 }
       );
+    }
+
+    // Fetch the intern's details to get their photo URL
+    const existingIntern = await db
+      .select({ photo: interns.photo })
+      .from(interns)
+      .where(eq(interns.id, id))
+      .limit(1);
+
+    if (existingIntern.length > 0 && existingIntern[0].photo) {
+      await deleteStorageFile(existingIntern[0].photo, 'avatars');
     }
 
     await db.delete(interns).where(eq(interns.id, id));

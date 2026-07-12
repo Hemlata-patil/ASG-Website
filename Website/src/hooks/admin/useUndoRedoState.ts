@@ -34,6 +34,12 @@ export function useUndoRedoState<T>(initialState: T | (() => T)) {
     });
   }, []);
 
+  const resetState = useCallback((newVal: T) => {
+    setPresent(newVal);
+    setPast([]);
+    setFuture([]);
+  }, []);
+
   return [
     present,
     updateState,
@@ -41,5 +47,6 @@ export function useUndoRedoState<T>(initialState: T | (() => T)) {
     redo,
     past.length > 0,
     future.length > 0,
+    resetState,
   ] as const;
 }

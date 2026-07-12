@@ -649,7 +649,7 @@ export default function Home() {
       </section>
 
       {/* 6. TESTIMONIALS SECTION (Light mode styling fix) */}
-      <section ref={testimonialsAnim.ref} className={`section ${testimonialsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface-elevated)' }}>
+      <section ref={testimonialsAnim.ref} className={`section ${testimonialsAnim.className}`} style={{ backgroundColor: 'var(--apex-bg-surface)' }}>
         <div className="container">
           <SectionHeading
             overline="What ASG Members Say"

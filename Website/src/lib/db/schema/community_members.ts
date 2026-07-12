@@ -5,6 +5,8 @@ export const memberTypeEnum = pgEnum('member_type', ['founder', 'mentor', 'inves
 export const communityMembers = pgTable('community_members', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
   photo: text('photo').notNull(),
   designation: text('designation').notNull(),
   company: text('company').notNull(),

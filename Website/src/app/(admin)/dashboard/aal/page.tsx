@@ -5,6 +5,7 @@ import { Plus, Search, GraduationCap, Check, X as XIcon, UploadCloud, Eye, Penci
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import ImageUpload from "@/components/shared/ImageUpload";
 
 const DUMMY_MENTORS = [
   { id: 1, name: "Dr. Sandeep Joshi", expertise: "IP & Academic Research" },
@@ -47,242 +48,10 @@ interface AALItem {
   endDate?: string;
   // Problem Statement fields
   icon?: string; // Icon URL or emoji
+  displayOrder?: number;
 }
 
-const INITIAL: AALItem[] = [
-  // Interns
-  {
-    id: 1,
-    type: "Intern",
-    title: "Rahul Kulkarni",
-    internName: "Rahul Kulkarni",
-    internEmail: "rahul.k@asg.io",
-    phone: "+91 98765 43220",
-    college: "SSBT COET Jalgaon",
-    course: "B.Tech Computer Engineering",
-    year: "3rd Year",
-    description: "Working on Career Intelligence Platform",
-    domain: "Career Intelligence",
-    mentor: "Dr. Sandeep Joshi",
-    status: "Active",
-    startDate: "2026-06-01",
-    endDate: "2026-07-15",
-    photo: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop",
-    github: "https://github.com/rahulkulkarni",
-    notes: "I want to build real-world AI applications that solve local recruitment problems.",
-    aiToolsUsed: "ChatGPT, GitHub Copilot, v0.dev",
-    shortDescription: "Frontend developer specialized in React and Tailwind CSS."
-  },
-  {
-    id: 2,
-    type: "Intern",
-    title: "Nisha Patil",
-    internName: "Nisha Patil",
-    internEmail: "nisha.p@asg.io",
-    phone: "+91 98765 43221",
-    college: "KCE Society Jalgaon",
-    course: "B.Sc Computer Science",
-    year: "2nd Year",
-    description: "UI/UX Designer for Career Intelligence Platform",
-    domain: "Career Intelligence",
-    mentor: "Dr. Sandeep Joshi",
-    status: "Active",
-    startDate: "2026-06-01",
-    endDate: "2026-07-15",
-    photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
-    github: "https://behance.net/nishapatil",
-    notes: "Excited to design premium dashboards and user interfaces for AI portals.",
-    aiToolsUsed: "Figma AI, Midjourney, Canva",
-    shortDescription: "Creative UI/UX designer with a strong eye for clean typography and dark themes."
-  },
-  {
-    id: 3,
-    type: "Intern",
-    title: "Tejas Patil",
-    internName: "Tejas Patil",
-    internEmail: "tejas.p@asg.io",
-    phone: "+91 98765 43222",
-    college: "GF's Godavari COE",
-    course: "B.E. Information Technology",
-    year: "4th Year",
-    description: "Backend Developer for Social Work & Sustainability",
-    domain: "Social Work",
-    mentor: "Milind Kulkarni",
-    status: "Active",
-    startDate: "2026-06-01",
-    endDate: "2026-07-15",
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-    github: "https://github.com/tejaspatil",
-    notes: "Deeply interested in sustainable tech and carbon footprint tracking databases.",
-    aiToolsUsed: "Copilot, Claude 3.5 Sonnet, Postman AI",
-    shortDescription: "Backend developer focused on Node.js, Express, and PostgreSQL."
-  },
-
-  // Problem Statements
-  { id: 4, type: "Problem Statement", title: "Career Intelligence Platform", description: "An AI-powered skill mapping and resume scanner giving real-time feedback matching candidates to startups.", domain: "Career Intelligence", status: "Active", icon: "🧠" },
-  { id: 5, type: "Problem Statement", title: "Social Work & Sustainability", description: "Platform tracking corporate social responsibility actions, volunteer hours, and local green initiatives.", domain: "Social Work", status: "Active", icon: "🌱" },
-  { id: 6, type: "Problem Statement", title: "Digital Economy Trackers", description: "Visualizing local commerce trends, digital transaction frequencies, and retail statistics in Jalgaon.", domain: "Digital Economy", status: "Active", icon: "📊" },
-  { id: 7, type: "Problem Statement", title: "ASG Ecosystem Portal", description: "Unified hub listing founders, service providers, active mentors, and investor portfolios in Jalgaon.", domain: "ASG Ecosystem", status: "Active", icon: "🚀" },
-  { id: 8, type: "Problem Statement", title: "Event Industry Planner", description: "A centralized booking and schedule pipeline tracking venues, AV providers, and speaker slots for events.", domain: "Event Industry", status: "Active", icon: "🎉" },
-  { id: 9, type: "Problem Statement", title: "Sports & Fitness Tracker", description: "Matching local sports clubs, training centers, and fitness trainers to sports enthusiasts and students.", domain: "Sports & Fitness", status: "Active", icon: "👟" },
-  { id: 10, type: "Problem Statement", title: "Kids Sector & E-Learning", description: "Interactive educational game portals and cognitive skill-builders for primary school students.", domain: "Kids Sector", status: "Active", icon: "👶" },
-  { id: 11, type: "Problem Statement", title: "HoReCa Management Systems", description: "Smart table reservation, order management, and feedback metrics custom-designed for Jalgaon restaurants.", domain: "HoReCa", status: "Active", icon: "🍔" },
-  { id: 12, type: "Problem Statement", title: "Energy & Utilities Hub", description: "Consumption analysis metrics tracking electricity loads, solar outputs, and distribution efficiencies.", domain: "Energy", status: "Active", icon: "⚡" },
-  { id: 13, type: "Problem Statement", title: "E-Sports & Gaming Guilds", description: "An interactive tournament planner, community chat forums, and team matching for regional e-sports.", domain: "E-Sports & Gaming", status: "Active", icon: "🎮" },
-  { id: 14, type: "Problem Statement", title: "Mobility & Transit Helpers", description: "Live shuttle route tracing, rickshaw fare estimates, and local carpooling matching for students.", domain: "Mobility", status: "Active", icon: "🚗" },
-  { id: 15, type: "Problem Statement", title: "Temple Ecosystem Portal", description: "A digital queue scheduler, trust donations manager, and tourism calendar for local cultural sites.", domain: "Temple Ecosystem", status: "Active", icon: "🛕" },
-
-  // Applications
-  {
-    id: 19,
-    type: "Application",
-    title: "Amit Sharma",
-    internName: "Amit Sharma",
-    internEmail: "amit.s@gmail.com",
-    phone: "+91 98765 43250",
-    college: "Jalgaon Institute of Technology",
-    course: "B.E. Computer Science",
-    year: "4th Year",
-    description: "Experienced in React/Node.",
-    domain: "Career Intelligence",
-    status: "Pending",
-    startDate: "2026-06-22",
-    isExistingIntern: false,
-    photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
-    github: "https://github.com/amitsharma",
-    notes: "I want to gain hands-on squad building experience.",
-    aiToolsUsed: "ChatGPT, Copilot",
-    shortDescription: "Full stack enthusiast."
-  },
-  {
-    id: 20,
-    type: "Application",
-    title: "Priya Mahajan",
-    internName: "Priya Mahajan",
-    internEmail: "priya.m@outlook.com",
-    phone: "+91 98765 43251",
-    college: "KCE Society's College of Engineering",
-    course: "B.Tech IT",
-    year: "3rd Year",
-    description: "Strong portfolio in UI/UX designing.",
-    domain: "ASG Ecosystem Portal",
-    status: "Pending",
-    startDate: "2026-06-21",
-    isExistingIntern: false,
-    photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
-    github: "https://behance.net/priyamahajan",
-    notes: "Design is my passion and I want to apply it to AI products.",
-    aiToolsUsed: "Figma, Midjourney",
-    shortDescription: "UI designer."
-  },
-  {
-    id: 21,
-    type: "Application",
-    title: "Rohan Chaudhari",
-    internName: "Rohan Chaudhari",
-    internEmail: "rohan.c@yahoo.com",
-    phone: "+91 98765 43252",
-    college: "SSBT COET Bambhori",
-    course: "B.Tech CSE",
-    year: "4th Year",
-    description: "Proficient in database schemas and backend operations.",
-    domain: "Digital Economy",
-    status: "Pending",
-    startDate: "2026-06-20",
-    isExistingIntern: true,
-    photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&h=200&fit=crop",
-    github: "https://github.com/rohanchaudhari",
-    notes: "Existing intern looking to extend my cohort and transition to the Digital Economy tracker squad.",
-    aiToolsUsed: "Claude, ChatGPT",
-    shortDescription: "Backend engineer."
-  },
-
-  // New Intern Applications (Pending)
-  {
-    id: 22,
-    type: "Application",
-    title: "Sneha Pawar",
-    internName: "Sneha Pawar",
-    internEmail: "sneha.pawar@gmail.com",
-    phone: "+91 97654 32100",
-    college: "North Maharashtra University, Jalgaon",
-    course: "B.Tech Computer Engineering",
-    year: "3rd Year",
-    description: "Passionate about machine learning and data pipelines.",
-    domain: "",
-    status: "Pending",
-    startDate: "2026-06-25",
-    isExistingIntern: false,
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop",
-    github: "https://github.com/snehapawar",
-    notes: "I have built ML models for crop disease detection during my project semester. Eager to apply AI skills to real-world startup problems in Jalgaon.",
-    aiToolsUsed: "Python, TensorFlow, ChatGPT",
-    shortDescription: "ML enthusiast with hands-on project experience in computer vision."
-  },
-  {
-    id: 23,
-    type: "Application",
-    title: "Arjun Deshmukh",
-    internName: "Arjun Deshmukh",
-    internEmail: "arjun.deshmukh@outlook.com",
-    phone: "+91 93456 78901",
-    college: "SSBT College of Engineering & Technology",
-    course: "B.E. Information Technology",
-    year: "3rd Year",
-    description: "Strong front-end developer with React and Tailwind experience.",
-    domain: "",
-    status: "Pending",
-    startDate: "2026-06-24",
-    isExistingIntern: false,
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-    github: "https://github.com/arjundeshmukh",
-    notes: "I have freelanced for 3 local businesses building their websites. I want to contribute to ASG's ecosystem portal and learn from experienced mentors.",
-    aiToolsUsed: "GitHub Copilot, v0.dev, ChatGPT",
-    shortDescription: "Frontend developer specialized in React, TypeScript, and responsive UI."
-  },
-  {
-    id: 24,
-    type: "Application",
-    title: "Kavya Patil",
-    internName: "Kavya Patil",
-    internEmail: "kavya.patil2024@gmail.com",
-    phone: "+91 99887 65432",
-    college: "KCE Society's College of Engineering",
-    course: "B.Sc Computer Science",
-    year: "2nd Year",
-    description: "Creative UI/UX designer with a strong eye for premium design systems.",
-    domain: "",
-    status: "Pending",
-    startDate: "2026-06-26",
-    isExistingIntern: false,
-    photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
-    github: "https://behance.net/kavyapatil",
-    notes: "I designed our college fest app UI that received 500+ downloads. I want to use design thinking to solve real startup challenges and grow under mentorship.",
-    aiToolsUsed: "Figma AI, Midjourney, Adobe XD",
-    shortDescription: "UI/UX designer focused on design systems, prototyping, and visual storytelling."
-  },
-  {
-    id: 25,
-    type: "Application",
-    title: "Rahul Jadhav",
-    internName: "Rahul Jadhav",
-    internEmail: "rahuljadhav.dev@yahoo.com",
-    phone: "+91 91234 56789",
-    college: "Government College of Engineering, Jalgaon",
-    course: "B.Tech Electronics & CS",
-    year: "4th Year",
-    description: "Experienced in Node.js, Express, and PostgreSQL backend development.",
-    domain: "",
-    status: "Pending",
-    startDate: "2026-06-23",
-    isExistingIntern: false,
-    photo: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop",
-    github: "https://github.com/rahuljadhavdev",
-    notes: "I have built a REST API for a campus attendance system serving 2000+ students. Looking to contribute to ASG's digital infrastructure and learn from industry leaders.",
-    aiToolsUsed: "ChatGPT, Postman AI, Claude",
-    shortDescription: "Backend developer with production experience in REST APIs and database design."
-  }
-];
+const INITIAL: AALItem[] = [];
 
 const empty: Omit<AALItem, "id"> = {
   type: "Intern",
@@ -301,7 +70,7 @@ const empty: Omit<AALItem, "id"> = {
   aiToolsUsed: "",
   shortDescription: "",
   domain: "",
-  status: "Pending",
+  status: "Active",
   startDate: new Date().toISOString().split("T")[0],
   endDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
   isExistingIntern: false,
@@ -330,100 +99,113 @@ function StatusBadge({ status }: { status: AALItem["status"] }) {
 }
 
 export default function AALPage() {
-  const [items, setItems, undo, redo, canUndo, canRedo] = useUndoRedoState<AALItem[]>(INITIAL);
+  const [items, setItems, undo, redo, canUndo, canRedo, resetItems] = useUndoRedoState<AALItem[]>(INITIAL);
 
   useEffect(() => {
     async function loadLiveAALData() {
       try {
-        // 1. Fetch applications
+        // 1. Fetch problem statements first so we can map IDs to titles
+        const probRes = await fetch('/api/v1/admin/problem-statements');
+        let dbProblems: AALItem[] = [];
+        if (probRes.ok) {
+          const { data } = await probRes.json();
+          dbProblems = data.map((prob: any) => ({
+            id: prob.id,
+            type: "Problem Statement",
+            title: prob.title,
+            description: prob.description,
+            icon: prob.icon || '💡',
+            displayOrder: prob.displayOrder || 0,
+            status: prob.status === 'open' ? 'Active' : (prob.status === 'assigned' ? 'Active' : 'Inactive'),
+          }));
+        }
+
+        // 2. Fetch applications
         const appRes = await fetch('/api/v1/admin/applications');
         let dbApplications: AALItem[] = [];
         if (appRes.ok) {
           const { data } = await appRes.json();
-          dbApplications = data.map((app: any) => ({
-            id: app.id,
-            type: "Application",
-            title: app.fullName,
-            internName: app.fullName,
-            internEmail: app.email,
-            phone: app.phone,
-            college: app.college,
-            course: app.branch,
-            year: app.year,
-            description: app.motivation || app.skills || '',
-            domain: app.preferredDomain || 'General',
-            status: app.status.charAt(0).toUpperCase() + app.status.slice(1),
-            startDate: new Date(app.createdAt).toISOString().split('T')[0],
-            isExistingIntern: app.isExistingIntern || false,
-            photo: app.photoUrl || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
-            github: app.githubUrl || '',
-            linkedin: app.linkedinUrl || '',
-            notes: app.motivation || '',
-            aiToolsUsed: app.skills || '',
-            shortDescription: app.skills || '',
-          }));
+          dbApplications = data.map((app: any) => {
+            const matchingProblem = dbProblems.find(p => p.id === app.preferredDomain);
+            const domainTitle = matchingProblem ? matchingProblem.title : (app.preferredDomain || 'General');
+            return {
+              id: app.id,
+              type: "Application",
+              title: app.fullName,
+              internName: app.fullName,
+              internEmail: app.email,
+              phone: app.phone,
+              college: app.college,
+              course: app.branch,
+              year: app.year,
+              description: app.motivation || app.skills || '',
+              domain: domainTitle,
+              status: app.status.charAt(0).toUpperCase() + app.status.slice(1),
+              startDate: new Date(app.createdAt).toISOString().split('T')[0],
+              isExistingIntern: app.isExistingIntern || false,
+              photo: app.photoUrl || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
+              github: app.githubUrl || '',
+              linkedin: app.linkedinUrl || '',
+              notes: app.motivation || '',
+              aiToolsUsed: app.skills || '',
+              shortDescription: app.skills || '',
+            };
+          });
         }
 
-        // 2. Fetch interns
+        // 3. Fetch interns
         const internRes = await fetch('/api/v1/admin/interns');
         let dbInterns: AALItem[] = [];
         if (internRes.ok) {
           const { data } = await internRes.json();
-          dbInterns = data.map((intern: any) => ({
-            id: intern.id,
-            type: "Intern",
-            title: intern.name,
-            internName: intern.name,
-            internEmail: intern.email || '',
-            phone: intern.phone || '',
-            college: intern.college,
-            course: "B.Tech/Other",
-            year: "Graduated/Active",
-            description: `Working on ${intern.domain} Platform`,
-            domain: intern.domain,
-            mentor: "TBD",
-            status: intern.status === 'active' ? 'Active' : 'Completed',
-            startDate: new Date(intern.createdAt).toISOString().split('T')[0],
-            isExistingIntern: false,
-            photo: intern.photo || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop",
-            github: intern.githubUrl || '',
-            linkedin: intern.linkedinUrl || '',
-            notes: '',
-            aiToolsUsed: '',
-            shortDescription: ''
-          }));
+          dbInterns = data.map((intern: any) => {
+            const matchingProblem = dbProblems.find(p => p.id === intern.domain);
+            const domainTitle = matchingProblem ? matchingProblem.title : (intern.domain || 'General');
+            return {
+              id: intern.id,
+              type: "Intern",
+              title: intern.name,
+              internName: intern.name,
+              internEmail: intern.email || '',
+              phone: intern.phone || '',
+              college: intern.college,
+              course: intern.course || '',
+              year: intern.year || '',
+              description: intern.description || `Working on ${domainTitle} Platform`,
+              domain: domainTitle,
+              mentor: "TBD",
+              status: intern.status === 'active' ? 'Active' : 'Completed',
+              startDate: new Date(intern.createdAt).toISOString().split('T')[0],
+              isExistingIntern: false,
+              photo: intern.photo || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop",
+              github: intern.githubUrl || '',
+              linkedin: intern.linkedinUrl || '',
+              displayOrder: intern.displayOrder || 0,
+              notes: '',
+              aiToolsUsed: '',
+              shortDescription: ''
+            };
+          });
         }
 
-        const raw = localStorage.getItem("asg_aal_items");
-        let baseItems = INITIAL;
-        if (raw) {
-          try {
-            baseItems = JSON.parse(raw) as AALItem[];
-          } catch { /* ignore */ }
+        // 4. Fetch industry experts
+        const expertRes = await fetch('/api/v1/industry-experts');
+        if (expertRes.ok) {
+          const { data } = await expertRes.json();
+          setExpertsList(data || []);
         }
-        
-        let problemStatements = baseItems.filter(i => i.type === "Problem Statement");
-        if (problemStatements.length === 0) {
-          problemStatements = INITIAL.filter(i => i.type === "Problem Statement");
-        }
-        setItems([...problemStatements, ...dbInterns, ...dbApplications]);
+
+        resetItems([...dbProblems, ...dbInterns, ...dbApplications]);
       } catch (err) {
         console.error("Failed to load live AAL data:", err);
-        const raw = localStorage.getItem("asg_aal_items");
-        if (raw) setItems(JSON.parse(raw));
       }
     }
     loadLiveAALData();
-  }, [setItems]);
-
-  useEffect(() => {
-    if (items !== INITIAL) {
-      localStorage.setItem("asg_aal_items", JSON.stringify(items));
-    }
-  }, [items]);
+  }, [resetItems]);
 
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<AALType>("Intern");
+  const [experts, setExpertsList] = useState<{ id: string | number; name: string; designation?: string }[]>([]);
   const [modal, setModal] = useState<{ open: boolean; mode: "add" | "edit" | "delete" | "view"; item: AALItem | null }>({
     open: false, mode: "add", item: null,
   });
@@ -432,6 +214,8 @@ export default function AALPage() {
   const [selectedProblemStatement, setSelectedProblemStatement] = useState<string>("");
   const [selectedMentor, setSelectedMentor] = useState<string>("");
   const [filterDomain, setFilterDomain] = useState<string>("All");
+  const [isOrderChanged, setIsOrderChanged] = useState(false);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
 
   const allDomains = Array.from(new Set(
     items
@@ -474,19 +258,66 @@ export default function AALPage() {
     reader.readAsDataURL(file);
   };
 
-  const toggleStatus = (id: number | string) => {
-    const updated = items.map((item) => {
-      if (item.id === id) {
-        const newStatus = (item.status === "Active" ? "Inactive" : "Active") as AALItem["status"];
-        return { ...item, status: newStatus };
-      }
-      return item;
-    });
-    saveItems(updated);
+  const toggleStatus = async (id: number | string) => {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    if (item.type === "Problem Statement" || item.type === "Intern") {
+      const nextStatus = item.status === "Active" ? "Inactive" : "Active";
+      await updateStatusDirectly(id, nextStatus);
+    } else {
+      const updated = items.map((item) => {
+        if (item.id === id) {
+          const newStatus = (item.status === "Active" ? "Inactive" : "Active") as AALItem["status"];
+          return { ...item, status: newStatus };
+        }
+        return item;
+      });
+      setItems(updated);
+    }
   };
 
-  const updateStatusDirectly = (id: number | string, newStatus: AALItem["status"]) => {
-    saveItems(items.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
+  const updateStatusDirectly = async (id: number | string, newStatus: AALItem["status"]) => {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    if (item.type === "Problem Statement") {
+      try {
+        const res = await fetch('/api/v1/admin/problem-statements', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id,
+            status: newStatus === 'Active' ? 'open' : 'closed'
+          })
+        });
+        if (res.ok) {
+          setItems(items.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
+        } else {
+          alert("Failed to update status on server.");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else if (item.type === "Intern") {
+      try {
+        const res = await fetch('/api/v1/admin/interns', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id,
+            status: newStatus === 'Active' ? 'active' : 'completed'
+          })
+        });
+        if (res.ok) {
+          setItems(items.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
+        } else {
+          alert("Failed to update status on server.");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      setItems(items.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
+    }
   };
 
   const filtered = items.filter((i) => {
@@ -496,9 +327,49 @@ export default function AALPage() {
       i.description.toLowerCase().includes(search.toLowerCase()) ||
       (i.domain?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
       (i.internName?.toLowerCase().includes(search.toLowerCase()) ?? false);
-    const matchDomain = filterDomain === "All" || i.domain === filterDomain || (i.type === "Problem Statement" && i.title === filterDomain);
+  const matchDomain = filterDomain === "All" || i.domain === filterDomain || (i.type === "Problem Statement" && i.title === filterDomain);
     return matchType && matchSearch && matchDomain;
   });
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= filtered.length) return;
+    
+    const item1 = filtered[index];
+    const item2 = filtered[newIndex];
+    const item1Idx = items.findIndex(i => i.id === item1.id);
+    const item2Idx = items.findIndex(i => i.id === item2.id);
+    
+    const newItems = [...items];
+    newItems[item1Idx] = item2;
+    newItems[item2Idx] = item1;
+    setItems(newItems);
+    setIsOrderChanged(true);
+  };
+
+  const handleSaveOrder = async () => {
+    if (activeTab === 'Application') return;
+    setIsSavingOrder(true);
+    try {
+      const orderData = filtered.map((item, index) => ({ id: item.id, displayOrder: index }));
+      const endpoint = activeTab === 'Intern' 
+        ? '/api/v1/admin/interns/reorder' 
+        : '/api/v1/admin/problem-statements/reorder';
+        
+      const res = await fetch(endpoint, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: orderData })
+      });
+      if (!res.ok) throw new Error("Failed to save order");
+      setIsOrderChanged(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save order.");
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
 
   const openAdd = () => {
     setForm({ ...empty, type: activeTab });
@@ -517,14 +388,101 @@ export default function AALPage() {
   };
   const close = () => setModal((m) => ({ ...m, open: false }));
 
-  const save = () => {
+  const save = async () => {
     if ((form.type === "Intern" && !form.internName) || (form.type !== "Intern" && !form.title)) return;
-    if (modal.mode === "add") {
-      const finalTitle = form.type === "Intern" ? (form.internName || "") : form.title;
-      saveItems([...items, { ...form, title: finalTitle, id: Date.now() }]);
-    } else if (modal.item) {
-      const finalTitle = form.type === "Intern" ? (form.internName || "") : form.title;
-      saveItems(items.map((i) => (i.id === modal.item!.id ? { ...modal.item!, ...form, title: finalTitle } : i)));
+    
+    if (form.type === "Problem Statement") {
+      try {
+        if (modal.mode === "add") {
+          const res = await fetch('/api/v1/admin/problem-statements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: form.title,
+              description: form.description,
+              icon: form.icon || '💡',
+              status: 'open'
+            })
+          });
+          if (!res.ok) throw new Error("Failed to save");
+        } else if (modal.item) {
+          const res = await fetch('/api/v1/admin/problem-statements', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: modal.item.id,
+              title: form.title,
+              description: form.description,
+              icon: form.icon || '💡',
+              status: form.status === 'Active' ? 'open' : 'closed'
+            })
+          });
+          if (!res.ok) throw new Error("Failed to save");
+        }
+        
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to save problem statement on server.");
+      }
+    } else {
+      if (modal.mode === "add") {
+        try {
+          const res = await fetch('/api/v1/admin/interns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: form.internName,
+              photo: form.photo,
+              college: form.college,
+              course: form.course,
+              year: form.year,
+              domain: form.domain,
+              linkedinUrl: form.linkedin,
+              githubUrl: form.github,
+              email: form.internEmail,
+              phone: form.phone,
+              description: form.description
+            })
+          });
+          if (res.ok) {
+            window.location.reload();
+          } else {
+            alert("Failed to add intern on server.");
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      } else if (modal.item) {
+        try {
+          const res = await fetch('/api/v1/admin/interns', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: modal.item.id,
+              name: form.internName,
+              photo: form.photo,
+              college: form.college,
+              course: form.course,
+              year: form.year,
+              domain: form.domain,
+              linkedinUrl: form.linkedin,
+              githubUrl: form.github,
+              email: form.internEmail,
+              phone: form.phone,
+              status: form.status,
+              description: form.description
+            })
+          });
+          if (res.ok) {
+            window.location.reload();
+          } else {
+            alert("Failed to update intern on server.");
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
     }
     close();
   };
@@ -545,8 +503,22 @@ export default function AALPage() {
           alert("Network error deleting intern.");
           return;
         }
+      } else if (modal.item.type === "Problem Statement") {
+        try {
+          const res = await fetch(`/api/v1/admin/problem-statements?id=${modal.item.id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) {
+            alert("Failed to delete problem statement on database server.");
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Network error deleting problem statement.");
+          return;
+        }
       }
-      saveItems(items.filter((i) => i.id !== modal.item!.id));
+      setItems(items.filter((i) => i.id !== modal.item!.id));
     }
     close();
   };
@@ -566,6 +538,8 @@ export default function AALPage() {
           name: item.internName || item.title,
           photo: item.photo,
           college: item.college || 'SSBT',
+          course: item.course || null,
+          year: item.year || null,
           domain: item.domain || 'General',
           linkedinUrl: item.linkedin || null,
           githubUrl: item.github || null,
@@ -613,6 +587,8 @@ export default function AALPage() {
           name: item.internName || item.title,
           photo: item.photo,
           college: item.college || 'SSBT',
+          course: item.course || null,
+          year: item.year || null,
           domain: problemStatement,
           linkedinUrl: item.linkedin || null,
           githubUrl: item.github || null,
@@ -625,6 +601,8 @@ export default function AALPage() {
         alert("Failed to save intern details on server.");
         return;
       }
+      const internData = await internRes.json();
+      const createdIntern = internData.data;
 
       // 2. Delete application
       const res = await fetch(`/api/v1/admin/applications?id=${item.id}`, {
@@ -635,7 +613,7 @@ export default function AALPage() {
           i.id === item.id ? { ...i, status: "Accepted" as const, domain: problemStatement } : i
         );
         const newIntern: AALItem = {
-          id: Date.now(),
+          id: createdIntern.id,
           type: "Intern",
           title: item.internName || item.title,
           internName: item.internName || item.title,
@@ -719,6 +697,12 @@ export default function AALPage() {
                 <Redo size={14} />
               </button>
             </div>
+            {isOrderChanged && (
+              <button onClick={handleSaveOrder} disabled={isSavingOrder} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90 transition-all"
+                style={{ background: "#10b981", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(16,185,129,0.35)", opacity: isSavingOrder ? 0.7 : 1 }}>
+                <Check size={16} /> {isSavingOrder ? 'Saving...' : 'Save Order'}
+              </button>
+            )}
             {activeTab === "Problem Statement" && (
               <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90"
                 style={{ background: "#FF6B00", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
@@ -807,17 +791,27 @@ export default function AALPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#fafafa" }}>
-                  {activeTab === "Intern" && ["Photo", "Name", "Email", "Phone Number", "Domain", "Mentor", "Status", "Actions"].map((h) => (
+                  {activeTab === "Intern" && ["Order", "Photo", "Name", "Email", "Phone Number", "Domain", "Mentor", "Status", "Actions"].map((h) => (
                     <th key={h} style={{ textAlign: "left", fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", padding: "12px 16px" }}>{h}</th>
                   ))}
-                  {activeTab === "Problem Statement" && ["Icon", "Title", "Description", "Domain", "Status", "Actions"].map((h) => (
+                  {activeTab === "Problem Statement" && ["Order", "Icon", "Title", "Description", "Status", "Actions"].map((h) => (
                     <th key={h} style={{ textAlign: "left", fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", padding: "12px 16px" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item) => (
+                {filtered.map((item, idx) => (
                   <tr key={item.id} style={{ borderTop: "1px solid #f5f5f5" }}>
+                    <td style={{ padding: "14px 16px", width: "50px" }}>
+                      <div className="flex flex-col gap-1">
+                        <button onClick={() => handleMove(idx, 'up')} disabled={idx === 0 || !!search || filterDomain !== 'All'} className="text-gray-400 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed bg-transparent border-none cursor-pointer p-0" title="Move Up">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                        </button>
+                        <button onClick={() => handleMove(idx, 'down')} disabled={idx === filtered.length - 1 || !!search || filterDomain !== 'All'} className="text-gray-400 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed bg-transparent border-none cursor-pointer p-0" title="Move Down">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                      </div>
+                    </td>
                     {activeTab === "Intern" && (
                       <>
                         <td style={{ padding: "14px 16px" }}>
@@ -894,9 +888,6 @@ export default function AALPage() {
                         </td>
                         <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555", maxWidth: "300px" }}>
                           <div style={{ overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{item.description}</div>
-                        </td>
-                        <td style={{ padding: "14px 16px" }}>
-                          <span style={{ fontSize: "12px", fontWeight: 500, padding: "3px 10px", borderRadius: "99px", background: "rgba(59,130,246,0.1)", color: "#3b82f6" }}>{item.domain}</span>
                         </td>
                         <td style={{ padding: "14px 16px" }}>
                           <div className="flex flex-col gap-1">
@@ -1209,8 +1200,8 @@ export default function AALPage() {
                       }}
                     >
                       <option value="">— TBD (Assign later) —</option>
-                      {DUMMY_MENTORS.map((m) => (
-                        <option key={m.id} value={m.name}>{m.name} — {m.expertise}</option>
+                      {experts.map((m) => (
+                        <option key={m.id} value={m.name}>{m.name}{m.designation ? ` — ${m.designation}` : ''}</option>
                       ))}
                     </select>
                   </div>
@@ -1339,48 +1330,24 @@ export default function AALPage() {
                 </div>
 
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <FormField label="Profile Photo (Drag & Drop or Click to Upload)">
-                    <div
-                      onDragEnter={handleDrag}
-                      onDragOver={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDrop={handleDrop}
-                      onClick={() => document.getElementById("intern-photo-upload")?.click()}
-                      style={{
-                        borderColor: dragActive ? "#FF6B00" : "#ebebeb",
-                        background: dragActive ? "rgba(255,107,0,0.04)" : "#fcfcfc",
-                        borderStyle: "dashed",
-                        borderWidth: "2px",
-                        borderRadius: "12px",
-                        padding: "20px",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        transition: "all 0.2s"
-                      }}
-                    >
-                      <input id="intern-photo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          handleFile(e.target.files[0]);
-                        }
-                      }} />
-                      {form.photo ? (
-                        <div className="flex flex-col items-center">
-                          <img src={form.photo} alt="Intern Preview" className="w-20 h-20 rounded-full object-cover mb-2" />
-                          <span className="text-[11px] text-gray-400">Click to select a different photo</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center">
-                          <UploadCloud size={24} className="text-[#FF6B00] mb-1" />
-                          <span className="text-xs font-semibold text-gray-700">Drag & drop profile picture here</span>
-                        </div>
-                      )}
-                    </div>
+                  <FormField label="Description (Shown on Website)">
+                    <Textarea value={form.description || ""} onChange={(e) => set("description", e.target.value)} placeholder="Describe the intern's role or biography..." rows={2} />
+                  </FormField>
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <FormField label="Profile Photo">
+                    <ImageUpload
+                      uploadType="intern_photo"
+                      value={form.photo}
+                      onChange={(url) => set("photo", url)}
+                    />
                   </FormField>
                 </div>
               </div>
             )}
 
-            {form.type === "Problem Statement" && (
+             {form.type === "Problem Statement" && (
               <div className="grid gap-4">
                 <FormField label="Title *">
                   <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Problem statement title" />
@@ -1388,14 +1355,11 @@ export default function AALPage() {
                 <FormField label="Description *">
                   <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Detailed description of the problem…" rows={4} />
                 </FormField>
-                <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
-                  <FormField label="Domain">
-                    <Input value={form.domain || ""} onChange={(e) => set("domain", e.target.value)} placeholder="e.g. IoT, AI" />
-                  </FormField>
+                <div>
                   <FormField label="Status">
                     <Select value={form.status} onChange={(e) => set("status", e.target.value)}>
-                      <option>Pending</option>
                       <option>Active</option>
+                      <option>Inactive</option>
                       <option>Completed</option>
                     </Select>
                   </FormField>
