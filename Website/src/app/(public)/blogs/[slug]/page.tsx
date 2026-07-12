@@ -71,6 +71,21 @@ export default async function BlogDetailPage({ params }) {
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
+          <div style={{
+            width: '100%',
+            height: '420px',
+            borderRadius: 'var(--radius-xl)',
+            overflow: 'hidden',
+            marginBottom: 'var(--space-6)',
+            border: '1px solid var(--apex-border-dark)',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <img
+              src={blog.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=420&fit=crop"}
+              alt={blog.title}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
 
           {/* Dynamic Article Content */}
           <div
@@ -89,6 +104,15 @@ export default async function BlogDetailPage({ params }) {
               <h5 style={{ color: 'var(--apex-text-white)', fontSize: '0.9rem', fontWeight: '700', marginBottom: '12px', textTransform: 'uppercase' }}>Tags</h5>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {blog.tags.map((t: string) => (
+                  <span key={t} style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--apex-text-muted)',
+                    backgroundColor: 'var(--apex-bg-surface-elevated)',
+                    border: '1px solid var(--apex-border-dark)',
+                    padding: '4px 10px',
+                    borderRadius: 'var(--radius-full)',
+                    fontWeight: '600'
+                  }}>
                   <span key={t} style={{
                     fontSize: '0.75rem',
                     color: 'var(--apex-text-muted)',

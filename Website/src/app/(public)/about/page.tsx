@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import simplesphereLogo from '@/assets/simplesphere.png';
-import aspireyaLogo from '@/assets/aspireya.png';
-import logicPointLogo from '@/assets/logic_point.png';
-import utLogo from '@/assets/ut_logo.png';
+import simplesphereLogo from '../../assets/simplesphere.png';
+import aspireyaLogo from '../../assets/aspireya.png';
+import logicPointLogo from '../../assets/logic_point.png';
+import utLogo from '../../assets/ut_logo.png';
 import { partnersData } from '@/data/partners';
 
 export default function About() {
