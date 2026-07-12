@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { UserCircle, Save, Check, Key, Camera } from "lucide-react";
 import { useAuth } from "@/context/admin/AuthContext";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ProfilePage() {
   const { adminEmail } = useAuth();
@@ -24,14 +25,32 @@ export default function ProfilePage() {
 
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
 
-  const handlePwSave = () => {
+  const handlePwSave = async () => {
     if (!pw.current || !pw.newPw) { setPwError("Please fill all password fields."); return; }
     if (pw.newPw !== pw.confirm) { setPwError("New passwords do not match."); return; }
     if (pw.newPw.length < 8) { setPwError("Password must be at least 8 characters."); return; }
+    
     setPwError("");
-    setPw({ current: "", newPw: "", confirm: "" });
-    setPwSaved(true);
-    setTimeout(() => setPwSaved(false), 2500);
+    try {
+      const supabase = createClient();
+      
+      // Update password inside Supabase Auth
+      const { error } = await supabase.auth.updateUser({
+        password: pw.newPw
+      });
+      
+      if (error) {
+        setPwError(error.message);
+        return;
+      }
+      
+      setPw({ current: "", newPw: "", confirm: "" });
+      setPwSaved(true);
+      setTimeout(() => setPwSaved(false), 2500);
+    } catch (err: any) {
+      console.error(err);
+      setPwError("An unexpected error occurred while changing your password.");
+    }
   };
 
   const inputStyle: React.CSSProperties = {
