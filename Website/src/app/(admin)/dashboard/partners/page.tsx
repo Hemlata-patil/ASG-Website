@@ -7,6 +7,8 @@ import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, Ghost
 import { PageHeader } from "@/components/admin/PageHeader";
 import { createPartnerAction, deletePartnerAction, getPartnersAction, togglePartnerStatusAction, updatePartnerAction } from "@/app/actions/partners";
 import ImageUpload from "@/components/shared/ImageUpload";
+import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import { Undo2, Redo2 } from "lucide-react";
 
 interface Partner {
   id: string;
@@ -48,6 +50,7 @@ export default function IndustryPartnersPage() {
     open: false, mode: "add", item: null,
   });
   const [form, setForm] = useState<PartnerForm>(empty);
+  const { pushAction, undo, redo, canUndo, canRedo, isProcessing } = useUndoRedoState();
 
   const loadPartners = async () => {
     setLoading(true);
@@ -124,7 +127,27 @@ export default function IndustryPartnersPage() {
       if (modal.mode === "add") {
         await createPartnerAction(payload);
       } else if (modal.item) {
-        await updatePartnerAction(modal.item.id, payload);
+        const oldData = {
+          name: modal.item.name,
+          logo: modal.item.logo,
+          websiteUrl: modal.item.website,
+          description: modal.item.description,
+          category: modal.item.category,
+          status: modal.item.status,
+        };
+        const id = modal.item.id;
+        await updatePartnerAction(id, payload);
+        
+        pushAction({
+          undo: async () => {
+            await updatePartnerAction(id, oldData);
+            await loadPartners();
+          },
+          redo: async () => {
+            await updatePartnerAction(id, payload);
+            await loadPartners();
+          }
+        });
       }
 
       close();
@@ -142,7 +165,29 @@ export default function IndustryPartnersPage() {
     setSaving(true);
     setError(null);
     try {
-      await deletePartnerAction(modal.item.id);
+      const deletedItem = modal.item;
+      await deletePartnerAction(deletedItem.id);
+      
+      const restorePayload = {
+        name: deletedItem.name,
+        logo: deletedItem.logo,
+        websiteUrl: deletedItem.website,
+        description: deletedItem.description,
+        category: deletedItem.category,
+        status: deletedItem.status,
+      };
+      
+      pushAction({
+        undo: async () => {
+          await createPartnerAction(restorePayload);
+          await loadPartners();
+        },
+        redo: async () => {
+          await deletePartnerAction(deletedItem.id);
+          await loadPartners();
+        }
+      });
+      
       close();
       router.refresh();
       await loadPartners();
@@ -159,6 +204,18 @@ export default function IndustryPartnersPage() {
     try {
       const nextStatus = item.status === "Active" ? "Inactive" : "Active";
       await togglePartnerStatusAction(item.id, nextStatus);
+      
+      pushAction({
+        undo: async () => {
+          await togglePartnerStatusAction(item.id, item.status);
+          await loadPartners();
+        },
+        redo: async () => {
+          await togglePartnerStatusAction(item.id, nextStatus);
+          await loadPartners();
+        }
+      });
+      
       setPartners((prev) => prev.map((partner) => (partner.id === item.id ? { ...partner, status: nextStatus } : partner)));
       router.refresh();
     } catch (err) {
@@ -178,7 +235,23 @@ export default function IndustryPartnersPage() {
         subtitle={`${partners.length} total partners · ${partners.filter((p) => p.status === "Active").length} active`}
         action={
           <div className="flex items-center gap-2.5">
-            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90"
+            <button
+              onClick={() => { void undo(); }}
+              disabled={!canUndo || isProcessing}
+              className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${!canUndo ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200 text-gray-400' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 cursor-pointer shadow-sm'}`}
+              title="Undo"
+            >
+              <Undo2 size={16} />
+            </button>
+            <button
+              onClick={() => { void redo(); }}
+              disabled={!canRedo || isProcessing}
+              className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${!canRedo ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200 text-gray-400' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 cursor-pointer shadow-sm'}`}
+              title="Redo"
+            >
+              <Redo2 size={16} />
+            </button>
+            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90 ml-2"
               style={{ background: "#FF6B00", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
               <Plus size={16} /> Add Partner
             </button>

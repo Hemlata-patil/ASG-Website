@@ -7,6 +7,8 @@ import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, Ghost
 import { PageHeader } from "@/components/admin/PageHeader";
 import { createExpertAction, deleteExpertAction, getExpertsAction, toggleExpertStatusAction, updateExpertAction } from "@/app/actions/experts";
 import ImageUpload from "@/components/shared/ImageUpload";
+import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import { Undo2, Redo2 } from "lucide-react";
 
 interface Expert {
   id: string;
@@ -78,6 +80,7 @@ export default function IndustryExpertsPage() {
   const [form, setForm] = useState<ExpertForm>(empty);
   const [dragActive, setDragActive] = useState(false);
   const [problemStatements, setProblemStatements] = useState<string[]>([]);
+  const { pushAction, undo, redo, canUndo, canRedo, isProcessing } = useUndoRedoState();
 
   const loadExperts = async () => {
     setLoading(true);
@@ -128,6 +131,18 @@ export default function IndustryExpertsPage() {
     try {
       const nextStatus = item.status === "Active" ? "Inactive" : "Active";
       await toggleExpertStatusAction(item.id, nextStatus);
+      
+      pushAction({
+        undo: async () => {
+          await toggleExpertStatusAction(item.id, item.status);
+          await loadExperts();
+        },
+        redo: async () => {
+          await toggleExpertStatusAction(item.id, nextStatus);
+          await loadExperts();
+        }
+      });
+      
       setExperts((prev) => prev.map((expert) => (expert.id === item.id ? { ...expert, status: nextStatus } : expert)));
       router.refresh();
     } catch (err) {
@@ -226,8 +241,35 @@ export default function IndustryExpertsPage() {
 
       if (modal.mode === "add") {
         await createExpertAction(payload);
+        // Note: Because we cannot retrieve the new ID cleanly without modifying action files,
+        // true inverse for 'add' is a bit tricky. We would normally push delete(newId).
+        // Since we can't alter action files, undo for Add might be unvailable or limited.
       } else if (modal.item) {
-        await updateExpertAction(modal.item.id, payload);
+        const oldData = {
+          name: modal.item.name,
+          role: modal.item.role,
+          designation: modal.item.role,
+          company: modal.item.company,
+          description: modal.item.description,
+          bio: modal.item.bio,
+          photo: modal.item.photo,
+          socialLinks: modal.item.socialLinks,
+          currentProblemStatement: modal.item.currentProblemStatement,
+          status: modal.item.status,
+        };
+        const id = modal.item.id;
+        await updateExpertAction(id, payload);
+        
+        pushAction({
+          undo: async () => {
+            await updateExpertAction(id, oldData);
+            await loadExperts();
+          },
+          redo: async () => {
+            await updateExpertAction(id, payload);
+            await loadExperts();
+          }
+        });
       }
 
       close();
@@ -245,7 +287,33 @@ export default function IndustryExpertsPage() {
     setSaving(true);
     setError(null);
     try {
-      await deleteExpertAction(modal.item.id);
+      const deletedItem = modal.item;
+      await deleteExpertAction(deletedItem.id);
+      
+      const restorePayload = {
+        name: deletedItem.name,
+        role: deletedItem.role,
+        designation: deletedItem.role,
+        company: deletedItem.company,
+        description: deletedItem.description,
+        bio: deletedItem.bio,
+        photo: deletedItem.photo,
+        socialLinks: deletedItem.socialLinks,
+        currentProblemStatement: deletedItem.currentProblemStatement,
+        status: deletedItem.status,
+      };
+      
+      pushAction({
+        undo: async () => {
+          await createExpertAction(restorePayload);
+          await loadExperts();
+        },
+        redo: async () => {
+          await deleteExpertAction(deletedItem.id);
+          await loadExperts();
+        }
+      });
+      
       close();
       router.refresh();
       await loadExperts();
@@ -266,7 +334,23 @@ export default function IndustryExpertsPage() {
         subtitle={`${experts.length} total experts · ${experts.filter((e) => e.status === "Active").length} active`}
         action={
           <div className="flex items-center gap-2.5">
-            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90 animate-fade-in"
+            <button
+              onClick={() => { void undo(); }}
+              disabled={!canUndo || isProcessing}
+              className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${!canUndo ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200 text-gray-400' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 cursor-pointer shadow-sm'}`}
+              title="Undo"
+            >
+              <Undo2 size={16} />
+            </button>
+            <button
+              onClick={() => { void redo(); }}
+              disabled={!canRedo || isProcessing}
+              className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${!canRedo ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200 text-gray-400' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 cursor-pointer shadow-sm'}`}
+              title="Redo"
+            >
+              <Redo2 size={16} />
+            </button>
+            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90 animate-fade-in ml-2"
               style={{ background: "#FF6B00", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(255,107,0,0.35)" }}>
               <Plus size={16} /> Add Expert
             </button>
