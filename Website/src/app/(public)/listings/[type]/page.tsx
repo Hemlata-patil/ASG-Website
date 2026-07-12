@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Filter } from 'lucide-react';
 import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
-import { asgMembers, aalInterns } from '@/data/listingsData';
-import { domains } from '@/data/domains';
+import { asgMembers } from '@/data/listingsData';
 import ApexDropdown from '@/components/common/ApexDropdown/ApexDropdown';
 
 function ListingsContent() {
@@ -22,6 +21,9 @@ function ListingsContent() {
 
   // State for project filter (applicable for interns only)
   const [selectedProject, setSelectedProject] = useState('all');
+  const [internsList, setInternsList] = useState<any[]>([]);
+  const [problemsList, setProblemsList] = useState<any[]>([]);
+  const [dbMembers, setDbMembers] = useState<any[]>([]);
 
   useEffect(() => {
     const projectInUrl = searchParams.get('project');
@@ -31,6 +33,41 @@ function ListingsContent() {
       setSelectedProject('all');
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (currentType === 'interns') {
+      const fetchInternsAndProblems = async () => {
+        try {
+          const internRes = await fetch('/api/v1/interns');
+          if (internRes.ok) {
+            const { data } = await internRes.json();
+            setInternsList(data);
+          }
+          const probRes = await fetch('/api/v1/problem-statements');
+          if (probRes.ok) {
+            const { data } = await probRes.json();
+            setProblemsList(data);
+          }
+        } catch (err) {
+          console.error("Failed to fetch dynamic listings:", err);
+        }
+      };
+      fetchInternsAndProblems();
+    } else {
+      const fetchCommunityMembers = async () => {
+        try {
+          const res = await fetch('/api/v1/community-members');
+          if (res.ok) {
+            const { data } = await res.json();
+            setDbMembers(data);
+          }
+        } catch (err) {
+          console.error("Failed to fetch community members:", err);
+        }
+      };
+      fetchCommunityMembers();
+    }
+  }, [currentType]);
 
   // Headers metadata
   const metaMap: Record<string, { overline: string; title: string; subtitle: string }> = {
@@ -77,84 +114,84 @@ function ListingsContent() {
   // Get data to display
   let displayData: any[] = [];
   if (currentType === 'interns') {
-    let approvedInterns: any[] = [];
-    try {
-      if (typeof window !== 'undefined') {
-        const raw = localStorage.getItem("asg_aal_items");
-        if (raw) {
-          const allItems = JSON.parse(raw);
-          approvedInterns = allItems.filter((i: any) => i.type === "Intern" && i.status === "Active");
-        }
-      }
-    } catch { /* ignore */ }
-
-    const sourceInterns = approvedInterns.length > 0 ? approvedInterns : null;
-
-    if (sourceInterns) {
-      if (selectedProject === 'all') {
-        displayData = sourceInterns.map(intern => ({
-          ...intern,
-          project: intern.domain || 'General',
-          projectId: (intern.domain || 'general').toLowerCase().replace(/\s+/g, '-')
-        }));
-      } else {
-        displayData = sourceInterns
-          .filter(intern => {
-            const projId = (intern.domain || 'general').toLowerCase().replace(/\s+/g, '-');
-            return projId === selectedProject;
-          })
-          .map(intern => ({
-            ...intern,
-            project: intern.domain || 'General',
-            projectId: selectedProject
-          }));
-      }
+    const activeInterns = internsList.filter(i => i.status === 'active');
+    
+    if (selectedProject === 'all') {
+      displayData = activeInterns.map(intern => {
+        const matchingProblemForIntern = problemsList.find(p => p.id === intern.domain);
+        const resolvedDomain = matchingProblemForIntern ? matchingProblemForIntern.title : (intern.domain || 'General');
+        const resolvedProjectId = matchingProblemForIntern ? matchingProblemForIntern.id : (intern.domain ? intern.domain.toLowerCase().replace(/\s+/g, '-') : 'general');
+        return {
+          id: intern.id,
+          name: intern.name,
+          internName: intern.name,
+          photo: intern.photo || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
+          college: intern.college,
+          course: intern.course || '',
+          year: intern.year || '',
+          project: resolvedDomain,
+          projectId: resolvedProjectId,
+          github: intern.githubUrl || '',
+          linkedin: intern.linkedinUrl || '',
+          description: intern.description || '',
+        };
+      });
     } else {
-      // Fallback to static data
-      if (selectedProject === 'all') {
-        Object.keys(aalInterns).forEach(projId => {
-          const projName = domains.find(d => d.id === projId)?.name || projId;
-          const list = (aalInterns as any)[projId] || [];
-          list.forEach((intern: any) => {
-            displayData.push({ ...intern, project: projName, projectId: projId });
-          });
+      displayData = activeInterns
+        .filter(intern => {
+          const matchingProblem = problemsList.find(p => p.id === selectedProject);
+          const targetTitle = matchingProblem ? matchingProblem.title : selectedProject;
+          const matchingProblemForIntern = problemsList.find(p => p.id === intern.domain);
+          const resolvedDomain = matchingProblemForIntern ? matchingProblemForIntern.title : (intern.domain || 'General');
+          return resolvedDomain.toLowerCase() === targetTitle.toLowerCase();
+        })
+        .map(intern => {
+          const matchingProblemForIntern = problemsList.find(p => p.id === intern.domain);
+          const resolvedDomain = matchingProblemForIntern ? matchingProblemForIntern.title : (intern.domain || 'General');
+          return {
+            id: intern.id,
+            name: intern.name,
+            internName: intern.name,
+            photo: intern.photo || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
+            college: intern.college,
+            course: intern.course || '',
+            year: intern.year || '',
+            project: resolvedDomain,
+            projectId: selectedProject,
+            github: intern.githubUrl || '',
+            linkedin: intern.linkedinUrl || '',
+            description: intern.description || '',
+          };
         });
-      } else {
-        const projName = domains.find(d => d.id === selectedProject)?.name || selectedProject;
-        const internsForProj = (aalInterns as any)[selectedProject] || [];
-        displayData = internsForProj.map((intern: any) => ({ ...intern, project: projName, projectId: selectedProject }));
-      }
     }
   } else {
-    let membersList: any[] = [];
-    if (typeof window !== 'undefined') {
-      const local = localStorage.getItem("asg_members");
-      if (local) {
-        try {
-          membersList = JSON.parse(local);
-        } catch (e) {
-          membersList = [];
-        }
-      }
-    }
-
-    if (membersList && membersList.length > 0) {
-      const typeMapping: Record<string, string> = {
-        'founders': 'Founder',
-        'mentors': 'Mentor',
-        'investors': 'Investor',
-        'service-providers': 'Service Provider',
-        'other': 'Other'
-      };
-      const adminType = typeMapping[currentType];
-      displayData = membersList.filter(m => m.type === adminType && m.status === 'Active');
-    } else {
-      displayData = (asgMembers as any)[currentType] || [];
-    }
+    const typeMapping: Record<string, string> = {
+      'founders': 'founder',
+      'mentors': 'mentor',
+      'investors': 'investor',
+      'service-providers': 'service_provider'
+    };
+    const targetType = typeMapping[currentType];
+    displayData = dbMembers
+      .filter(m => m.memberType === targetType)
+      .map(m => ({
+        id: m.id,
+        name: m.name,
+        photo: m.photo || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
+        role: m.designation,
+        company: m.company,
+        companyWebsite: m.websiteUrl || '',
+        description: m.bio || '',
+        socialLinks: m.linkedinUrl ? [m.linkedinUrl] : [],
+        nodeRole: m.memberType === 'founder' ? 'Founder' :
+                  m.memberType === 'mentor' ? 'Mentor' :
+                  m.memberType === 'investor' ? 'Investor' :
+                  m.memberType === 'service_provider' ? 'Service Provider' : 'Other',
+      }));
   }
 
   // Resolve currently selected project name
-  const currentProjectName = selectedProject === 'all' ? 'All Projects' : (domains.find(d => d.id === selectedProject)?.name || selectedProject);
+  const currentProjectName = selectedProject === 'all' ? 'All Projects' : (problemsList.find(d => d.id === selectedProject || d.title.toLowerCase().replace(/\s+/g, '-') === selectedProject)?.title || selectedProject);
 
   return (
     <div className="container">
@@ -216,7 +253,7 @@ function ListingsContent() {
             label={currentProjectName}
             options={[
               { value: 'all', label: 'All Projects' },
-              ...domains.map((d) => ({ value: d.id, label: d.name }))
+              ...problemsList.map((d) => ({ value: d.id, label: d.title }))
             ]}
             onSelect={handleProjectFilterChange}
             minWidth="200px"
@@ -311,11 +348,18 @@ function ListingsContent() {
                       </a>
                     ) : member.company}
                   </p>
-                  {member.phone && (
-                    <p className="body-sm" style={{ color: 'var(--apex-text-muted)', fontSize: '0.8rem', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                      <span>📞</span> {member.phone}
-                    </p>
-                  )}
+                  <span style={{
+                    fontSize: '0.7rem',
+                    backgroundColor: 'rgba(255, 107, 0, 0.1)',
+                    color: 'var(--apex-primary)',
+                    padding: '3px 10px',
+                    borderRadius: 'var(--radius-full)',
+                    fontWeight: '700',
+                    display: 'inline-block',
+                    marginTop: '8px'
+                  }}>
+                    {member.nodeRole}
+                  </span>
                   {member.description && (
                     <p className="body-sm" style={{ color: 'var(--apex-text-muted)', fontSize: '0.8rem', marginTop: '8px', fontStyle: 'italic', maxWidth: '240px', lineHeight: '1.4' }}>
                       "{member.description}"
@@ -386,6 +430,11 @@ function ListingsContent() {
                   }}>
                     Project: {member.project}
                   </span>
+                  {member.description && (
+                    <p className="body-sm" style={{ color: 'var(--apex-text-muted)', fontSize: '0.8rem', marginTop: '8px', fontStyle: 'italic', maxWidth: '240px', lineHeight: '1.4' }}>
+                      "{member.description}"
+                    </p>
+                  )}
                 </>
               )}
             </div>

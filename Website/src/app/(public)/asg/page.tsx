@@ -16,6 +16,7 @@ interface FormDataState {
   role: string;
   socialLinks: string[];
   company: string;
+  designation: string;
   companyWebsite: string;
   description: string;
   photoUrl: string;
@@ -36,6 +37,7 @@ export default function ASG() {
     role: '', // founders | mentors | investors | service-providers
     socialLinks: [''],
     company: '',
+    designation: '',
     companyWebsite: '',
     description: '',
     photoUrl: '',
@@ -82,10 +84,14 @@ export default function ASG() {
     if (!formData.phone.trim()) errors.phone = 'Phone Number is required';
     if (!formData.role) errors.role = 'Ecosystem role is required';
     if (!formData.company.trim()) errors.company = 'Company / Affiliation is required';
+    if (!formData.designation.trim()) errors.designation = 'Designation is required';
     if (!formData.description.trim()) errors.description = 'Short Description is required';
     if (!formData.photoUrl) errors.photoUrl = 'Profile Photo / Company Logo is required';
     if (formData.role === 'other' && !formData.otherRoleDetails?.trim()) {
       errors.otherRoleDetails = 'Tell us about your role is required';
+    }
+    if (formData.description.length > 250) {
+      errors.description = 'Short Description cannot exceed 250 characters';
     }
     return errors;
   };
@@ -121,6 +127,7 @@ export default function ASG() {
         role: '',
         socialLinks: [''],
         company: '',
+        designation: '',
         companyWebsite: '',
         description: '',
         photoUrl: '',
@@ -465,9 +472,31 @@ export default function ASG() {
                   </div>
                 </div>
 
+                {/* Designation Row */}
+                <div style={{ marginBottom: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Designation in Company *</label>
+                  <input
+                    type="text"
+                    name="designation"
+                    value={formData.designation}
+                    onChange={handleFormChange}
+                    placeholder="e.g. CEO, Co-founder, Partner"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: 'var(--apex-bg-surface-elevated)',
+                      border: formErrors.designation ? '1.5px solid var(--apex-primary)' : '1px solid var(--apex-border-dark)',
+                      color: 'var(--apex-text-white)',
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                  {formErrors.designation && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.designation}</span>}
+                </div>
+
                 {/* Dynamic Social Media Links */}
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Social Media Links <span style={{ color: 'var(--apex-text-muted)', fontWeight: 400 }}>(Optional)</span></label>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Personal Social Media Links <span style={{ color: 'var(--apex-text-muted)', fontWeight: 400 }}>(Optional)</span></label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {formData.socialLinks.map((link, index) => (
                       <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -536,6 +565,7 @@ export default function ASG() {
                     value={formData.description}
                     onChange={handleFormChange}
                     rows={3}
+                    maxLength={250}
                     placeholder="Briefly describe your business, role, or area of focus..."
                     style={{
                       width: '100%',
@@ -548,6 +578,9 @@ export default function ASG() {
                       resize: 'vertical'
                     }}
                   />
+                  <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--apex-text-muted)', marginTop: '4px' }}>
+                    {formData.description.length} / 250 characters
+                  </div>
                   {formErrors.description && <span style={{ color: 'var(--apex-primary)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{formErrors.description}</span>}
                 </div>
 

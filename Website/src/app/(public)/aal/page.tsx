@@ -4,11 +4,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PageWrapper from '@/components/layout/PageWrapper/PageWrapper';
 import SectionHeading from '@/components/common/SectionHeading/SectionHeading';
-import { domains } from '@/data/domains';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import ApexDropdown from '@/components/common/ApexDropdown/ApexDropdown';
 import { getExpertsAction, type ExpertRecord } from '@/app/actions/experts';
 import ImageUpload from '@/components/shared/ImageUpload';
+import { FileText, Users, Brain, Code, Award } from 'lucide-react';
 
 interface FormDataState {
   name: string;
@@ -35,6 +35,22 @@ export default function AAL() {
   const formAnim = useScrollAnimation();
 
   const formRef = useRef<HTMLDivElement | null>(null);
+  const [problemStatements, setProblemStatements] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchProblemStatements() {
+      try {
+        const res = await fetch('/api/v1/problem-statements');
+        if (res.ok) {
+          const { data } = await res.json();
+          setProblemStatements(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch public problem statements:", err);
+      }
+    }
+    fetchProblemStatements();
+  }, []);
 
   const [experts, setExperts] = useState<ExpertRecord[]>([]);
 
@@ -86,31 +102,31 @@ export default function AAL() {
       stage: "Stage 1",
       title: "Apply & Get Selected",
       desc: "Submit your Github, portfolio, and choice of project. Candidates are selected based on basic problem-solving and eagerness to build.",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop"
+      icon: <FileText size={18} color="var(--apex-primary)" />
     },
     {
       stage: "Stage 2",
       title: "Onboarding & Squad Formation",
       desc: "Meet your co-interns. We align students into cross-functional squads containing web devs, PMs, and designers to mimic real startups.",
-      avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=150&auto=format&fit=crop"
+      icon: <Users size={18} color="var(--apex-primary)" />
     },
     {
       stage: "Stage 3",
       title: "Domain Deep-Dive (Weeks 1–2)",
       desc: "Intense skill sprints. Guided workshops on frameworks (React, Python, Fast API, Figma design libraries) to establish strong build foundations.",
-      avatar: "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?q=80&w=150&auto=format&fit=crop"
+      icon: <Brain size={18} color="var(--apex-primary)" />
     },
     {
       stage: "Stage 4",
       title: "Live Project Execution (Weeks 3–6)",
       desc: "Squads build a live production project addressing real client requests or local community problems under weekly expert design reviews.",
-      avatar: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=150&auto=format&fit=crop"
+      icon: <Code size={18} color="var(--apex-primary)" />
     },
     {
       stage: "Stage 5",
       title: "Demo Day & Certification",
       desc: "Present your squad's live app to external mentors and investors. Outstanding builders get direct references and project certificates.",
-      avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=150&auto=format&fit=crop"
+      icon: <Award size={18} color="var(--apex-primary)" />
     }
   ];
 
@@ -179,6 +195,9 @@ export default function AAL() {
     if (formData.internStatus === 'new' && !formData.aiToolsUsed.trim()) errors.aiToolsUsed = 'Please tell us what AI tools you use';
     if (formData.internStatus === 'existing') {
       if (!formData.project) errors.project = 'Please choose your project';
+    }
+    if (formData.internStatus === 'new' && formData.notes.length > 250) {
+      errors.notes = 'Motivation/Notes cannot exceed 250 characters';
     }
     return errors;
   };
@@ -291,7 +310,7 @@ export default function AAL() {
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 'var(--space-4)'
           }} className="grid-3">
-            {domains.map((d) => (
+            {problemStatements.map((d) => (
               <div
                 key={d.id}
                 onClick={() => router.push(`/listings/interns?project=${d.id}`)}
@@ -316,12 +335,12 @@ export default function AAL() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
-                  <div style={{ fontSize: '2rem' }}>{d.icon}</div>
+                  <div style={{ fontSize: '2rem' }}>{d.icon || '💡'}</div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--apex-primary)', fontWeight: '700' }}>
                     View Interns →
                   </span>
                 </div>
-                <h4 className="heading-sm" style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--apex-text-white)' }}>{d.name}</h4>
+                <h4 className="heading-sm" style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--apex-text-white)' }}>{d.title}</h4>
                 <p className="body-sm" style={{ color: 'var(--apex-text-muted)', marginBottom: '8px' }}>{d.description}</p>
               </div>
             ))}
@@ -538,10 +557,8 @@ export default function AAL() {
                   marginBottom: 'var(--space-5)',
                   position: 'relative'
                 }}>
-                  {/* Timeline Dot with Intern Stock Photo */}
-                  <img
-                    src={item.avatar}
-                    alt="Intern avatar"
+                  {/* Timeline Dot with Stage Icon */}
+                  <div
                     style={{
                       position: 'absolute',
                       left: '50%',
@@ -551,11 +568,15 @@ export default function AAL() {
                       border: '3px solid var(--apex-primary)',
                       transform: 'translateX(-50%)',
                       zIndex: 3,
-                      objectFit: 'cover',
-                      backgroundColor: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'var(--apex-bg-surface-elevated)',
                       boxShadow: 'var(--shadow-md)'
                     }}
-                  />
+                  >
+                    {item.icon}
+                  </div>
 
                   {/* Card Container */}
                   <div style={{
@@ -874,13 +895,13 @@ export default function AAL() {
                   </div>
                 </div>
 
-                {/* Project Selection (Existing Only) */}
+                 {/* Project Selection (Existing Only) */}
                 {formData.internStatus === 'existing' && (
                   <div style={{ marginBottom: 'var(--space-2)' }}>
                     <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--apex-text-white)', display: 'block', marginBottom: '6px' }}>Your Project *</label>
                     <ApexDropdown
-                      label={domains.find(d => d.id === formData.project)?.name || 'Select your project'}
-                      options={domains.map((d) => ({ value: d.id, label: d.name }))}
+                      label={problemStatements.find(d => d.id === formData.project)?.title || 'Select your project'}
+                      options={problemStatements.map((d) => ({ value: d.id, label: d.title }))}
                       onSelect={(value) => {
                         setFormData((prev) => ({ ...prev, project: value }));
                         if (formErrors.project) {
@@ -942,6 +963,7 @@ export default function AAL() {
                       value={formData.notes}
                       onChange={handleFormChange}
                       rows={3}
+                      maxLength={250}
                       placeholder="Briefly tell us about your experience or motivation..."
                       style={{
                         width: '100%',
@@ -954,6 +976,9 @@ export default function AAL() {
                         resize: 'vertical'
                       }}
                     />
+                    <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--apex-text-muted)', marginTop: '4px' }}>
+                      {formData.notes.length} / 250 characters
+                    </div>
                   </div>
                 )}
 

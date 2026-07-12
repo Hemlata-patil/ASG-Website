@@ -13,6 +13,7 @@ import Modal, {
 } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import ImageUpload from "@/components/shared/ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
 
@@ -37,154 +38,10 @@ interface Member {
   socialLinks?: string[];
   companyWebsite?: string;
   otherRoleDetails?: string;
+  displayOrder?: number;
 }
 
-const INITIAL: Member[] = [
-  {
-    id: 1,
-    name: "Vikram Singh",
-    email: "vikram@asg.io",
-    type: "Founder",
-    company: "ASG Foundation",
-    expertise: "Entrepreneurship",
-    city: "Bangalore",
-    joinDate: "2022-01-15",
-    status: "Active",
-    phone: "+91 98765 43201",
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=250&auto=format&fit=crop",
-    description: "Co-founder of ASG Foundation. Helping build the tech ecosystem in Jalgaon.",
-    socialLinks: ["https://linkedin.com/in/vikramsingh", "https://twitter.com/vikram_asg"],
-    companyWebsite: "https://asgfoundation.org"
-  },
-  {
-    id: 2,
-    name: "Priya Nair",
-    email: "priya@asg.io",
-    type: "Founder",
-    company: "ASG Foundation",
-    expertise: "Operations",
-    city: "Mumbai",
-    joinDate: "2022-01-15",
-    status: "Active",
-    phone: "+91 98765 43202",
-    photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=250&auto=format&fit=crop",
-    description: "Co-founder at ASG Foundation. Focused on community growth and corporate partnerships.",
-    socialLinks: ["https://linkedin.com/in/priyanair"],
-    companyWebsite: "https://asgfoundation.org"
-  },
-  {
-    id: 3,
-    name: "Dr. Ravi Kumar",
-    email: "ravi.kumar@edu.in",
-    type: "Mentor",
-    company: "IIT Bombay",
-    expertise: "AI & Machine Learning",
-    city: "Mumbai",
-    joinDate: "2023-03-10",
-    status: "Active",
-    phone: "+91 98765 43203",
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=250&auto=format&fit=crop",
-    description: "Professor at IIT Bombay. Mentoring students on Deep Learning models and research projects.",
-    socialLinks: ["https://linkedin.com/in/drravikumar"],
-    companyWebsite: "https://iitb.ac.in"
-  },
-  {
-    id: 4,
-    name: "Sneha Joshi",
-    email: "sneha.joshi@tech.com",
-    type: "Mentor",
-    company: "Google India",
-    expertise: "Product Management",
-    city: "Bangalore",
-    joinDate: "2023-05-20",
-    status: "Active",
-    phone: "+91 98765 43204",
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=250&auto=format&fit=crop",
-    description: "Lead Product Manager. Helping founders design user journeys and GTM strategies.",
-    socialLinks: ["https://linkedin.com/in/snehajoshi"],
-    companyWebsite: "https://google.co.in"
-  },
-  {
-    id: 5,
-    name: "Kiran Rao",
-    email: "kiran.rao@blockchain.io",
-    type: "Mentor",
-    company: "Polygon",
-    expertise: "Blockchain & Web3",
-    city: "Pune",
-    joinDate: "2023-08-15",
-    status: "Active",
-    phone: "+91 98765 43205",
-    photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=250&auto=format&fit=crop",
-    description: "Developer Relations at Polygon. Tech advisor for smart contract architectures.",
-    socialLinks: ["https://linkedin.com/in/kiranrao"],
-    companyWebsite: "https://polygon.technology"
-  },
-  {
-    id: 6,
-    name: "Amit Verma",
-    email: "amit@ventures.com",
-    type: "Investor",
-    company: "Sequoia Capital",
-    expertise: "Early Stage Ventures",
-    city: "Delhi",
-    joinDate: "2023-06-01",
-    status: "Active",
-    phone: "+91 98765 43206",
-    photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=250&auto=format&fit=crop",
-    description: "Partner at Sequoia. Investing in SaaS, FinTech, and deep-tech startups in India.",
-    socialLinks: ["https://linkedin.com/in/amitverma"],
-    companyWebsite: "https://sequoiacap.com"
-  },
-  {
-    id: 7,
-    name: "Neha Sharma",
-    email: "neha@angelnet.in",
-    type: "Investor",
-    company: "Angel Network",
-    expertise: "Angel Investing",
-    city: "Hyderabad",
-    joinDate: "2023-09-10",
-    status: "Active",
-    phone: "+91 98765 43207",
-    photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop",
-    description: "Angel investor. Focused on supporting student startups and regional tech incubators.",
-    socialLinks: ["https://linkedin.com/in/nehasharma"],
-    companyWebsite: "https://angelnet.in"
-  },
-  {
-    id: 8,
-    name: "Rajesh Patel",
-    email: "rajesh@legalservices.com",
-    type: "Service Provider",
-    company: "Legal Advisors LLP",
-    expertise: "Legal Services",
-    city: "Ahmedabad",
-    joinDate: "2024-01-05",
-    status: "Active",
-    phone: "+91 98765 43208",
-    photo: "https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=250&auto=format&fit=crop",
-    description: "Corporate lawyer. Helping startups with registrations, term sheets, and IP compliance.",
-    socialLinks: ["https://linkedin.com/in/rajeshpatel"],
-    companyWebsite: "https://legaladvisors.com"
-  },
-  {
-    id: 9,
-    name: "Meera Reddy",
-    email: "meera@marketing.co",
-    type: "Service Provider",
-    company: "BrandCraft",
-    expertise: "Marketing & Branding",
-    city: "Chennai",
-    joinDate: "2024-02-12",
-    status: "Active",
-    phone: "+91 98765 43209",
-    photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=250&auto=format&fit=crop",
-    description: "Co-founder at BrandCraft. Expert in brand positioning and performance marketing.",
-    socialLinks: ["https://linkedin.com/company/brandcraft"],
-    companyWebsite: "https://brandcraft.co"
-  }
-];
+const INITIAL: Member[] = [];
 
 const empty: Omit<Member, "id"> = {
   name: "",
@@ -204,71 +61,81 @@ const empty: Omit<Member, "id"> = {
 };
 
 export default function CommunityPage() {
-  const [members, setMembers, undo, redo, canUndo, canRedo] = useUndoRedoState<Member[]>(INITIAL);
+  const [members, setMembers, undo, redo, canUndo, canRedo, resetMembers] = useUndoRedoState<Member[]>(INITIAL);
   const [applications, setApplications] = useState<any[]>([]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("asg_members");
-      if (raw) {
-        const saved = JSON.parse(raw) as Member[];
-        const savedIds = new Set(saved.map((m) => m.id));
-        const newEntries = INITIAL.filter((m) => !savedIds.has(m.id));
-        setMembers([...saved, ...newEntries]);
+    async function loadLiveCommunityData() {
+      try {
+        const memberRes = await fetch('/api/v1/admin/community-members');
+        if (memberRes.ok) {
+          const { data } = await memberRes.json();
+          const dbMembers = data.map((m: any) => ({
+            id: m.id,
+            name: m.name,
+            email: m.email || '',
+            type: m.memberType === 'founder' ? 'Founder' :
+              m.memberType === 'mentor' ? 'Mentor' :
+                m.memberType === 'investor' ? 'Investor' :
+                  m.memberType === 'service_provider' ? 'Service Provider' : 'Other',
+            company: m.company,
+            expertise: m.designation,
+            city: 'Jalgaon',
+            joinDate: new Date(m.createdAt).toISOString().split('T')[0],
+            status: m.showOnWebsite ? 'Active' : 'Inactive',
+            phone: m.phone || '',
+            photo: m.photo,
+            description: m.bio || '',
+            socialLinks: m.linkedinUrl ? [m.linkedinUrl] : [],
+            companyWebsite: m.websiteUrl || '',
+            otherRoleDetails: m.designation || '',
+            displayOrder: m.displayOrder || 0
+          }));
+          resetMembers(dbMembers);
+        }
+      } catch (err) {
+        console.error("Failed to load live community members:", err);
       }
-    } catch { /* ignore */ }
+    }
+    loadLiveCommunityData();
 
     async function loadLiveCommunityApplications() {
       try {
-        const res = await fetch('/api/v1/admin/community-applications');
-        if (res.ok) {
-          const { data } = await res.json();
+        const appRes = await fetch('/api/v1/admin/community-applications');
+        if (appRes.ok) {
+          const { data } = await appRes.json();
           const dbApps = data.map((app: any) => ({
             id: app.id,
             name: app.fullName,
             email: app.email,
             phone: app.phone,
             role: app.applicantType === 'founder' ? 'founders' :
-                  app.applicantType === 'mentor' ? 'mentors' :
-                  app.applicantType === 'investor' ? 'investors' :
+              app.applicantType === 'mentor' ? 'mentors' :
+                app.applicantType === 'investor' ? 'investors' :
                   app.applicantType === 'service_provider' ? 'service-providers' : 'other',
+            type: app.applicantType === 'founder' ? 'Founder' :
+              app.applicantType === 'mentor' ? 'Mentor' :
+                app.applicantType === 'investor' ? 'Investor' :
+                  app.applicantType === 'service_provider' ? 'Service Provider' : 'Other',
+            expertise: app.designation || '',
             company: app.company,
             companyWebsite: app.websiteUrl || '',
             description: app.motivation || '',
             photo: app.photoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
             status: app.status === 'pending' ? 'Pending' :
-                    app.status === 'accepted' ? 'Accepted' : 'Rejected',
+              app.status === 'accepted' ? 'Accepted' : 'Rejected',
             socialLinks: app.linkedinUrl ? [app.linkedinUrl] : [],
-            otherRoleDetails: app.designation || ''
+            otherRoleDetails: app.designation || '',
+            date: app.createdAt
           }));
-          
-          const local = localStorage.getItem("asg_listing_applications");
-          let baseApps = [];
-          if (local) {
-            try { baseApps = JSON.parse(local); } catch {}
-          }
-          
-          const dbIds = new Set(dbApps.map((a: any) => a.id));
-          const nonDbApps = baseApps.filter((a: any) => !dbIds.has(a.id));
-          setApplications([...nonDbApps, ...dbApps]);
-        } else {
-          const local = localStorage.getItem("asg_listing_applications");
-          if (local) setApplications(JSON.parse(local));
+          setApplications(dbApps);
         }
       } catch (err) {
         console.error("Failed to load live community applications:", err);
-        const local = localStorage.getItem("asg_listing_applications");
-        if (local) setApplications(JSON.parse(local));
       }
     }
     loadLiveCommunityApplications();
-  }, [setMembers]);
-
-  useEffect(() => {
-    if (members !== INITIAL) {
-      localStorage.setItem("asg_members", JSON.stringify(members));
-    }
-  }, [members]);
+  }, [resetMembers]);
 
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<string>("Founder");
@@ -284,18 +151,34 @@ export default function CommunityPage() {
   });
   const [form, setForm] = useState<Omit<Member, "id">>(empty);
   const [dragActive, setDragActive] = useState(false);
+  const [isOrderChanged, setIsOrderChanged] = useState(false);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
 
   const saveMembers = (newMembers: Member[]) => {
     setMembers(newMembers);
   };
 
-  const toggleStatus = (id: number) => {
-    const next = members.map((m) =>
-      m.id === id
-        ? { ...m, status: (m.status === "Active" ? "Inactive" : "Active") as "Active" | "Inactive" }
-        : m
-    );
-    saveMembers(next);
+  const toggleStatus = async (id: number | string) => {
+    const item = members.find(m => m.id === id);
+    if (!item) return;
+    try {
+      const nextStatus = item.status === "Active" ? "Inactive" : "Active";
+      const res = await fetch('/api/v1/admin/community-members', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          showOnWebsite: nextStatus === 'Active'
+        })
+      });
+      if (res.ok) {
+        setMembers(members.map((m) => (m.id === id ? { ...m, status: nextStatus } : m)));
+      } else {
+        alert("Failed to toggle status on server.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -355,6 +238,42 @@ export default function CommunityPage() {
     return matchType && matchSearch && matchStatus;
   });
 
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= filtered.length) return;
+    
+    const item1 = filtered[index];
+    const item2 = filtered[newIndex];
+    const item1Idx = members.findIndex(m => m.id === item1.id);
+    const item2Idx = members.findIndex(m => m.id === item2.id);
+    
+    const newMembers = [...members];
+    newMembers[item1Idx] = item2;
+    newMembers[item2Idx] = item1;
+    setMembers(newMembers);
+    setIsOrderChanged(true);
+  };
+
+  const handleSaveOrder = async () => {
+    if (activeTab === 'Applications') return;
+    setIsSavingOrder(true);
+    try {
+      const orderData = filtered.map((item, index) => ({ id: item.id, displayOrder: index }));
+      const res = await fetch('/api/v1/admin/community-members/reorder', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: orderData })
+      });
+      if (!res.ok) throw new Error("Failed to save order");
+      setIsOrderChanged(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save order.");
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
+
   const filteredApplications = applications.filter((app) => {
     const matchSearch =
       app.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -367,39 +286,43 @@ export default function CommunityPage() {
 
   const handleAcceptApplication = async (app: any) => {
     try {
+      let mappedType: Member["type"] = "Founder";
+      if (app.role === "founders") mappedType = "Founder";
+      else if (app.role === "mentors") mappedType = "Mentor";
+      else if (app.role === "investors") mappedType = "Investor";
+      else if (app.role === "service-providers") mappedType = "Service Provider";
+      else if (app.role === "other") mappedType = "Other";
+
+      // 1. Save member to database
+      const memberRes = await fetch('/api/v1/admin/community-members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: app.name,
+          email: app.email,
+          phone: app.phone,
+          photo: app.photo,
+          designation: app.otherRoleDetails || 'Member',
+          company: app.company,
+          type: mappedType,
+          linkedinUrl: app.socialLinks?.[0] || null,
+          websiteUrl: app.companyWebsite || null,
+          bio: app.description || '',
+          showOnWebsite: true
+        })
+      });
+
+      if (!memberRes.ok) {
+        alert("Failed to save community member on server.");
+        return;
+      }
+
+      // 2. Delete application
       const res = await fetch(`/api/v1/admin/community-applications?id=${app.id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
-        let mappedType: Member["type"] = "Founder";
-        if (app.role === "founders") mappedType = "Founder";
-        else if (app.role === "mentors") mappedType = "Mentor";
-        else if (app.role === "investors") mappedType = "Investor";
-        else if (app.role === "service-providers") mappedType = "Service Provider";
-        else if (app.role === "other") mappedType = "Other";
-
-        const newMember: Member = {
-          id: Date.now(),
-          name: app.name,
-          email: app.email,
-          phone: app.phone,
-          type: mappedType,
-          company: app.company,
-          companyWebsite: app.companyWebsite,
-          description: app.description,
-          socialLinks: app.socialLinks,
-          city: "Jalgaon",
-          joinDate: new Date().toISOString().split("T")[0],
-          status: "Active",
-          photo: app.photo,
-          otherRoleDetails: app.otherRoleDetails
-        };
-
-        const nextMembers = [...members, newMember];
-        saveMembers(nextMembers);
-
-        const nextApps = applications.map((a) => (a.id === app.id ? { ...a, status: "Accepted" } : a));
-        setApplications(nextApps);
+        window.location.reload();
       } else {
         alert("Failed to approve application on server.");
       }
@@ -443,24 +366,55 @@ export default function CommunityPage() {
     setModal({ open: true, mode: "view", item });
   const close = () => setModal((m) => ({ ...m, open: false }));
 
-  const save = () => {
+  const save = async () => {
     if (!form.name || !form.email) return;
     const cleanedSocialLinks = (form.socialLinks || []).filter(l => l.trim());
-    const finalForm = { ...form, socialLinks: cleanedSocialLinks };
-    
-    if (modal.mode === "add") {
-      const next = [
-        ...members,
-        { ...finalForm, id: Date.now() },
-      ];
-      saveMembers(next);
-    } else if (modal.item) {
-      const next = members.map((m) =>
-        m.id === modal.item!.id
-          ? { ...modal.item!, ...finalForm }
-          : m
-      );
-      saveMembers(next);
+
+    try {
+      if (modal.mode === "add") {
+        const res = await fetch('/api/v1/admin/community-members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            photo: form.photo,
+            designation: form.expertise || 'Founder',
+            company: form.company,
+            type: form.type,
+            linkedinUrl: cleanedSocialLinks[0] || null,
+            websiteUrl: form.companyWebsite || null,
+            bio: form.description || '',
+            showOnWebsite: form.status === 'Active'
+          })
+        });
+        if (!res.ok) throw new Error("Failed to add");
+      } else if (modal.item) {
+        const res = await fetch('/api/v1/admin/community-members', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: modal.item.id,
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            photo: form.photo,
+            designation: form.expertise || 'Founder',
+            company: form.company,
+            type: form.type,
+            linkedinUrl: cleanedSocialLinks[0] || null,
+            websiteUrl: form.companyWebsite || null,
+            bio: form.description || '',
+            showOnWebsite: form.status === 'Active'
+          })
+        });
+        if (!res.ok) throw new Error("Failed to update");
+      }
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save community member on server.");
     }
     close();
   };
@@ -474,11 +428,17 @@ export default function CommunityPage() {
             await fetch('/api/v1/delete', { method: 'POST', body: JSON.stringify({ bucket: 'avatars', paths: [filePath] }) });
           }
         }
+        const res = await fetch(`/api/v1/admin/community-members?id=${modal.item.id}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          alert("Failed to delete community member on server.");
+        }
       } catch (err) {
-        console.error('Storage delete error:', err);
+        console.error("Delete error:", err);
       }
-      const next = members.filter((m) => m.id !== modal.item!.id);
-      saveMembers(next);
     }
     close();
   };
@@ -536,6 +496,12 @@ export default function CommunityPage() {
                 <Redo size={14} />
               </button>
             </div>
+            {isOrderChanged && (
+              <button onClick={handleSaveOrder} disabled={isSavingOrder} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold border-none hover:opacity-90 transition-all"
+                style={{ background: "#10b981", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", boxShadow: "0 2px 10px rgba(16,185,129,0.35)", opacity: isSavingOrder ? 0.7 : 1 }}>
+                <Check size={16} /> {isSavingOrder ? 'Saving...' : 'Save Order'}
+              </button>
+            )}
             {activeTab !== "Applications" && (
               <button
                 onClick={openAdd}
@@ -669,21 +635,21 @@ export default function CommunityPage() {
               <tr style={{ background: "#fafafa" }}>
                 {(activeTab === "Applications"
                   ? [
-                      "Applicant",
-                      "Selected Role",
-                      "Company / details",
-                      "Submitted",
-                      "Status",
-                      "Actions",
-                    ]
+                    "Applicant",
+                    "Selected Role",
+                    "Company / details",
+                    "Submitted",
+                    "Status",
+                    "Actions",
+                  ]
                   : [
-                      "Name",
-                      "Company/Expertise",
-                      "City",
-                      "Joined",
-                      "Status",
-                      "Actions",
-                    ]
+                    "Order",
+                    "Name",
+                    "Company/Expertise",
+                    "Joined",
+                    "Status",
+                    "Actions",
+                  ]
                 ).map((h) => (
                   <th
                     key={h}
@@ -705,317 +671,318 @@ export default function CommunityPage() {
             <tbody>
               {activeTab === "Applications"
                 ? filteredApplications.map((app) => (
-                    <tr
-                      key={app.id}
-                      style={{ borderTop: "1px solid #f5f5f5" }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "#fafafa")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "transparent")
-                      }
-                    >
-                      <td style={{ padding: "14px 16px" }}>
-                        <div className="flex items-center gap-3">
-                          {app.photo ? (
-                            <img
-                              src={app.photo}
-                              alt={app.name}
-                              style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "12px",
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : (
-                            <div
-                              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                              style={{
-                                background: `hsl(${(app.name.charCodeAt(0) * 37) % 360}, 60%, 92%)`,
-                                color: `hsl(${(app.name.charCodeAt(0) * 37) % 360}, 60%, 40%)`,
-                                fontWeight: 700,
-                                fontSize: "14px",
-                              }}
-                            >
-                              {app.name[0]}
-                            </div>
-                          )}
-                          <div>
-                            <div
-                              style={{
-                                fontSize: "14px",
-                                fontWeight: 600,
-                                color: "#0d0d0d",
-                              }}
-                            >
-                              {app.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#aaa",
-                              }}
-                            >
-                              {app.email}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>
-                        <span style={{ fontSize: "12px", fontWeight: 500, padding: "3px 10px", borderRadius: "99px", background: "rgba(255,107,0,0.1)", color: "#FF6B00" }}>
-                          {app.role === "founders" ? "Founder" :
-                           app.role === "mentors" ? "Mentor" :
-                           app.role === "investors" ? "Investor" :
-                           app.role === "service-providers" ? "Service Provider" :
-                           app.role === "other" ? "Other" :
-                           app.role}
-                        </span>
-                      </td>
-                      <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>
-                        <div style={{ fontWeight: 600, color: "#0d0d0d" }}>{app.company || "—"}</div>
-                        {app.companyWebsite && (
-                          <a href={app.companyWebsite} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#FF6B00", textDecoration: "none" }}>
-                            {app.companyWebsite} ↗
-                          </a>
-                        )}
-                      </td>
-                      <td style={{ padding: "14px 16px", fontSize: "13px", color: "#8a8a8a" }}>
-                        {new Date(app.date).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td style={{ padding: "14px 16px" }}>
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: 600,
-                            padding: "3px 10px",
-                            borderRadius: "99px",
-                            background:
-                              app.status === "Pending"
-                                ? "rgba(245,158,11,0.12)"
-                                : app.status === "Accepted"
-                                ? "rgba(16,185,129,0.12)"
-                                : "rgba(239,68,68,0.12)",
-                            color:
-                              app.status === "Pending"
-                                ? "#d97706"
-                                : app.status === "Accepted"
-                                ? "#059669"
-                                : "#dc2626",
-                          }}
-                        >
-                          {app.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: "14px 16px" }}>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => openView(app)}
-                            className="p-1.5 rounded-lg transition-all bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100"
-                            title="View Details"
+                  <tr
+                    key={app.id}
+                    style={{ borderTop: "1px solid #f5f5f5" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#fafafa")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
+                  >
+                    <td style={{ padding: "14px 16px" }}>
+                      <div className="flex items-center gap-3">
+                        {app.photo ? (
+                          <img
+                            src={app.photo}
+                            alt={app.name}
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "12px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: `hsl(${(app.name.charCodeAt(0) * 37) % 360}, 60%, 92%)`,
+                              color: `hsl(${(app.name.charCodeAt(0) * 37) % 360}, 60%, 40%)`,
+                              fontWeight: 700,
+                              fontSize: "14px",
+                            }}
                           >
-                            <Eye size={13} />
-                          </button>
-                          {app.status === "Pending" && (
-                            <>
-                              <button
-                                onClick={() => handleAcceptApplication(app)}
-                                className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg border-none cursor-pointer hover:bg-emerald-100"
-                                title="Accept"
-                              >
-                                <Check size={13} />
-                              </button>
-                              <button
-                                onClick={() => handleRejectApplication(app)}
-                                className="p-1.5 bg-red-50 text-red-500 rounded-lg border-none cursor-pointer hover:bg-red-100"
-                                title="Reject"
-                              >
-                                <XIcon size={13} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                : filtered.map((member) => (
-                    <tr
-                      key={member.id}
-                      style={{ borderTop: "1px solid #f5f5f5" }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "#fafafa")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "transparent")
-                      }
-                    >
-                      <td style={{ padding: "14px 16px" }}>
-                        <div className="flex items-center gap-3">
-                          {member.photo ? (
-                            <img
-                              src={member.photo}
-                              alt={member.name}
-                              style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "12px",
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : (
-                            <div
-                              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                              style={{
-                                background: `hsl(${(member.name.charCodeAt(0) * 37) % 360}, 60%, 92%)`,
-                                color: `hsl(${(member.name.charCodeAt(0) * 37) % 360}, 60%, 40%)`,
-                                fontWeight: 700,
-                                fontSize: "14px",
-                              }}
-                            >
-                              {member.name[0]}
-                            </div>
-                          )}
-                          <div>
-                            <div
-                              style={{
-                                fontSize: "14px",
-                                fontWeight: 600,
-                                color: "#0d0d0d",
-                              }}
-                            >
-                              {member.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#aaa",
-                              }}
-                            >
-                              {member.email}
-                            </div>
+                            {app.name[0]}
                           </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: "14px 16px" }}>
-                        {member.company && (
+                        )}
+                        <div>
                           <div
                             style={{
-                              fontSize: "13px",
-                              fontWeight: 500,
+                              fontSize: "14px",
+                              fontWeight: 600,
                               color: "#0d0d0d",
                             }}
                           >
-                            {member.company}
+                            {app.name}
                           </div>
-                        )}
-                        {member.expertise && (
                           <div
                             style={{
                               fontSize: "12px",
-                              color: "#888",
-                              marginTop: member.company
-                                ? "2px"
-                                : "0",
+                              color: "#aaa",
                             }}
                           >
-                            {member.expertise}
+                            {app.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 500, padding: "3px 10px", borderRadius: "99px", background: "rgba(255,107,0,0.1)", color: "#FF6B00" }}>
+                        {app.role === "founders" ? "Founder" :
+                          app.role === "mentors" ? "Mentor" :
+                            app.role === "investors" ? "Investor" :
+                              app.role === "service-providers" ? "Service Provider" :
+                                app.role === "other" ? "Other" :
+                                  app.role}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px", fontSize: "13px", color: "#555" }}>
+                      <div style={{ fontWeight: 600, color: "#0d0d0d" }}>{app.company || "—"}</div>
+                      {app.companyWebsite && (
+                        <a href={app.companyWebsite} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#FF6B00", textDecoration: "none" }}>
+                          {app.companyWebsite} ↗
+                        </a>
+                      )}
+                    </td>
+                    <td style={{ padding: "14px 16px", fontSize: "13px", color: "#8a8a8a" }}>
+                      {new Date(app.date).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          padding: "3px 10px",
+                          borderRadius: "99px",
+                          background:
+                            app.status === "Pending"
+                              ? "rgba(245,158,11,0.12)"
+                              : app.status === "Accepted"
+                                ? "rgba(16,185,129,0.12)"
+                                : "rgba(239,68,68,0.12)",
+                          color:
+                            app.status === "Pending"
+                              ? "#d97706"
+                              : app.status === "Accepted"
+                                ? "#059669"
+                                : "#dc2626",
+                        }}
+                      >
+                        {app.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => openView(app)}
+                          className="p-1.5 rounded-lg transition-all bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100"
+                          title="View Details"
+                        >
+                          <Eye size={13} />
+                        </button>
+                        {app.status === "Pending" && (
+                          <>
+                            <button
+                              onClick={() => handleAcceptApplication(app)}
+                              className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg border-none cursor-pointer hover:bg-emerald-100"
+                              title="Accept"
+                            >
+                              <Check size={13} />
+                            </button>
+                            <button
+                              onClick={() => handleRejectApplication(app)}
+                              className="p-1.5 bg-red-50 text-red-500 rounded-lg border-none cursor-pointer hover:bg-red-100"
+                              title="Reject"
+                            >
+                              <XIcon size={13} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+                : filtered.map((member, idx) => (
+                  <tr
+                    key={member.id}
+                    style={{ borderTop: "1px solid #f5f5f5" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#fafafa")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
+                  >
+                    <td style={{ padding: "14px 16px", width: "50px" }}>
+                      <div className="flex flex-col gap-1">
+                        <button onClick={() => handleMove(idx, 'up')} disabled={idx === 0 || !!search || filterStatus !== 'All'} className="text-gray-400 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed bg-transparent border-none cursor-pointer p-0" title="Move Up">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                        </button>
+                        <button onClick={() => handleMove(idx, 'down')} disabled={idx === filtered.length - 1 || !!search || filterStatus !== 'All'} className="text-gray-400 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed bg-transparent border-none cursor-pointer p-0" title="Move Down">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div className="flex items-center gap-3">
+                        {member.photo ? (
+                          <img
+                            src={member.photo}
+                            alt={member.name}
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "12px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: `hsl(${(member.name.charCodeAt(0) * 37) % 360}, 60%, 92%)`,
+                              color: `hsl(${(member.name.charCodeAt(0) * 37) % 360}, 60%, 40%)`,
+                              fontWeight: 700,
+                              fontSize: "14px",
+                            }}
+                          >
+                            {member.name[0]}
                           </div>
                         )}
-                      </td>
-                      <td
-                        style={{
-                          padding: "14px 16px",
-                          fontSize: "13px",
-                          color: "#555",
-                        }}
-                      >
-                        {member.city}
-                      </td>
-                      <td
-                        style={{
-                          padding: "14px 16px",
-                          fontSize: "13px",
-                          color: "#8a8a8a",
-                        }}
-                      >
-                        {new Date(
-                          member.joinDate,
-                        ).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td style={{ padding: "14px 16px" }}>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => toggleStatus(member.id)}
-                            className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out align-middle border-none"
+                        <div>
+                          <div
                             style={{
-                              background: member.status === "Active" ? "#10b981" : "#e5e7eb",
-                              outline: "none"
+                              fontSize: "14px",
+                              fontWeight: 600,
+                              color: "#0d0d0d",
                             }}
-                            title={member.status === "Active" ? "Disable" : "Enable"}
                           >
-                            <span
-                              className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out"
-                              style={{
-                                transform: member.status === "Active" ? "translateX(16px)" : "translateX(0)"
-                              }}
-                            />
-                          </button>
-                          <span style={{ fontSize: "12px", fontWeight: 500, color: member.status === "Active" ? "#10b981" : "#888" }}>
-                            {member.status}
-                          </span>
+                            {member.name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#aaa",
+                            }}
+                          >
+                            {member.email}
+                          </div>
                         </div>
-                      </td>
-                      <td style={{ padding: "14px 16px" }}>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => openView(member)}
-                            className="p-1.5 rounded-lg transition-all bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100"
-                            title="View Details"
-                          >
-                            <Eye size={13} />
-                          </button>
-                          <button
-                            onClick={() => openEdit(member)}
-                            className="p-1.5 rounded-lg transition-all bg-orange-50 text-[#FF6B00] border-none cursor-pointer hover:bg-orange-100"
-                            title="Edit Details"
-                          >
-                            <Pencil size={13} />
-                          </button>
-                          <button
-                            onClick={() => openDelete(member)}
-                            className="p-1.5 rounded-lg transition-all bg-red-50 text-red-500 border-none cursor-pointer hover:bg-red-100"
-                            title="Remove Member"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      {member.company && (
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            color: "#0d0d0d",
+                          }}
+                        >
+                          {member.company}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
+                      )}
+                      {member.expertise && (
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "#888",
+                            marginTop: member.company
+                              ? "2px"
+                              : "0",
+                          }}
+                        >
+                          {member.expertise}
+                        </div>
+                      )}
+                    </td>
+                    <td
+                      style={{
+                        padding: "14px 16px",
+                        fontSize: "13px",
+                        color: "#8a8a8a",
+                      }}
+                    >
+                      {new Date(
+                        member.joinDate,
+                      ).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleStatus(member.id)}
+                          className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out align-middle border-none"
+                          style={{
+                            background: member.status === "Active" ? "#10b981" : "#e5e7eb",
+                            outline: "none"
+                          }}
+                          title={member.status === "Active" ? "Disable" : "Enable"}
+                        >
+                          <span
+                            className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out"
+                            style={{
+                              transform: member.status === "Active" ? "translateX(16px)" : "translateX(0)"
+                            }}
+                          />
+                        </button>
+                        <span style={{ fontSize: "12px", fontWeight: 500, color: member.status === "Active" ? "#10b981" : "#888" }}>
+                          {member.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => openView(member)}
+                          className="p-1.5 rounded-lg transition-all bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100"
+                          title="View Details"
+                        >
+                          <Eye size={13} />
+                        </button>
+                        <button
+                          onClick={() => openEdit(member)}
+                          className="p-1.5 rounded-lg transition-all bg-orange-50 text-[#FF6B00] border-none cursor-pointer hover:bg-orange-100"
+                          title="Edit Details"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button
+                          onClick={() => openDelete(member)}
+                          className="p-1.5 rounded-lg transition-all bg-red-50 text-red-500 border-none cursor-pointer hover:bg-red-100"
+                          title="Remove Member"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               {((activeTab === "Applications" && filteredApplications.length === 0) ||
                 (activeTab !== "Applications" && filtered.length === 0)) && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    style={{
-                      padding: "40px 16px",
-                      textAlign: "center",
-                      color: "#bbb",
-                      fontSize: "14px",
-                    }}
-                  >
-                    No {activeTab.toLowerCase()} found.
-                  </td>
-                </tr>
-              )}
+                  <tr>
+                    <td
+                      colSpan={6}
+                      style={{
+                        padding: "40px 16px",
+                        textAlign: "center",
+                        color: "#bbb",
+                        fontSize: "14px",
+                      }}
+                    >
+                      No {activeTab.toLowerCase()} found.
+                    </td>
+                  </tr>
+                )}
             </tbody>
           </table>
         </div>
@@ -1075,12 +1042,12 @@ export default function CommunityPage() {
 
             <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
               <div>
-                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Phone Number</label>
-                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.phone || "—"}</div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Email Address</label>
+                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.email || "—"}</div>
               </div>
               <div>
-                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>City</label>
-                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.city || "—"}</div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Phone Number</label>
+                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.phone || "—"}</div>
               </div>
               <div>
                 <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Company / Affiliation</label>
@@ -1095,8 +1062,12 @@ export default function CommunityPage() {
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Expertise</label>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Designation</label>
                 <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.expertise || "—"}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Community Node Role</label>
+                <div style={{ fontSize: "13.5px", color: "#333", marginTop: "2px" }}>{modal.item.type || "—"}</div>
               </div>
               <div>
                 <label style={{ fontSize: "11px", fontWeight: 600, color: "#aaa", textTransform: "uppercase" }}>Join Date</label>
@@ -1234,11 +1205,11 @@ export default function CommunityPage() {
                   placeholder="Company name"
                 />
               </FormField>
-              <FormField label="Expertise">
+              <FormField label="Designation in Company *">
                 <Input
                   value={form.expertise || ""}
                   onChange={(e) => set("expertise", e.target.value)}
-                  placeholder="Area of expertise"
+                  placeholder="e.g. CEO, Co-founder, Partner"
                 />
               </FormField>
               <FormField label="Company Website Link">
@@ -1278,43 +1249,13 @@ export default function CommunityPage() {
               </FormField>
             )}
 
-            <div>
-              <FormField label="Profile Photo (Drag & Drop or Click to Upload)">
-                <div
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={() => document.getElementById("member-photo-upload")?.click()}
-                  style={{
-                    borderColor: dragActive ? "#FF6B00" : "#ebebeb",
-                    background: dragActive ? "rgba(255,107,0,0.04)" : "#fcfcfc",
-                    borderStyle: "dashed",
-                    borderWidth: "2px",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    transition: "all 0.2s"
-                  }}
-                >
-                  <input id="member-photo-upload" type="file" accept="image/*" className="hidden" onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFile(e.target.files[0]);
-                    }
-                  }} />
-                  {form.photo ? (
-                    <div className="flex flex-col items-center">
-                      <img src={form.photo} alt="Preview" className="w-16 h-16 rounded-xl object-cover mb-2" />
-                      <span className="text-[11px] text-gray-400">Click to select a different photo</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <UploadCloud size={24} className="text-[#FF6B00] mb-1" />
-                      <span className="text-xs font-semibold text-gray-650">Drag & drop profile picture here</span>
-                    </div>
-                  )}
-                </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <FormField label="Profile Photo">
+                <ImageUpload
+                  uploadType="community_member_photo"
+                  value={form.photo}
+                  onChange={(url) => set("photo", url)}
+                />
               </FormField>
             </div>
 

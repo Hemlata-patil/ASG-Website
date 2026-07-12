@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { communityMemberApplications } from '@/lib/db/schema/community_member_applications';
+import { communityMembers } from '@/lib/db/schema/community_members';
 import { eq, or } from 'drizzle-orm';
 
 const mapRoleToApplicantType = (role: string): 'founder' | 'mentor' | 'investor' | 'service_provider' | 'industry_expert' | 'partner' => {
@@ -24,11 +25,12 @@ export async function POST(req: Request) {
       companyWebsite,
       description,
       photoUrl,
-      otherRoleDetails
+      otherRoleDetails,
+      designation
     } = body;
 
     // Validation checks
-    if (!name || !email || !phone || !role || !company || !description || !photoUrl) {
+    if (!name || !email || !phone || !role || !company || !designation || !description || !photoUrl) {
       return NextResponse.json(
         { error: { code: 'VALIDATION_ERROR', message: 'Missing required fields' } },
         { status: 400 }
@@ -56,11 +58,32 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check for existing duplicates in community_members table
+    const existingMember = await db
+      .select()
+      .from(communityMembers)
+      .where(
+        or(
+          eq(communityMembers.email, email),
+          eq(communityMembers.phone, phone)
+        )
+      )
+      .limit(1);
+
+    if (existingMember.length > 0) {
+      const record = existingMember[0];
+      const duplicateField = record.email && record.email.toLowerCase() === email.toLowerCase() ? 'Email Address' : 'Phone Number';
+      return NextResponse.json(
+        { error: { code: 'DUPLICATE_ERROR', message: `An active community member with this ${duplicateField} is already registered.` } },
+        { status: 400 }
+      );
+    }
+
     // Map fields for insertion to match non-nullable database columns
     const applicantType = mapRoleToApplicantType(role);
     const linkedinUrl = (socialLinks || []).find((l: string) => l.toLowerCase().includes('linkedin.com')) || null;
     const websiteUrl = companyWebsite || null;
-    const designation = otherRoleDetails || role || 'Member';
+    const finalDesignation = designation || otherRoleDetails || role || 'Member';
     const expertise = description;
     const motivation = description;
 
@@ -69,7 +92,7 @@ export async function POST(req: Request) {
       email,
       phone,
       company,
-      designation,
+      designation: finalDesignation,
       applicantType,
       websiteUrl,
       linkedinUrl,

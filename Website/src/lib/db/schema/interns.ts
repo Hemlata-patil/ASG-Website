@@ -9,6 +9,8 @@ export const interns = pgTable('interns', {
   phone: text('phone'),
   photo: text('photo').notNull(),
   college: text('college').notNull(),
+  course: text('course'),
+  year: text('year'),
   domain: text('domain').notNull(),
   cohortNumber: integer('cohort_number').notNull(),
   linkedinUrl: text('linkedin_url'),
@@ -16,6 +18,7 @@ export const interns = pgTable('interns', {
   portfolioUrl: text('portfolio_url'),
   status: internStatusEnum('status').default('active').notNull(),
   displayOrder: integer('display_order').notNull(),
+  description: text('description'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
