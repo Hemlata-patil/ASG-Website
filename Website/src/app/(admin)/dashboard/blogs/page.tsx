@@ -9,10 +9,10 @@ import {
 import Modal, { FormField, Input, Select, Textarea, PrimaryBtn, DangerBtn, GhostBtn } from "@/components/admin/Modal";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { useUndoRedoState } from "@/hooks/admin/useUndoRedoState";
+import ImageUpload from "@/components/shared/ImageUpload";
 
 interface Blog {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   author: string;
@@ -28,91 +28,12 @@ interface Blog {
   metaDescription: string;
   keywords: string;
   ogImage?: string;
+  createdAt?: string;
+  publishedAt?: string | null;
 }
 
-const INITIAL: Blog[] = [
-  { 
-    id: 1, 
-    title: "Scaling Tech in Tier 2/3 Cities: The Jalgaon Blueprint", 
-    slug: "scaling-tech-in-tier-2-3-cities-the-jalgaon-blueprint",
-    author: "ASG Editor", 
-    category: "Ecosystem", 
-    status: "Published", 
-    date: "2026-06-12", 
-    excerpt: "How grassroots communities are building high-performance tech squads and scaling regional startups from outside major metros.", 
-    readTime: "5 min read", 
-    thumbnailUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=300&auto=format&fit=crop",
-    tags: ["Ecosystem", "Jalgaon", "Startups"],
-    content: `
-      <h2>The Rise of Regional Tech Hubs</h2>
-      <p>Historically, building a high-growth technology startup required moving to tier-1 cities like Bangalore, Mumbai, or Pune. However, with modern collaborative software, remote learning pathways, and high-performance AI coding tools, we are proving that top-tier technology teams can be built anywhere—specifically from Jalgaon.</p>
-      <blockquote>"Grassroots tech squads are the future of regional innovation. Talent is everywhere; access to opportunity is what we are building."</blockquote>
-      <p>Through our cohort models, we are cultivating a generation of builders who don't just study software engineering—they launch real projects for real users.</p>
-      <h3>Key Pillars of our Ecosystem</h3>
-      <ul>
-        <li>Collaborative peer-to-peer engineering squads</li>
-        <li>Direct integration with startup problem statements</li>
-        <li>Rigorous weekly code and design reviews</li>
-      </ul>
-      <p>As we scale this blueprint across other Tier-2 and Tier-3 cities, the results remain consistent: highly capable developers building market-ready software solutions.</p>
-    `,
-    metaTitle: "Scaling Tech in Tier 2/3 Cities - ASG Blogs",
-    metaDescription: "How grassroots communities are building high-performance tech squads and scaling regional startups from Jalgaon.",
-    keywords: "Jalgaon Tech, Startup Hub, Regional Ecosystem, AI Launchpad"
-  },
-  { 
-    id: 2, 
-    title: "RAG & LLMs: Practical AI Engineering inside Launchpads", 
-    slug: "rag-llms-practical-ai-engineering-inside-launchpads",
-    author: "AI Lab Squad", 
-    category: "Technology", 
-    status: "Published", 
-    date: "2026-05-28", 
-    excerpt: "A deep dive into model selections, prompt metrics, and structuring vector search directories for students building real projects.", 
-    readTime: "7 min read", 
-    thumbnailUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=300&auto=format&fit=crop",
-    tags: ["Technology", "AI", "LLMs", "RAG"],
-    content: `
-      <h2>Implementing Production RAG Pipelines</h2>
-      <p>Retrieval-Augmented Generation (RAG) has become the gold standard for connecting Large Language Models to proprietary business documents. In our AI Launchpad cohorts, students are engineering complete vector-search integrations to power intelligent query systems.</p>
-      <h3>Choosing the Right Embedding Models</h3>
-      <p>When selecting models for enterprise search systems, students evaluate several performance parameters: latency, context window sizes, and embedding dimensions. Our latest benchmark testing demonstrates excellent results using local models hosted on accelerated cloud servers.</p>
-      <pre><code>// Example initialization of our index searcher
-const searchIndex = async (query) => {
-  const queryVector = await getEmbeddings(query);
-  const hits = await vectorDB.similaritySearch(queryVector, 5);
-  return generateResponse(hits);
-};</code></pre>
-      <p>By using structured index architectures and clean retrieval techniques, our teams are delivering sub-second search results over thousands of pages of academic and technical documentation.</p>
-    `,
-    metaTitle: "RAG & LLMs AI Engineering - ASG Blogs",
-    metaDescription: "A deep dive into model selections, prompt metrics, and structuring vector search directories for students.",
-    keywords: "RAG, LLM, Vector Search, AI Launchpad, Python, TypeScript"
-  },
-  { 
-    id: 3, 
-    title: "Bridging the Gap: Academic Curriculums vs Startup Operations", 
-    slug: "bridging-the-gap-academic-curriculums-vs-startup-operations",
-    author: "Academic Advisors", 
-    category: "Education", 
-    status: "Published", 
-    date: "2026-05-10", 
-    excerpt: "Why hands-on team structures and weekly expert reviews are essential to transition engineering students into production builders.", 
-    readTime: "4 min read", 
-    thumbnailUrl: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=300&auto=format&fit=crop",
-    tags: ["Education", "Mentorship", "Careers"],
-    content: `
-      <h2>The Educational Gap</h2>
-      <p>Modern academic curriculums do a great job teaching foundational logic and syntax. However, there remains a massive gap when students step onto real-world dev teams that run on continuous integration pipelines, agile standups, and high-intensity production environments.</p>
-      <blockquote>"Traditional education teaches how to write code. Startup environments teach how to build value."</blockquote>
-      <p>To prepare our students, we emulate modern software organization workflows. Our interns learn to write pull requests, work in cross-functional design and backend squads, and defend their design decisions in weekly review meetings.</p>
-      <p>Through this immersive training, we drastically reduce the onboarding and training time, making our graduates immediately productive inside fast-paced engineering organizations.</p>
-    `,
-    metaTitle: "Bridging Academics and Startups - ASG Blogs",
-    metaDescription: "Why hands-on team structures and weekly reviews are essential to transition students into industry builders.",
-    keywords: "Academic Gap, Startup Internships, Tech Mentorship, Jalgaon Careers"
-  }
-];
+const INITIAL: Blog[] = [];
+
 
 const CATEGORIES = ["Ecosystem", "Technology", "Education", "Startup", "AI", "Innovation", "Community"];
 
@@ -138,7 +59,12 @@ const FONTS = [
   { label: "Serif (Georgia)", value: "Georgia, serif" },
   { label: "Monospace (Code)", value: "Courier New, monospace" },
   { label: "Satoshi (Premium)", value: "'Satoshi', sans-serif" },
-  { label: "Inter (Modern)", value: "'Inter', sans-serif" }
+  { label: "Inter (Modern)", value: "'Inter', sans-serif" },
+  { label: "Playfair Display (Elegant)", value: "'Playfair Display', serif" },
+  { label: "Merriweather (Readability)", value: "'Merriweather', serif" },
+  { label: "Roboto (Clean)", value: "'Roboto', sans-serif" },
+  { label: "Lora (Journal)", value: "'Lora', serif" },
+  { label: "Montserrat (Geometric)", value: "'Montserrat', sans-serif" }
 ];
 
 const FONT_SIZES = [
@@ -153,29 +79,31 @@ const FONT_SIZES = [
 const EMOJIS = ["😀", "😂", "😍", "👍", "👎", "🎉", "🔥", "🚀", "💡", "💻", "🎨", "📝", "🤔", "👏", "✔️", "🌟", "📅", "💡"];
 
 export default function BlogsPage() {
-  const [blogs, setBlogs, undo, redo, canUndo, canRedo] = useUndoRedoState<Blog[]>(INITIAL);
+  const [blogs, setBlogs] = useState<Blog[]>(INITIAL);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchBlogs = async () => {
     try {
-      const raw = localStorage.getItem("asg_blogs");
-      if (raw) {
-        const saved = JSON.parse(raw) as Blog[];
-        const savedIds = new Set(saved.map((b) => b.id));
-        const newEntries = INITIAL.filter((b) => !savedIds.has(b.id));
-        setBlogs([...saved, ...newEntries]);
+      setLoading(true);
+      const res = await fetch("/api/v1/admin/blogs");
+      if (res.ok) {
+        const json = await res.json();
+        setBlogs(json.data || []);
       }
-    } catch { /* ignore */ }
-  }, [setBlogs]);
+    } catch (err) {
+      console.error("Error fetching blogs:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (blogs !== INITIAL) {
-      localStorage.setItem("asg_blogs", JSON.stringify(blogs));
-    }
-  }, [blogs]);
+    fetchBlogs();
+  }, []);
 
   // CMS Views: "list" | "edit" | "add"
   const [viewState, setViewState] = useState<"list" | "edit" | "add">("list");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Filters & List States
   const [search, setSearch] = useState("");
@@ -197,7 +125,29 @@ export default function BlogsPage() {
   
   // Refs
   const editorRef = useRef<HTMLDivElement>(null);
+  const isEditorInitialized = useRef(false);
   const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
+  
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const saveSelection = () => {
+    if (typeof window !== 'undefined') {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        savedRangeRef.current = sel.getRangeAt(0);
+      }
+    }
+  };
+
+  const restoreSelection = () => {
+    if (typeof window !== 'undefined' && savedRangeRef.current) {
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(savedRangeRef.current);
+      }
+    }
+  };
 
   // Auto-generate slug and pre-fill SEO on title change
   const handleTitleChange = (title: string) => {
@@ -264,8 +214,9 @@ export default function BlogsPage() {
   };
 
   useEffect(() => {
-    if ((viewState === "edit" || viewState === "add") && editorRef.current) {
+    if ((viewState === "edit" || viewState === "add") && !isPreviewMode && editorRef.current && !isEditorInitialized.current) {
       editorRef.current.innerHTML = form.content;
+      isEditorInitialized.current = true;
       const images = editorRef.current.getElementsByTagName("img");
       for (let i = 0; i < images.length; i++) {
         images[i].style.cursor = "pointer";
@@ -275,7 +226,7 @@ export default function BlogsPage() {
         };
       }
     }
-  }, [viewState, form.content]);
+  }, [viewState, isPreviewMode, form.content]);
 
   useEffect(() => {
     const handleDeselect = () => {
@@ -285,11 +236,18 @@ export default function BlogsPage() {
     return () => document.removeEventListener("click", handleDeselect);
   }, []);
 
+  const handleTogglePreview = () => {
+    isEditorInitialized.current = false;
+    setIsPreviewMode(prev => !prev);
+  };
+
   const execEditorCmd = (cmd: string, val: string = "") => {
     if (typeof document !== 'undefined') {
+      restoreSelection();
       document.execCommand("styleWithCSS", false, "true");
       document.execCommand(cmd, false, val);
       handleEditorInput();
+      saveSelection();
     }
   };
 
@@ -361,15 +319,38 @@ export default function BlogsPage() {
     }
   };
 
-  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          handleImageInsert(event.target.result as string);
+      const file = e.target.files[0];
+      
+      // Validate file size (1.5MB for inline images as per config limit)
+      const maxSize = 1.5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert("Inline image exceeds the 1.5MB size limit.");
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("bucket", "media");
+        formData.append("uploadType", "blog_inline");
+
+        const res = await fetch("/api/v1/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || "Failed to upload inline image.");
         }
-      };
-      reader.readAsDataURL(e.target.files[0]);
+
+        const data = await res.json();
+        handleImageInsert(data.url);
+      } catch (err: any) {
+        alert(err.message || "An error occurred during inline image upload.");
+      }
     }
   };
 
@@ -447,50 +428,104 @@ export default function BlogsPage() {
     setForm(prev => ({ ...prev, tags: prev.tags.filter(tag => tag !== t) }));
   };
 
-  const handleSave = (status: "Published" | "Draft") => {
+  const handleSave = async (status: "Published" | "Draft") => {
     if (!form.title) {
       alert("Blog Title is required!");
       return;
     }
-    if (!form.thumbnailUrl) {
-      alert("Featured Image is required!");
-      return;
+    
+    // Only enforce complete information when actually publishing
+    if (status === "Published") {
+      if (!form.thumbnailUrl) {
+        alert("Featured Image is required to publish!");
+        return;
+      }
+      if (!form.excerpt) {
+        alert("Excerpt Summary is required to publish!");
+        return;
+      }
     }
 
-    const payload: Blog = {
-      ...form,
-      status,
-      id: viewState === "add" ? Date.now() : editingId || Date.now()
-    };
+    try {
+      setLoading(true);
+      const url = viewState === "add" ? "/api/v1/admin/blogs" : `/api/v1/admin/blogs/${editingId}`;
+      const method = viewState === "add" ? "POST" : "PUT";
 
-    let updatedList: Blog[];
-    if (viewState === "add") {
-      updatedList = [...blogs, payload];
-    } else {
-      updatedList = blogs.map(b => b.id === editingId ? payload : b);
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...form,
+          status,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || "Failed to save blog post.");
+      }
+
+      await fetchBlogs();
+      setViewState("list");
+      setEditingId(null);
+    } catch (err: any) {
+      alert(err.message || "An error occurred while saving the blog post.");
+    } finally {
+      setLoading(false);
     }
-
-    setBlogs(updatedList);
-    setViewState("list");
-    setEditingId(null);
   };
 
   const handleEditClick = (blog: Blog) => {
-    setForm(blog);
+    isEditorInitialized.current = false;
+    setForm({
+      title: blog.title,
+      slug: blog.slug,
+      author: blog.author,
+      category: blog.category,
+      status: blog.status,
+      date: blog.date,
+      excerpt: blog.excerpt,
+      content: blog.content,
+      readTime: blog.readTime,
+      thumbnailUrl: blog.thumbnailUrl,
+      tags: blog.tags || [],
+      metaTitle: blog.metaTitle,
+      metaDescription: blog.metaDescription,
+      keywords: blog.keywords,
+    });
     setEditingId(blog.id);
     setViewState("edit");
   };
 
   const handleAddNewClick = () => {
+    isEditorInitialized.current = false;
     setForm(empty);
     setEditingId(null);
     setViewState("add");
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deleteModal.item) {
-      setBlogs(blogs.filter(b => b.id !== deleteModal.item!.id));
-      setDeleteModal({ open: false, item: null });
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/v1/admin/blogs/${deleteModal.item.id}`, {
+          method: "DELETE",
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || "Failed to delete blog post.");
+        }
+
+        await fetchBlogs();
+      } catch (err: any) {
+        alert(err.message || "An error occurred while deleting the blog post.");
+      } finally {
+        setLoading(false);
+        setDeleteModal({ open: false, item: null });
+      }
     }
   };
 
@@ -504,9 +539,9 @@ export default function BlogsPage() {
 
     return matchSearch && matchCategory && matchStatus;
   }).sort((a, b) => {
-    const dateA = new Date(a.date).getTime();
-    const dateB = new Date(b.date).getTime();
-    return sortBy === "newest" ? dateB - dateA : dateA - dateB;
+    const timeA = new Date(a.publishedAt || a.createdAt || a.date).getTime();
+    const timeB = new Date(b.publishedAt || b.createdAt || b.date).getTime();
+    return sortBy === "newest" ? timeB - timeA : timeA - timeB;
   });
 
   return (
@@ -519,24 +554,6 @@ export default function BlogsPage() {
             subtitle={`${blogs.length} posts · ${blogs.filter((b) => b.status === "Published").length} published`}
             action={
               <div className="flex items-center gap-2.5">
-                <div className="flex items-center gap-1 bg-gray-50 border border-gray-150 rounded-xl p-1 shadow-2xs">
-                  <button
-                    onClick={undo}
-                    disabled={!canUndo}
-                    className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
-                    title="Undo Action"
-                  >
-                    <Undo size={14} />
-                  </button>
-                  <button
-                    onClick={redo}
-                    disabled={!canRedo}
-                    className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border-none bg-transparent cursor-pointer"
-                    title="Redo Action"
-                  >
-                    <Redo size={14} />
-                  </button>
-                </div>
                 <button 
                   onClick={handleAddNewClick} 
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 transition-opacity border-none cursor-pointer"
@@ -622,12 +639,16 @@ export default function BlogsPage() {
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
                       <td style={{ padding: "14px 16px", maxWidth: "380px" }}>
                         <div className="flex gap-3 items-start">
-                          <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-150">
-                            <img
-                              src={blog.thumbnailUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=100&h=100&fit=crop"}
-                              alt={blog.title}
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
+                          <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-150 flex items-center justify-center text-gray-400">
+                            {blog.thumbnailUrl ? (
+                              <img
+                                src={blog.thumbnailUrl}
+                                alt={blog.title}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            ) : (
+                              <ImageIcon size={18} />
+                            )}
                           </div>
                           <div>
                             <div style={{ fontSize: "14px", fontWeight: 600, color: "#0d0d0d", marginBottom: "3px" }}>{blog.title}</div>
@@ -693,7 +714,7 @@ export default function BlogsPage() {
             <div className="flex items-center gap-2">
               <GhostBtn onClick={() => setViewState("list")}>Cancel</GhostBtn>
               <button 
-                onClick={() => setIsPreviewMode(!isPreviewMode)}
+                onClick={handleTogglePreview}
                 className="px-4 py-2 border border-gray-250 hover:border-gray-300 text-gray-700 text-sm font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer bg-white"
               >
                 <Eye size={15} /> {isPreviewMode ? "Edit Mode" : "Preview"}
@@ -970,7 +991,9 @@ export default function BlogsPage() {
                     contentEditable
                     dir="ltr"
                     onInput={handleEditorInput}
-                    onBlur={handleEditorInput}
+                    onMouseUp={saveSelection}
+                    onKeyUp={saveSelection}
+                    onBlur={saveSelection}
                     className="p-6 overflow-y-auto flex-1 bg-white outline-none prose prose-orange max-w-none min-h-[400px] text-gray-800 font-sans"
                     style={{ minHeight: "450px", direction: "ltr" }}
                     data-placeholder="Start typing your rich-text blog content here..."
@@ -1021,55 +1044,11 @@ export default function BlogsPage() {
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-wider block">Featured Image *</label>
-                <div
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                  style={{
-                    borderColor: dragActive ? "#FF6B00" : "#ebebeb",
-                    background: dragActive ? "rgba(255,107,0,0.04)" : "#fcfcfc",
-                    borderStyle: "dashed",
-                    borderWidth: "2px",
-                    borderRadius: "12px",
-                    padding: "20px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease"
-                  }}
-                  onClick={() => document.getElementById("cms-featured-img")?.click()}
-                >
-                  <input
-                    id="cms-featured-img"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFile(e.target.files[0]);
-                      }
-                    }}
-                  />
-                  {form.thumbnailUrl ? (
-                    <div className="relative w-full flex flex-col items-center">
-                      <img
-                        src={form.thumbnailUrl}
-                        alt="Featured Preview"
-                        className="max-h-32 rounded-lg object-cover mb-2 border border-gray-100"
-                      />
-                      <span className="text-[10px] text-gray-400 font-semibold">Drop or click to change featured image</span>
-                    </div>
-                  ) : (
-                    <>
-                      <UploadCloud size={24} className="text-[#FF6B00] mb-2" />
-                      <span className="text-xs font-bold text-gray-600">Upload Featured Image</span>
-                      <span className="text-[10px] text-gray-400">Click to browse or drop here</span>
-                    </>
-                  )}
-                </div>
+                <ImageUpload 
+                  uploadType="blog_cover" 
+                  value={form.thumbnailUrl} 
+                  onChange={(url) => setForm(f => ({ ...f, thumbnailUrl: url }))} 
+                />
               </div>
 
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
@@ -1106,7 +1085,7 @@ export default function BlogsPage() {
                     />
                     <button 
                       onClick={handleAddTag}
-                      className="px-3 bg-gray-150 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl cursor-pointer border-none"
+                      className="px-4 bg-[#FF5A14] hover:bg-[#e0480a] text-white text-xs font-semibold rounded-xl cursor-pointer border-none transition-colors"
                     >
                       Add
                     </button>
