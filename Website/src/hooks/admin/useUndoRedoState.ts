@@ -33,30 +33,43 @@ export function useUndoRedoState(initialValue?: any): any {
     const [future, setFuture] = useState<any[]>([]);
 
     const updateState = useCallback((newVal: any) => {
-      setPast((prev) => [...prev, present]);
-      setPresent(newVal);
-      setFuture([]);
-    }, [present]);
+      setPresent((prev: any) => {
+        const resolved = typeof newVal === "function" ? (newVal as Function)(prev) : newVal;
+        setPast((p: any) => [...p, prev]);
+        setFuture([]);
+        return resolved;
+      });
+    }, []);
 
     const undo = useCallback(() => {
-      if (past.length === 0) return;
-      const previous = past[past.length - 1];
-      const newPast = past.slice(0, past.length - 1);
-
-      setPast(newPast);
-      setFuture((prev) => [present, ...prev]);
-      setPresent(previous);
-    }, [past, present]);
+      setPast((prevPast: any[]) => {
+        if (prevPast.length === 0) return prevPast;
+        const previous = prevPast[prevPast.length - 1];
+        const newPast = prevPast.slice(0, prevPast.length - 1);
+        
+        setPresent((prevPresent: any) => {
+          setFuture((prevFuture: any[]) => [prevPresent, ...prevFuture]);
+          return previous;
+        });
+        
+        return newPast;
+      });
+    }, []);
 
     const redo = useCallback(() => {
-      if (future.length === 0) return;
-      const next = future[0];
-      const newFuture = future.slice(1);
-
-      setFuture(newFuture);
-      setPast((prev) => [...prev, present]);
-      setPresent(next);
-    }, [future, present]);
+      setFuture((prevFuture: any[]) => {
+        if (prevFuture.length === 0) return prevFuture;
+        const next = prevFuture[0];
+        const newFuture = prevFuture.slice(1);
+        
+        setPresent((prevPresent: any) => {
+          setPast((prevPast: any[]) => [...prevPast, prevPresent]);
+          return next;
+        });
+        
+        return newFuture;
+      });
+    }, []);
 
     const resetState = useCallback((newVal: any) => {
       setPresent(newVal);
